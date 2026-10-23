@@ -952,7 +952,7 @@
       "id": "B13",
       "title": "Seeded demo profiles complete",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "A demo guest sees the quick-commerce, Stride & Co. and quantum-idea profiles fully populated with competitors, history, comparison and simulator data, all labelled demo data.",
       "why_now": "Your multi-profile demo story; must be data, not code, so it comes after every feature exists.",

@@ -57,7 +57,7 @@
 | B10 | Prototype | After a competitor price-cut run, S-14 shows a re-planned launch recommendation from options A/B/C whose best/expected/worst outcomes cite editable assumptions. | UC-07, UC-14, S-09, S-11, S-14 | tdd, code-review | 0.4 h | B09, B06 | — | done |
 | B11 | Prototype | A user downloads a PDF report from S-15 in which every claim links to a receipt with its observed date (AI suggestions labelled separately). | UC-09, S-15, S-11 | frontend-design | 0.3 h | B10 | — | done |
 | B12 | Prototype | S-12 shows a competitor's dated history: current fields, a timeline of runs, receipts or failures, plus a price chart. | UC-11, S-12, S-08, S-13 | vercel-react-best-practices | 0.2 h | B08 | — | done |
-| B13 | Prototype | A demo guest sees the quick-commerce, Stride & Co. and quantum-idea profiles fully populated with competitors, history, comparison and simulator data, all labelled demo data. | UC-13, UC-14, S-03, S-09, S-13, S-14 | diagnosing-bugs | 0.3 h | B10, B11, B12 | — | todo |
+| B13 | Prototype | A demo guest sees the quick-commerce, Stride & Co. and quantum-idea profiles fully populated with competitors, history, comparison and simulator data, all labelled demo data. | UC-13, UC-14, S-03, S-09, S-13, S-14 | diagnosing-bugs | 0.3 h | B10, B11, B12 | — | done |
 | B14 🏁 | Prototype | A judge walks the full journeys §9 golden path on the public URL twice in a row without errors, with README + PPT ready to submit. | UC-01, UC-02, UC-03, UC-04, UC-05, UC-06, UC-07, UC-08, UC-09, UC-10, UC-11, UC-12, UC-13, UC-14, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-09, S-10, S-11, S-13, S-14, S-15, S-16, S-18 | diagnosing-bugs, render-debug, hackathon-demo-submission, pptx | 0.75 h | B13 | — | todo |
 | B15 | MVP | A user's competitors are re-checked on a schedule and new alerts appear without anyone clicking Run monitor. | UC-04, UC-08, S-09, S-16, S-17 | render-deploy, fastapi | 3 h | B14 | — | todo |
 | B16 | MVP | S-12 shows review themes (praise, complaints, requests) for a competitor from a permitted source, each with source link, date and sample size. | UC-15, S-12 | supabase-postgres-best-practices, tdd | 4 h | B15 | — | todo |
@@ -272,7 +272,7 @@
 - **Prompt:** `prompts/B12-competitor-history-timeline.md`
 
 ### B13 — Seeded demo profiles complete
-- **Status:** todo
+- **Status:** done
 - **Goal:** A demo guest sees the quick-commerce, Stride & Co. and quantum-idea profiles fully populated with competitors, history, comparison and simulator data, all labelled demo data.
 - **Why now:** Your multi-profile demo story; must be data, not code, so it comes after every feature exists.
 - **Slice:** UC UC-13, UC-14 · Screens S-03, S-09, S-13, S-14 · Components C-13, C-15
