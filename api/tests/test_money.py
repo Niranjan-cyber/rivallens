@@ -70,3 +70,12 @@ def test_benchmark_lookup():
     b = benchmark("Shoe")
     assert b["firms"] == 13 and b["operating_margin"] == 0.0825 and b["gross_margin"] == 0.5197
     assert benchmark("Nope") is None
+
+
+def test_bank_settlements_are_not_double_counted_with_order_exports():
+    txs = [
+        {"date": date(2026, 1, 3), "kind": "sale", "amount": 4000, "product": "Stride Runner", "quantity": 2},   # order export
+        {"date": date(2026, 1, 9), "kind": "sale", "amount": 3900, "product": None, "quantity": None},           # the same money, settled
+        {"date": date(2026, 2, 9), "kind": "sale", "amount": 5000, "product": None, "quantity": None},           # no orders this month
+    ]
+    assert [m["revenue"] for m in metrics(txs, cash=None)["months"]] == [4000, 5000]

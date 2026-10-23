@@ -132,18 +132,21 @@ def to_transactions(rows: list[dict], mapping: dict, source: str) -> list[dict]:
 
 
 def metrics(txs: list[dict], cash: float | None) -> dict:
-    by_month: dict[str, dict] = defaultdict(lambda: {"revenue": 0.0, "expenses": 0.0})
+    # Order exports (sales with a product) and bank settlements are the same money: a month's revenue is its
+    # product sales when there are any, else its other sales.
+    by_month: dict[str, dict] = defaultdict(lambda: {"product_sales": 0.0, "other_sales": 0.0, "expenses": 0.0})
     funding, products = 0.0, defaultdict(lambda: {"units": 0.0, "revenue": 0.0})
     for t in txs:
         if t["kind"] == "funding":
             funding += t["amount"]
             continue
         key = t["date"].strftime("%Y-%m")
-        by_month[key]["revenue" if t["kind"] == "sale" else "expenses"] += t["amount"]
+        bucket = "expenses" if t["kind"] != "sale" else "product_sales" if t.get("product") else "other_sales"
+        by_month[key][bucket] += t["amount"]
         if t["kind"] == "sale" and t.get("product"):
             products[t["product"]]["units"] += t.get("quantity") or 0
             products[t["product"]]["revenue"] += t["amount"]
-    months = [{"month": k, "revenue": round(v["revenue"]), "expenses": round(v["expenses"])} for k, v in sorted(by_month.items())]
+    months = [{"month": k, "revenue": round(v["product_sales"] or v["other_sales"]), "expenses": round(v["expenses"])} for k, v in sorted(by_month.items())]
     last = months[-3:]
     rev = sum(m["revenue"] for m in last) / len(last) if last else 0
     exp = sum(m["expenses"] for m in last) / len(last) if last else 0
