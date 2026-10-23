@@ -14,6 +14,7 @@ from app import jobs
 from app.config import MOCK_BASE_URL, SEED_USER_EMAIL, SUPABASE_SECRET_KEY, SUPABASE_URL
 from app.db import engine
 from app.modules.changes.runs import monitor, start_run
+from app.modules.demo.history import seed_history
 
 MIGRATIONS = Path(__file__).resolve().parents[2] / "supabase" / "migrations"
 
@@ -29,8 +30,16 @@ PROFILES = [
      "competitors": [*[(n, f"{s}.demo", "inspiration" if s == "orbitly" else "comparable", True) for n, s in MOCKS],
                      ("Render", "render.com", "inspiration", False), ("Railway", "railway.com", "inspiration", False),
                      ("E2E Networks", "e2enetworks.com", "comparable", False)]},
-    {"name": "QuickKart", "kind": "business", "offering_type": "service", "card": {"note": "Quick commerce, Bengaluru"}, "competitors": []},
-    {"name": "Stride & Co.", "kind": "business", "offering_type": "product", "card": {"note": "Running shoes, D2C"}, "competitors": []},
+    {"name": "QuickKart", "kind": "business", "offering_type": "service",
+     "card": {"note": "Quick commerce, Bengaluru", "category": "Quick commerce membership", "india_markets": ["Bengaluru"],
+              "price": {"amount": 129, "currency": "INR", "period": "month"}, "attributes": ["Free delivery over ₹199", "No surge fee", "Weekly deals"],
+              "sim_assumptions": {"segment_size": 200000, "base_conversion": 0.02, "upfront_cost": 2000000, "monthly_cost": 300000}},
+     "competitors": []},
+    {"name": "Stride & Co.", "kind": "business", "offering_type": "product",
+     "card": {"note": "Running shoes, D2C", "category": "Running shoes", "india_markets": ["Mumbai", "Pune"],
+              "price": {"amount": 3999, "currency": "INR", "period": "one_time"}, "attributes": ["Breathable mesh", "30-day returns", "Carbon plate"],
+              "sim_assumptions": {"segment_size": 50000, "base_conversion": 0.01, "upfront_cost": 1500000, "monthly_cost": 400000}},
+     "competitors": []},
     {"name": "Qubit Labs", "kind": "idea", "offering_type": "service",
      "card": {"note": "Quantum computing access", "category": "Quantum computing access",
               "price": {"amount": 50000, "currency": "INR", "period": "month"},
@@ -129,6 +138,7 @@ def seed() -> None:
                 url = f"{MOCK_BASE_URL}/seed-{domain.removesuffix('.demo')}/{domain.removesuffix('.demo')}" if is_mock else f"https://{'www.' if domain == 'e2enetworks.com' else ''}{domain}/pricing"
                 conn.execute(text("insert into sources (competitor_id, url, page_type, is_mock) values (:c, :url, 'pricing', :m)"),
                              {"c": cid, "url": url, "m": is_mock})
+            seed_history(conn, pid, p["name"])  # fictional competitors with dated history (QuickKart, Stride & Co., Qubit Labs)
             if p["name"] == "StackNest":
                 stacknest = pid
     print("seeded", len(PROFILES), "profiles for", SEED_USER_EMAIL)

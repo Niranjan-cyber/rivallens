@@ -7,6 +7,7 @@ from sqlalchemy import Connection, text
 from app.auth import UserDep
 from app.config import MOCK_BASE_URL, SEED_USER_EMAIL
 from app.db import ConnDep
+from app.modules.demo.history import DEMO_HISTORY, seed_history
 from app.modules.profiles.router import ProfileSummary, list_profiles
 
 router = APIRouter(tags=["demo"])
@@ -39,7 +40,10 @@ def guest_clone(user: UserDep, conn: ConnDep) -> dict[str, list[ProfileSummary]]
         insert into profiles (id, user_id, name, kind, offering_type, card, is_demo_data, created_at)
         select m.new_id, :u, p.name, p.kind, p.offering_type, p.card, p.is_demo_data, p.created_at from profiles p join _p m on m.old_id = p.id
     """), {"u": user.id})
-    conn.execute(text("create temp table _c on commit drop as select c.id as old_id, gen_random_uuid() as new_id, m.new_id as profile_id from competitors c join _p m on m.old_id = c.profile_id"))
+    # Profiles with generated demo history get fresh history below instead of a copy (same story, guest-owned rows).
+    conn.execute(text("""create temp table _c on commit drop as select c.id as old_id, gen_random_uuid() as new_id, m.new_id as profile_id
+        from competitors c join _p m on m.old_id = c.profile_id join profiles p on p.id = c.profile_id where not (p.name = any(:generated))"""),
+        {"generated": list(DEMO_HISTORY)})
     conn.execute(text("""
         insert into competitors (id, profile_id, name, domain, relation, origin, selected, monitorable, india_signals, similarity, is_demo_data)
         select m.new_id, m.profile_id, c.name, c.domain, c.relation, c.origin, c.selected, c.monitorable, c.india_signals, c.similarity, c.is_demo_data
@@ -63,6 +67,8 @@ def guest_clone(user: UserDep, conn: ConnDep) -> dict[str, list[ProfileSummary]]
             insert into observations (snapshot_id, source_id, observed_at, fields, origin)
             select snap.id, :new, snap.observed_at, o.fields, 'seed' from snap, old join observations o on o.snapshot_id = old.id
         """), {"old": s["id"], "new": new_id})
+    for pid, name in conn.execute(text("select p.id, p.name from profiles p join _p m on m.new_id = p.id")).all():
+        seed_history(conn, pid, name)
     return {"profiles": list_profiles(user, conn)}
 
 

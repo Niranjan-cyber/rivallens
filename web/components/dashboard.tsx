@@ -52,7 +52,7 @@ export function Dashboard({ profileId }: { profileId: string }) {
       {sim && (
         <Link href={`/app/${profileId}/simulator`} className="mt-4 block rounded-stadium bg-ink p-7 text-canvas hover:shadow-lift-2">
           <p className="text-[15px] text-dust">Launch simulator · scenario model, not a forecast</p>
-          <p className="mt-1 text-[28px] font-medium tracking-[-0.02em]">Recommended ₹{sim.recommended_price_inr.toLocaleString("en-IN")}/month</p>
+          <p className="mt-1 text-[28px] font-medium tracking-[-0.02em]">Recommended ₹{sim.recommended_price_inr.toLocaleString("en-IN")}{sim.price_unit ?? "/month"}</p>
           {sim.replanned && <p className="mt-1 text-[15px] text-signal-light">{sim.replanned.summary}</p>}
           {sim.viability_flags.length > 0 && <p className="mt-1 text-[15px] text-dust">{sim.viability_flags.length} viability flag{sim.viability_flags.length > 1 ? "s" : ""}</p>}
         </Link>

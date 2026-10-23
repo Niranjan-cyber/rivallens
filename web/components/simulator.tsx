@@ -13,7 +13,7 @@ export type Simulation = {
   version: number; label: string; replanned: { from_version: number; trigger_change_event_id: string; summary: string } | null;
   market: { median_price_inr: number; origin: string; n_priced: number; evidence: { name: string; price_inr: number; source_url: string; observed_at: string; evidence_id: string | null }[] };
   feature_coverage: number; options: Option[]; recommended_option: string; recommended_price_inr: number; reason: string; warning: boolean;
-  assumption_list: Assumption[]; viability_flags: Flag[];
+  assumption_list: Assumption[]; viability_flags: Flag[]; price_unit?: string;
 };
 
 const LABELS: Record<string, string> = {
@@ -66,7 +66,7 @@ export function Simulator({ profileId }: { profileId: string }) {
 
       <div className="mt-6 rounded-stadium bg-ink p-7 text-canvas sm:p-9">
         <p className="text-[15px] text-dust">Recommended launch price · version {sim.version}</p>
-        <p className="mt-1 text-[52px] font-medium leading-none tracking-[-0.03em]">{inr(sim.recommended_price_inr)}<span className="text-[24px] text-dust">/month</span></p>
+        <p className="mt-1 text-[52px] font-medium leading-none tracking-[-0.03em]">{inr(sim.recommended_price_inr)}<span className="text-[24px] text-dust">{sim.price_unit ?? "/month"}</span></p>
         <p className="mt-3 max-w-[40rem] text-[16px] text-dust">Option {sim.recommended_option}. {sim.reason}</p>
       </div>
 
@@ -99,7 +99,7 @@ export function Simulator({ profileId }: { profileId: string }) {
             {sim.options.map((o) => (
               <tr key={o.id} className={`border-b border-ghost ${o.id === sim.recommended_option ? "bg-canvas" : ""}`}>
                 <th scope="row" className="p-3 align-top font-medium">
-                  {o.id} · {inr(o.price_inr)}/mo{o.id === sim.recommended_option && " ✓"}
+                  {o.id} · {inr(o.price_inr)}{sim.price_unit === "" ? "" : "/mo"}{o.id === sim.recommended_option && " ✓"}
                   <span className="block text-[12px] font-normal text-slate">{o.origin}</span>
                 </th>
                 {(["best", "expected", "worst"] as const).map((s) => (

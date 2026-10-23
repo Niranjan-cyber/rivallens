@@ -77,6 +77,7 @@ def compute(conn: Connection, profile_id: UUID, overrides: dict, extra_option: f
     sim["market"] = {"median_price_inr": m, "origin": m_origin, "n_priced": len(priced),
                      "evidence": [{k: c[k] for k in ("name", "price_inr", "source_url", "observed_at", "evidence_id")} for c in priced]}
     sim["viability_flags"] = flags
+    sim["price_unit"] = "" if (card_value(card, "price") or {}).get("period") == "one_time" else "/month"  # products: price per unit sold
     return sim
 
 

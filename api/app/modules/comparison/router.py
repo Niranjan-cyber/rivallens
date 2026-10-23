@@ -48,8 +48,9 @@ class CriteriaIn(BaseModel):
     criteria: list[CriterionIn]
 
 
-def _rupees(v: float) -> str:
-    return f"₹{v:,.0f}/mo"
+def _rupees(v: float, unit: str = "/mo") -> str:
+    from app.modules.simulator.service import inr
+    return f"{inr(v)}{unit}"
 
 
 def _cell(value, display: str, observed_at=None, source_url=None, evidence_id=None) -> dict:
@@ -64,12 +65,13 @@ def _unknown() -> dict:
 def competitor_cells(fields: dict, page_text: str, src: dict) -> dict:
     meta = {"observed_at": src["observed_at"], "source_url": src["url"], "evidence_id": src["snapshot_id"]}
     prices = sorted(p for p in (monthly_inr(pl["price"], USD_INR_RATE) for pl in fields.get("plans", [])) if p is not None)
+    unit = "" if all(pl["price"].get("period") in ("one_time", None) for pl in fields.get("plans", [])) else "/mo"
     features = {f for pl in fields.get("plans", []) for f in pl.get("features", [])}
     support = max((w for f in features for rx, w in SUPPORT if rx.search(f) and "support" in f.lower()), default=None)
     headline = (fields.get("headline") or {}).get("text")
     return {
-        "entry_price": _cell(prices[0], _rupees(prices[0]), **meta) if prices else _unknown(),
-        "mid_price": _cell(prices[len(prices) // 2], _rupees(prices[len(prices) // 2]), **meta) if len(prices) >= 2 else _unknown(),
+        "entry_price": _cell(prices[0], _rupees(prices[0], unit), **meta) if prices else _unknown(),
+        "mid_price": _cell(prices[len(prices) // 2], _rupees(prices[len(prices) // 2], unit), **meta) if len(prices) >= 2 else _unknown(),
         "free_tier": _cell(int(prices[0] == 0), "Yes" if prices[0] == 0 else "No", **meta) if prices else _unknown(),
         "india_region": _cell(1, "Yes", **meta) if INDIA.search(page_text or "") else (_cell(0, "Not stated", **meta) if page_text else _unknown()),
         "support": _cell(support, {1: "Community", 2: "Email or chat", 3: "Priority or phone"}[support], **meta) if support else _unknown(),
@@ -83,7 +85,8 @@ def your_cells(card: dict) -> dict:
     markets = card_value(card, "india_markets") or []
     attrs = card_value(card, "attributes") or []
     return {
-        "entry_price": _cell(price, _rupees(price), source_url="your card") if price is not None else _unknown(),
+        "entry_price": _cell(price, _rupees(price, "" if (card_value(card, "price") or {}).get("period") == "one_time" else "/mo"),
+                             source_url="your card") if price is not None else _unknown(),
         "mid_price": _unknown(), "free_tier": _unknown(),
         "india_region": _cell(1, "Yes", source_url="your card") if markets else _unknown(),
         "support": _unknown(),
