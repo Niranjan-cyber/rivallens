@@ -17,7 +17,8 @@ export default function Login() {
   // Email and password only, no confirmation email (D-83): the API creates the account, then we sign in with it.
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const f = new FormData(form);
     const email = String(f.get("email")).trim();
     const password = String(f.get("password"));
     setBusy("form");
@@ -34,6 +35,8 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(null);
     if (error) return setMessage(error.message === "Invalid login credentials" ? "Wrong email or password." : error.message);
+    form.reset();
+    setMode("login"); // Next keeps this page's state, so after logging out it should open clean on Log in
     router.push("/app");
   }
 
