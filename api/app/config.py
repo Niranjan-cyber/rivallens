@@ -8,7 +8,8 @@ WEB_ORIGIN = os.getenv("WEB_ORIGIN", "http://localhost:3000")
 GIT_SHA = os.getenv("RENDER_GIT_COMMIT", "dev")[:7]
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
-SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY", "")
+SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+SUPABASE_PUBLIC_KEY = os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_ANON_KEY", "")
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")  # only if the project still signs with the legacy HS256 secret
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 MOCK_BASE_URL = os.getenv("MOCK_BASE_URL", f"{WEB_ORIGIN}/mock")
