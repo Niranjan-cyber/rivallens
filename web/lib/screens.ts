@@ -11,7 +11,7 @@ export const groups = [
 export const groupOf: Record<string, (typeof groups)[number]["key"]> = {
   home: "home", product: "product", simulator: "product", money: "money", customers: "customers",
   dashboard: "market", competitors: "market", comparison: "market", alerts: "market", reports: "market", settings: "market",
-  competitor: "market", run: "market", receipt: "market", card: "home",
+  competitor: "market", run: "market", receipt: "market", card: "home", "product-detail": "product",
 };
 
 export const sections = [
@@ -29,6 +29,7 @@ export const sections = [
 ] as const;
 
 export const extraScreens = {
+  "product-detail": { label: "Product", screen: "S-23", purpose: "One product against its exact category: price, features, add-ons, revenue and premium inspirations." },
   competitor: { label: "Competitor", screen: "S-12", purpose: "One competitor over time." },
   card: { label: "Profile card", screen: "S-06", purpose: "The card that drives discovery and comparison." },
   run: { label: "Monitoring run", screen: "S-10", purpose: "What changed since the last check, what was ignored, and why." },

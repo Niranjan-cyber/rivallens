@@ -8,6 +8,7 @@ import { CompetitorDetail } from "@/components/competitor-detail";
 import { Competitors } from "@/components/competitors";
 import { Dashboard } from "@/components/dashboard";
 import { Overview } from "@/components/overview";
+import { Products } from "@/components/products";
 import { ReceiptView } from "@/components/receipt";
 import { RunResult } from "@/components/run-result";
 import { ReportView } from "@/components/report";
@@ -25,6 +26,7 @@ async function Section({ params }: { params: PageProps<"/app/[profileId]/[sectio
   if (section === "competitors") return <Competitors profileId={profileId} />;
   if (section === "competitor") return <CompetitorDetail profileId={profileId} />;
   if (section === "home") return <Overview profileId={profileId} />;
+  if (section === "product") return <Products profileId={profileId} />;
   if (section === "dashboard") return <Dashboard profileId={profileId} />;
   if (section === "comparison") return <ComparisonMatrix profileId={profileId} />;
   if (section === "simulator") return <Simulator profileId={profileId} />;

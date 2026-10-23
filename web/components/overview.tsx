@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { SampleBadge } from "@/components/ui";
-import { api, type ProfileSummary } from "@/lib/api";
+import { api, type Product, type ProfileSummary } from "@/lib/api";
 
 type Card = Record<string, { value: unknown } | undefined>;
 type Profile = { id: string; name: string; card: Card; is_demo_data: boolean };
@@ -14,15 +14,17 @@ const list = (v: unknown) => (Array.isArray(v) ? v.map(String) : typeof v === "s
 export function Overview({ profileId }: { profileId: string }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
+  const [items, setItems] = useState<Product[] | null>(null);
 
   useEffect(() => {
     api<Profile>(`/api/v1/profiles/${profileId}`).then(setProfile, () => {});
+    api<Product[]>(`/api/v1/profiles/${profileId}/products`).then(setItems, () => {});
     api<ProfileSummary[]>("/api/v1/profiles").then((ps) => setSummary(ps.find((p) => p.id === profileId) ?? null), () => {});
   }, [profileId]);
 
   const card = profile?.card ?? {};
   const val = (k: string) => card[k]?.value;
-  const products = list(val("main_products"));
+  const products = items?.length ? items.map((p) => p.niche ? `${p.name} (${p.niche})` : p.name) : list(val("main_products"));
   const meta = [val("business_type"), list(val("india_markets"))[0]].filter(Boolean).join(" in ");
 
   return (

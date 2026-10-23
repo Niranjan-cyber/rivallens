@@ -106,3 +106,24 @@ export type Competitor = {
   id: string; name: string; domain: string; relation: "comparable" | "inspiration"; origin: string; selected: boolean; monitorable: boolean;
   india_signals: { score?: number; hits?: string[] }; similarity: number | null; is_demo_data: boolean; sources: { id: string; url: string; page_type: string }[];
 };
+
+export type Product = {
+  id: string;
+  profile_id: string;
+  name: string;
+  stage: "existing" | "new";
+  description: string | null;
+  url: string | null;
+  taxonomy_id: number | null;
+  category_path: string | null;
+  niche: string | null;
+  category_source: "ai" | "top_match" | "user" | "none";
+  price: number | null;
+  currency: string;
+  unit: string;
+  unit_cost: number | null;
+  features: string[];
+  add_ons: string[];
+  source: { url: string; observed_at: string; brand?: string | null; rating?: number | null; review_count?: number | null } | null;
+  is_demo_data: boolean;
+};
