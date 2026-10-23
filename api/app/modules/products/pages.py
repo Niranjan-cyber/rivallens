@@ -1,4 +1,5 @@
 """Read a product from its public page: schema.org Product JSON-LD (what shops publish for search engines)."""
+import html as html_lib
 import json
 
 from selectolax.lexbor import LexborHTMLParser
@@ -38,9 +39,9 @@ def product_from_html(html: str) -> dict | None:
             rating = p.get("aggregateRating") or {}
             count = rating.get("reviewCount") or rating.get("ratingCount")
             return {
-                "name": p.get("name"),
+                "name": html_lib.unescape(p["name"]) if p.get("name") else None,
                 "brand": brand.get("name") if isinstance(brand, dict) else brand,
-                "description": p.get("description"),
+                "description": html_lib.unescape(p["description"])[:600] if p.get("description") else None,
                 "price": _num(offers.get("price") or offers.get("lowPrice")),
                 "currency": offers.get("priceCurrency"),
                 "rating": _num(rating.get("ratingValue")),
