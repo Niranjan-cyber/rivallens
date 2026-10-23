@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
@@ -10,6 +11,8 @@ from app.modules.alerts.router import router as alerts_router
 from app.modules.changes.router import router as changes_router
 from app.modules.demo.router import router as demo_router
 from app.modules.profiles.router import router as profiles_router
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")  # app logs (llm cache hits, job failures) reach Render
 
 
 @asynccontextmanager
