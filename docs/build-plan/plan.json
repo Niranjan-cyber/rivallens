@@ -19,7 +19,7 @@
   },
   "urls": {
     "frontend": "https://rivallens-eight.vercel.app",
-    "backend": "<BACKEND_URL> (e.g. https://rivallens-api.onrender.com)"
+    "backend": "https://rivallens-api.onrender.com"
   },
   "modifiers": [
     "ponytail"
@@ -211,7 +211,7 @@
       "id": "B02",
       "title": "Walking skeleton: web ↔ deployed API",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "S-03 Home on the public URL lists profile cards fetched from the deployed FastAPI service.",
       "why_now": "Proves Vercel → Render CORS, env vars and the API contract before any real logic; also starts the Render cold-start clock early.",
@@ -1316,6 +1316,10 @@
     {
       "date": "2026-10-23",
       "change": "B01 done: frontend live at https://rivallens-eight.vercel.app (rivallens.vercel.app is taken by another project)."
+    },
+    {
+      "date": "2026-10-23",
+      "change": "B02 done: API live at https://rivallens-api.onrender.com (Render srv-dbdk8n6i0phs73a3k6mg, Singapore, Free); S-03 reads profiles from it."
     }
   ]
 }

@@ -4,7 +4,7 @@
 
 ## Live URLs
 - Frontend: https://rivallens-eight.vercel.app
-- Backend: <BACKEND_URL> (e.g. https://rivallens-api.onrender.com)
+- Backend: https://rivallens-api.onrender.com
 
 ## Spine
 **Prototype is done when** (checked on the public URL):
@@ -46,7 +46,7 @@
 | ID | Phase | Goal | Use cases / screens | Skills | Est. | After | Track | Status |
 |---|---|---|---|---|---|---|---|---|
 | B01 | Prototype | Anyone can open the public URL and click from the S-01 landing through stub screens S-03 to S-18 labelled sample data. | UC-13, S-01, S-03, S-09, S-10, S-11, S-13, S-14, S-15, S-16, S-18 | frontend-design, vercel-react-best-practices | 0.35 h | — | — | done |
-| B02 | Prototype | S-03 Home on the public URL lists profile cards fetched from the deployed FastAPI service. | UC-13, S-03 | fastapi, render-deploy, render-debug | 0.35 h | B01 | — | todo |
+| B02 | Prototype | S-03 Home on the public URL lists profile cards fetched from the deployed FastAPI service. | UC-13, S-03 | fastapi, render-deploy, render-debug | 0.35 h | B01 | — | done |
 | B03 | Prototype | A visitor can click 'Try demo account' or sign up with email and land on S-03 showing profiles stored in Supabase for their own account. | UC-01, UC-13, S-01, S-02, S-03 | supabase, supabase-postgres-best-practices, fastapi | 0.45 h | B02 | — | todo |
 | B04 | Prototype | In the Demo Lab, a user applies 'cosmetic' then 'price cut' to NimbusDeploy (demo) and Run monitor on S-10 shows 0 meaningful changes the first time and the Pro price drop as meaningful the second time, with every ignored diff listed with its reason. | UC-04, UC-10, S-09, S-10, S-18, S-19 | tdd, fastapi, vercel-react-best-practices, code-review | 0.55 h | B03 | — | todo |
 | B05 | Prototype | Clicking the meaningful change on S-10 opens S-11, which shows prev → curr, delta, observed-at and the before/after snapshot text with the price highlighted. | UC-05, S-10, S-11 | supabase, frontend-design | 0.3 h | B04 | — | todo |
@@ -83,7 +83,7 @@
 - **Notes:** Keep stubs as one shared <StubPage> component; don't build real screens here.
 
 ### B02 — Walking skeleton: web ↔ deployed API
-- **Status:** todo
+- **Status:** done
 - **Goal:** S-03 Home on the public URL lists profile cards fetched from the deployed FastAPI service.
 - **Why now:** Proves Vercel → Render CORS, env vars and the API contract before any real logic; also starts the Render cold-start clock early.
 - **Slice:** UC UC-13 · Screens S-03 · Components C-01, C-03, C-24
@@ -383,3 +383,4 @@ Work one step at a time: paste the step's prompt into the coding agent, finish w
 - 2026-10-23: Initial plan (16:35 IST): 14 prototype steps, 3 described MVP steps; deploy-first; freeze 20:15.
 - 2026-10-23: Source labels tell agents to read docs by section (token budget, SKILL-PLAYBOOK.md).
 - 2026-10-23: B01 done: frontend live at https://rivallens-eight.vercel.app (rivallens.vercel.app is taken by another project).
+- 2026-10-23: B02 done: API live at https://rivallens-api.onrender.com (Render srv-dbdk8n6i0phs73a3k6mg, Singapore, Free); S-03 reads profiles from it.
