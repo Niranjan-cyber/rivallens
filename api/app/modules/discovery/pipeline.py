@@ -110,7 +110,7 @@ def discover(job: Job, profile_id: UUID) -> dict:
                             "instruction": "Competitors that sell to customers in India. At least 6 of the 10 must be companies headquartered in "
                                            "India that price in rupees (₹), the rest global companies with Indian regions or INR pricing. "
                                            "Use each company's exact website domain. Queries should find Indian providers."},
-                            "discovery_candidates.v3")
+                            "discovery_candidates.v3", cache_if=lambda out: bool(out.candidates))
     except LLMUnavailable:
         gen = Candidates(queries=[f"{ctext[:80]} India"], candidates=[])
     job.step("generate_candidates", "done", len(gen.candidates), f"{len(gen.candidates)} suggested")
@@ -148,7 +148,7 @@ def discover(job: Job, profile_id: UUID) -> dict:
             labels = complete_json("classify_competitors", Labels, {"card": ctext, "competitors": json.dumps(
                 [{"name": c["name"], "domain": c["domain"]} for c in ok]),
                 "instruction": "comparable = sells a similar offering to similar customers; inspiration = adjacent or much larger."},
-                "classify_competitors.v1")
+                "classify_competitors.v1", cache_if=lambda out: bool(out.labels))
             relation = {registrable_domain(lab.domain): (lab.relation, lab.reason) for lab in labels.labels}
         except LLMUnavailable:
             pass

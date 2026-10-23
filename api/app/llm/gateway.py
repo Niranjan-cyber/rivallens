@@ -94,7 +94,9 @@ def _cache_put(key: str, task: str, provider: str, model: str, data: dict) -> No
                      {"k": key, "t": task, "p": provider, "m": model, "v": key.split(":")[0], "r": json.dumps(data)})
 
 
-def complete_json(task: str, schema: type[BaseModel], prompt_vars: dict, prompt_version: str = "v1", max_input_chars: int = 12000):
+def complete_json(task: str, schema: type[BaseModel], prompt_vars: dict, prompt_version: str = "v1", max_input_chars: int = 12000,
+                  cache_if=lambda out: True):
+    """cache_if: answers failing it (e.g. an empty candidate list) are neither stored nor served from the cache."""
     user = "\n\n".join(f"{k}:\n{str(v)[:max_input_chars]}" for k, v in prompt_vars.items())
     key = f"{prompt_version}:" + hashlib.sha256(f"{task}|{prompt_version}|{user}".encode()).hexdigest()
     fixture = FIXTURES / f"{task}-{key[-16:]}.json"
@@ -102,7 +104,7 @@ def complete_json(task: str, schema: type[BaseModel], prompt_vars: dict, prompt_
     cached = _cache_get(key)
     if cached is None and LLM_MODE == "replay" and fixture.exists():
         cached = json.loads(fixture.read_text(encoding="utf-8"))
-    if cached is not None:
+    if cached is not None and cache_if(schema.model_validate(cached)):
         log.info("llm cache hit task=%s key=%s", task, key[-16:])
         return schema.model_validate(cached)
     if LLM_MODE == "replay":
@@ -121,7 +123,8 @@ def complete_json(task: str, schema: type[BaseModel], prompt_vars: dict, prompt_
             log.warning("llm %s failed for %s: %s", provider, task, str(e)[:120])
             continue
         data = out.model_dump(mode="json")
-        _cache_put(key, task, provider, MODELS[provider], data)
+        if cache_if(out):
+            _cache_put(key, task, provider, MODELS[provider], data)
         if LLM_MODE == "record":
             fixture.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
         log.info("llm provider call task=%s provider=%s", task, provider)

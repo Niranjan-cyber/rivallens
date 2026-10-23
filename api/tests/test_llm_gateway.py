@@ -78,3 +78,12 @@ def test_draft_card_replays_the_recorded_gemini_answer(monkeypatch):
     d = draft_card("business", "Pune startup, managed app deployment for Indian developers, Pro ₹999/mo", None)
     assert (d["offering_type"], d["price"]["amount"], d["price"]["currency"], d["price"]["period"]) == ("service", 999.0, "INR", "month")
     assert "Pune" in d["india_markets"]
+
+
+def test_answers_failing_cache_if_are_not_cached(world):
+    cache, calls, script = world
+    script["gemini"] += ['{"name": "", "amount": null}', '{"name": "Real", "amount": 1}']
+    keep = lambda out: bool(out.name)  # noqa: E731
+    assert complete_json("t", Out, {"text": "e"}, cache_if=keep).name == ""
+    assert complete_json("t", Out, {"text": "e"}, cache_if=keep).name == "Real"  # the empty answer wasn't reused
+    assert calls == ["gemini", "gemini"]
