@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { RivalMoney } from "@/components/rival-money";
 import { api } from "@/lib/api";
 
 type Month = { month: string; revenue: number; expenses: number };
@@ -91,6 +92,8 @@ export function MoneyDashboard({ profileId }: { profileId: string }) {
       </div>
 
       {m.months.length > 0 && <Chart months={m.months} />}
+
+      <RivalMoney profileId={profileId} />
 
       {m.products.length > 0 && (
         <Block title="Product prices and sales">

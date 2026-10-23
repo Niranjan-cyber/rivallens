@@ -268,6 +268,13 @@ def product_comparison(product_id: UUID, user: UserDep, conn: ConnDep) -> dict:
         if r["price"] is not None:
             b["min"] = min(x for x in (b["min"], float(r["price"])) if x is not None)
             b["max"] = max(x for x in (b["max"], float(r["price"])) if x is not None)
+    from app.modules.money.router import facts_for  # B14f: each brand's reported revenue, cited
+    revenue = {}
+    for f in facts_for(conn, [b["brand"] for b in brands.values()]):
+        if f["kind"] == "revenue":
+            revenue.setdefault(f["company"].lower(), f)
+    for b in brands.values():
+        b["revenue"] = revenue.get(b["brand"].lower())
     rows.sort(key=lambda r: (not r["same_niche"], r["price"] is None, r["price"] or 0))
     return {"product": Product(**p).model_dump(mode="json"), "basis": "niche" if basis is niche_rows else "category",
             "position": pos, "rows": rows, "premium": premium, "brands": sorted(brands.values(), key=lambda b: -b["products"])}

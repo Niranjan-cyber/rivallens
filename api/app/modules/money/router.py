@@ -4,12 +4,14 @@ from datetime import date
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import Connection, text
 
+from app import jobs
 from app.auth import UserDep
 from app.db import ConnDep
+from app.modules.money.facts import find_job
 from app.modules.money.service import benchmark, industries, metrics, parse_table, suggest_mapping, to_transactions
 from app.modules.products.taxonomy import tokens
 
@@ -137,3 +139,63 @@ def get_money(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict:
         from transactions where profile_id = :p group by source order by source"""), {"p": profile_id}).mappings()]
     out["industries"] = industries()
     return out
+
+
+# ---- B14f: competitors' reported revenue and funding, cited ----
+
+def rival_names(conn: Connection, profile_id: UUID) -> list[str]:
+    """The business's competitors plus the brands most often seen in its products' categories."""
+    names = [r[0] for r in conn.execute(text("select name from competitors where profile_id = :p and selected and not is_demo_data"), {"p": profile_id})]
+    names += [r[0] for r in conn.execute(text("""
+        select mp.brand from market_products mp join products pr on pr.taxonomy_id = mp.taxonomy_id
+        where pr.profile_id = :p and mp.brand is not null group by mp.brand order by count(*) desc limit 6"""), {"p": profile_id})]
+    return list(dict.fromkeys(n.strip() for n in names if n and n.strip()))[:8]
+
+
+def facts_for(conn: Connection, names: list[str]) -> list[dict]:
+    if not names:
+        return []
+    return [dict(r) | {"amount_inr": float(r["amount_inr"]), "observed_at": r["observed_at"].isoformat()} for r in conn.execute(text("""
+        select company, kind, amount_inr, period, round, event_date, quote, source_url, source_title, added_by_user, observed_at
+        from money_facts where lower(company) = any(:n) order by company, kind, observed_at desc"""), {"n": [n.lower() for n in names]}).mappings()]
+
+
+@router.get("/profiles/{profile_id}/money/rivals")
+def rival_money(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict:
+    _own(conn, profile_id, user.id)
+    names = rival_names(conn, profile_id)
+    return {"companies": names, "facts": facts_for(conn, names)}
+
+
+class RivalsIn(BaseModel):
+    companies: list[str] = Field(default_factory=list, max_length=8)
+
+
+@router.post("/profiles/{profile_id}/money/rivals/find", status_code=202)
+def find_rival_money(profile_id: UUID, body: RivalsIn, user: UserDep, conn: ConnDep, background: BackgroundTasks) -> dict:
+    _own(conn, profile_id, user.id)
+    names = [c.strip()[:80] for c in body.companies if c.strip()] or rival_names(conn, profile_id)
+    if not names:
+        raise HTTPException(409, {"code": "no_companies", "message": "Add competitors or products first, or type a company name."})
+    job_id = jobs.create(user.id, profile_id, "money_facts")
+    background.add_task(jobs.run, job_id, lambda job: find_job(job, profile_id, names))
+    return {"job_id": job_id, "status": "queued", "companies": names}
+
+
+class FactIn(BaseModel):
+    company: str = Field(min_length=1, max_length=80)
+    kind: Literal["revenue", "profit", "funding"]
+    amount_inr: float = Field(gt=0)
+    period: str | None = Field(None, max_length=30)
+    source_url: str = Field(min_length=8, max_length=500)
+    quote: str | None = Field(None, max_length=300)
+
+
+@router.post("/profiles/{profile_id}/money/rivals/facts", status_code=201)
+def add_rival_fact(profile_id: UUID, body: FactIn, user: UserDep, conn: ConnDep) -> dict:
+    """Manual entry still needs a source link; it's shown as 'added by you'."""
+    _own(conn, profile_id, user.id)
+    conn.execute(text("""insert into money_facts (company, kind, amount_inr, period, quote, source_url, added_by_user)
+                         values (:company, :kind, :amount_inr, :period, :quote, :source_url, true) on conflict do nothing"""),
+                 body.model_dump() | {"quote": body.quote or "Entered by the user"})
+    return {"ok": True}

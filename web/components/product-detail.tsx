@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { inr } from "@/components/money";
 import { rupees } from "@/components/products";
 import { api, type Job, type Product } from "@/lib/api";
 
@@ -10,7 +11,7 @@ type Row = {
   rating: number | null; review_count: number | null; features: string[]; observed_at: string; same_niche: boolean;
 };
 type Position = { n: number; median: number | null; min: number | null; max: number | null; q75: number | null; pct_vs_median: number | null; rank: number | null };
-type Comparison = { product: Product; basis: "niche" | "category"; position: Position; rows: Row[]; premium: Row[]; brands: { brand: string; products: number; min: number | null; max: number | null }[] };
+type Comparison = { product: Product; basis: "niche" | "category"; position: Position; rows: Row[]; premium: Row[]; brands: { brand: string; products: number; min: number | null; max: number | null; revenue: { amount_inr: number; period: string | null; source_url: string; quote: string } | null }[] };
 
 const date = (ts: string) => new Date(ts).toLocaleDateString("en-IN", { dateStyle: "medium" });
 const input = "w-full rounded-[14px] border border-ink/30 bg-white px-4 py-2.5 text-[16px] focus:border-ink focus:outline-none";
@@ -162,6 +163,9 @@ export function ProductDetail() {
             <li key={b.brand} className="rounded-stadium bg-lifted p-6">
               <p className="text-[17px] font-medium">{b.brand}</p>
               <p className="text-[15px] text-charcoal">{b.products} product{b.products > 1 ? "s" : ""} in this category{b.min != null ? `, ${rupees(b.min)}${b.max !== b.min ? `–${rupees(b.max)}` : ""}` : ""}</p>
+              <p className="mt-1 text-[14px]">
+                Revenue: {b.revenue ? <a className="underline" href={b.revenue.source_url} target="_blank" rel="noreferrer">{inr(b.revenue.amount_inr)}{b.revenue.period ? ` (${b.revenue.period})` : ""}</a> : <span className="text-slate">Unknown (find it on Money)</span>}
+              </p>
             </li>
           ))}
         </ul>
