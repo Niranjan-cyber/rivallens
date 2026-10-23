@@ -134,7 +134,7 @@ flowchart LR
   FIND --> SAME{Same taxonomy id? ✅}
   SAME -- yes --> CMP[Compare ✅<br/>price position vs median,<br/>features, premium, brand ranges]
   SAME -- no --> DROP[Not compared<br/>says which category it is in]
-  MO[Money 🛠<br/>CSV / Excel / manual] --> MM[Margin vs Damodaran India,<br/>runway 🛠]
+  MO[Money ✅<br/>CSV / Excel / manual] --> MM[Margin vs Damodaran India,<br/>runway ✅]
   CU[Customers 🛠<br/>reviews, mentions, insight CSVs] --> CS[Sentiment + top requests 🛠]
   CMP --> SEG[Customer segment + simulator 🛠]
   MM --> SEG
@@ -189,7 +189,7 @@ flowchart TB
     ON[Sign-in → onboarding → business card ✅]
     OV[Overview ✅]
     D1[Product ✅]
-    D2[Money 🛠]
+    D2[Money ✅]
     D3[Market ✅]
     D4[Customers 🛠]
   end
@@ -197,7 +197,7 @@ flowchart TB
     PRD[products ✅<br/>taxonomy · classify · market comparables]
     MKT[collector · extractor · changes · alerts ·<br/>discovery · comparison · reports ✅]
     SIM[simulator ✅<br/>re-plans on receipts]
-    MON[money 🛠]
+    MON[money ✅]
     CUS[customers 🛠]
     JOB[jobs table + background work ✅]
     GW[LLM gateway ✅<br/>cache · fallback · replay]
@@ -212,7 +212,7 @@ flowchart TB
     TAV[Tavily search ✅]
     LLMs[Gemini → Groq ✅]
     MAIL[Resend email ✅]
-    REF[Reference data<br/>Google taxonomy ✅ · Damodaran India 🛠]
+    REF[Reference data<br/>Google taxonomy ✅ · Damodaran India ✅]
   end
   U --> Web
   Web -- JWT --> API
@@ -249,7 +249,7 @@ Layout note:
 |---|---|---|
 | Overview | profiles | profiles |
 | Product ✅ | products (taxonomy, classify, market), simulator | products, market_products, simulations |
-| Money 🛠 | money | transactions, money_facts |
+| Money ✅ | money | transactions, money_settings |
 | Market ✅ | collector, extractor, changes, alerts, discovery, comparison, reports | competitors, sources, snapshots, observations, change_events, alerts, reports |
 | Customers 🛠 | customers | customer_mentions |
 
@@ -314,7 +314,8 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 | ✅ Built and live | 🛠 Planned (in build) |
 |---|---|
 | Email sign-up with confirmation link, Google button, guest demo | Google sign-in switched on (provider setup) |
-| Onboarding form → AI-drafted business card → Overview | Money: CSV/Excel/manual transactions, margin vs Damodaran India benchmark, runway |
+| Onboarding form → AI-drafted business card → Overview | |
+| Money: CSV/Excel upload with column check, manual entries, revenue, margin vs Damodaran India benchmark, burn, runway, transaction log | |
 | Four-dashboard navigation (Product, Money, Market, Customers) | Competitors' revenue and funding from filings and news, cited |
 | Products (existing/new) in exact Google-taxonomy categories | Customers: uploads, own-site reviews, web mentions → sentiment and top requests |
 | Like-for-like comparison from real brand product pages: price position vs median, features, premium inspirations, brand ranges | Customer segment per product; simulator fed by Money, Market and Customers |
@@ -328,7 +329,7 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 | Competitor history timeline | |
 | Simulated price/feature change (Demo Lab) | |
 
-**Screenshot to add:** the product comparison (Stride Runner ₹1,999 vs 8 real running shoes from Puma and Brooks India, "56% below the median ₹4,499"). Take it from the live app, or use `docs/screenshots/s23-product-compare.png`.
+**Screenshots to add:** the Money dashboard (`docs/screenshots/s24-money.png`: runway 19.4 months, margin −23% vs 8.3% for Shoe in India) and the product comparison (Stride Runner ₹1,999 vs 8 real running shoes from Puma and Brooks India, "56% below the median ₹4,499"). Take it from the live app, or use `docs/screenshots/s23-product-compare.png`.
 
 > If the deck can be resubmitted at 08:00, move the items finished overnight into the left column and replace one screenshot with the Product dashboard.
 
