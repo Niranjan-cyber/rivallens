@@ -1,5 +1,8 @@
 """B14c products: existing and new products of a business, each in an exact category (UC-16, S-22)."""
 import json
+import logging
+import threading
+import time
 from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID
@@ -16,6 +19,7 @@ from app.modules.products.pages import product_from_html
 from app.modules.products.taxonomy import candidates, path_of
 
 router = APIRouter(prefix="/api/v1", tags=["products"])
+log = logging.getLogger(__name__)
 COLS = ("id, profile_id, name, stage, description, url, taxonomy_id, category_path, niche, category_source, price, currency, unit, "
         "unit_cost, features, add_ons, source, is_demo_data, created_at")
 Unit = Literal["one_time", "month", "year", "hour", "user"]
@@ -168,10 +172,17 @@ def search_taxonomy(q: str) -> list[dict]:
 
 
 def add_from_onboarding(profile_id) -> None:
-    """Background task after onboarding: one product row per 'main product' the user listed, each classified."""
-    import time
+    """After onboarding: one product row per 'main product' the user listed, each classified.
+
+    Runs on its own thread: FastAPI background tasks run before the request's transaction commits,
+    and an exception there would roll the new business back.
+    """
+    threading.Thread(target=_add_from_onboarding, args=(profile_id,), daemon=True).start()
+
+
+def _add_from_onboarding(profile_id) -> None:
     from app.db import engine
-    for _ in range(10):  # the request's transaction may still be committing
+    for _ in range(40):  # wait for the request's transaction to commit
         with engine.connect() as conn:
             if conn.execute(text("select 1 from profiles where id = :p"), {"p": profile_id}).first():
                 break
@@ -181,4 +192,7 @@ def add_from_onboarding(profile_id) -> None:
         names = (profile["card"].get("main_products") or {}).get("value") or []
         stage = "new" if profile["kind"] == "idea" else "existing"
         for name in names[:10]:
-            insert_product(conn, profile_id, profile, ProductIn(name=str(name)[:160], stage=stage))
+            try:
+                insert_product(conn, profile_id, profile, ProductIn(name=str(name)[:160], stage=stage))
+            except Exception:
+                log.exception("onboarding product %r failed", name)

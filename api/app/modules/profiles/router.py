@@ -92,14 +92,14 @@ def draft_profile(body: DraftIn, user: UserDep, background: BackgroundTasks) -> 
 
 
 @router.post("", status_code=201)
-def create_profile(body: ProfileIn, user: UserDep, conn: ConnDep, background: BackgroundTasks) -> Profile:
+def create_profile(body: ProfileIn, user: UserDep, conn: ConnDep) -> Profile:
     row = conn.execute(text("""
         insert into profiles (user_id, name, kind, offering_type, card) values (:u, :n, :k, :o, cast(:c as jsonb))
         returning id, name, kind, offering_type, card, is_demo_data, created_at
     """), {"u": user.id, "n": body.name, "k": body.kind, "o": body.offering_type, "c": json.dumps(body.card)}).mappings().one()
     conn.execute(text("insert into alert_rules (profile_id) values (:p) on conflict do nothing"), {"p": row["id"]})
     if (body.card.get("main_products") or {}).get("value"):
-        background.add_task(add_from_onboarding, row["id"])  # runs after this transaction commits
+        add_from_onboarding(row["id"])  # its own thread; waits for this transaction to commit
     return Profile(**row)
 
 
