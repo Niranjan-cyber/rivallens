@@ -896,7 +896,7 @@
       "id": "B12",
       "title": "Competitor history timeline",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "S-12 shows a competitor's dated history: current fields, a timeline of runs, receipts or failures, plus a price chart.",
       "why_now": "Covers UC-11 (historical tracking, a judging criterion) using data that already exists.",
