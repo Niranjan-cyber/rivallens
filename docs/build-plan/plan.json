@@ -1138,7 +1138,7 @@
       "id": "B14a",
       "title": "Real accounts: email and password",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "milestone": null,
       "goal": "A new user creates an account with email and password and is signed in straight away; each demo business has its own sign-in.",
       "why_now": "Everything after this belongs to a real account; the user asked for real sign-up first.",
