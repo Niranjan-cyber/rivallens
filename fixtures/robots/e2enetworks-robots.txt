@@ -1,0 +1,8 @@
+User-Agent: *
+Allow: /
+Allow: /api/og
+Allow: /api/og/gpu/
+Disallow: /api/
+Disallow: /thankyou
+
+Sitemap: https://www.e2enetworks.com/sitemap.xml

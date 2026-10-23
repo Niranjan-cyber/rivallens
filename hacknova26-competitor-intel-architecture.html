@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RivalLens (working name) architecture</title>
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --paper: #E9EEF1; --surface: #F8FAFB; --ink: #1D2B3A; --muted: #5B6B7A;
+  --rule: #C5D0D9; --wire: #8C9DAD; --hi: #C2185B; --hi-soft: rgba(194,24,91,.10);
+  --client: #2B7A78; --edge: #6B5B95; --service: #3B6EA5; --ai: #A8741A;
+  --data: #5E7D3A; --external: #737373; --infra: #8A5A44; --ops: #4F6D7A;
+  --font: "Avenir Next", "Segoe UI Variable", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #16212C; --surface: #1F2C39; --ink: #E4EAF0; --muted: #93A3B3;
+    --rule: #33475A; --wire: #5E7385; --hi: #F06292; --hi-soft: rgba(240,98,146,.14);
+    --client: #4FB3AE; --edge: #A394CC; --service: #6E9CD4; --ai: #D9A441;
+    --data: #8FB566; --external: #A0A0A0; --infra: #C08A70; --ops: #7FA2B0;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #16212C; --surface: #1F2C39; --ink: #E4EAF0; --muted: #93A3B3;
+  --rule: #33475A; --wire: #5E7385; --hi: #F06292; --hi-soft: rgba(240,98,146,.14);
+  --client: #4FB3AE; --edge: #A394CC; --service: #6E9CD4; --ai: #D9A441;
+  --data: #8FB566; --external: #A0A0A0; --infra: #C08A70; --ops: #7FA2B0;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.45; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--hi); outline-offset: 2px; }
+
+header { padding: 28px 28px 12px; max-width: 1400px; margin: 0 auto; }
+h1 { font-size: 30px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 4px; }
+.tagline { color: var(--muted); margin: 0; max-width: 70ch; }
+
+.controls { max-width: 1400px; margin: 0 auto; padding: 8px 28px 0; display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: flex-end; }
+.phases { display: flex; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.phases button { border: 0; background: none; padding: 10px 18px; cursor: pointer; display: flex; gap: 8px; align-items: baseline; border-right: 1px solid var(--rule); }
+.phases button:last-child { border-right: 0; }
+.phases button .n { color: var(--muted); font-size: 13px; }
+.phases button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.phases button[aria-pressed="true"] .n { color: inherit; opacity: .7; }
+.phase-summary { color: var(--muted); max-width: 60ch; margin: 0; flex: 1 1 280px; font-size: 14px; }
+.ghost-toggle { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 14px; cursor: pointer; }
+
+main { max-width: 1400px; margin: 0 auto; padding: 18px 28px 40px; display: grid; grid-template-columns: 220px minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+aside h2 { font-size: 14px; font-weight: 600; margin: 0 0 8px; color: var(--muted); }
+.uc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.uc-list button { width: 100%; text-align: left; background: none; border: 1px solid transparent; border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+.uc-list button:hover { border-color: var(--rule); }
+.uc-list button[aria-pressed="true"] { border-color: var(--hi); background: var(--hi-soft); }
+.uc-list button[disabled] { opacity: .45; cursor: not-allowed; }
+.uc-id { font-size: 12px; color: var(--muted); display: block; }
+
+.board-wrap { overflow-x: auto; }
+.board { position: relative; min-width: 560px; }
+svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.band { display: grid; grid-template-columns: 92px 1fr; border-top: 1px solid var(--rule); min-height: 96px; }
+.band:last-child { border-bottom: 1px solid var(--rule); }
+.band-label { padding: 12px 8px 12px 10px; font-size: 13px; font-weight: 600; border-left: 4px solid var(--c); color: var(--c); }
+.band-cards { display: flex; flex-wrap: wrap; gap: 18px 28px; padding: 14px 10px; align-items: center; }
+.card { position: relative; z-index: 1; width: 168px; background: var(--surface); border: 1px solid var(--rule); border-top: 3px solid var(--c); border-radius: 6px; padding: 8px 10px; text-align: left; cursor: pointer; transition: opacity .2s; }
+.card .cid { font-size: 11px; color: var(--muted); }
+.card .cname { font-weight: 600; display: block; line-height: 1.25; }
+.card .ctech { font-size: 12px; color: var(--muted); display: block; margin-top: 2px; }
+.card.absent { border-style: dashed; border-top-style: dashed; opacity: .38; }
+.card.hidden { display: none; }
+.card.dim { opacity: .3; }
+.card.on-path { box-shadow: 0 0 0 2px var(--hi); }
+.card[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
+.step { position: absolute; top: -10px; right: -10px; background: var(--hi); color: #fff; font-size: 11px; border-radius: 999px; min-width: 20px; height: 20px; display: grid; place-items: center; padding: 0 5px; }
+
+.wire { fill: none; stroke: var(--wire); stroke-width: 1.4; transition: opacity .2s; }
+.wire.dim { opacity: .15; }
+.wire.on-path { stroke: var(--hi); stroke-width: 2.4; }
+.wire-label { font-size: 10.5px; fill: var(--muted); paint-order: stroke; stroke: var(--paper); stroke-width: 3px; }
+.wire-label.on-path { fill: var(--hi); }
+
+.detail { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; position: sticky; top: calc(12px + env(safe-area-inset-top, 0px)); }
+.detail h3 { margin: 0 0 2px; font-size: 18px; }
+.detail .meta { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+.detail dl { margin: 0; display: grid; gap: 8px; }
+.detail dt { font-size: 12px; color: var(--muted); }
+.detail dd { margin: 0; }
+.detail .empty { color: var(--muted); margin: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { border: 1px solid var(--rule); border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+.chip.off { opacity: .45; text-decoration: line-through; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); margin-top: 14px; }
+.legend span::before { content: ""; display: inline-block; width: 18px; height: 0; border-top: 1px dashed var(--muted); vertical-align: middle; margin-right: 6px; }
+
+@media (max-width: 1080px) {
+  main { grid-template-columns: minmax(0, 1fr); }
+  .uc-list { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .detail { position: static; }
+}
+@media (max-width: 600px) {
+  header, .controls, main { padding-left: 14px; padding-right: 14px; }
+  h1 { font-size: 24px; }
+  .phases button { padding: 9px 12px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <p class="tagline" id="tagline"></p>
+</header>
+<div class="controls">
+  <div class="phases" role="group" aria-label="Phase" id="phases"></div>
+  <p class="phase-summary" id="phase-summary"></p>
+  <label class="ghost-toggle"><input type="checkbox" id="ghosts" checked> Show components from later phases</label>
+</div>
+<main>
+  <aside>
+    <h2>Use cases</h2>
+    <ul class="uc-list" id="ucs"></ul>
+  </aside>
+  <div class="board-wrap">
+    <div class="board" id="board">
+      <svg class="wires" id="wires" aria-hidden="true"></svg>
+    </div>
+    <div class="legend"><span>Dashed box: arrives in a later phase</span></div>
+  </div>
+  <aside class="detail" id="detail" aria-live="polite">
+    <p class="empty">Select a component to see what it does, its technology, and how it changes across phases. Select a use case to trace its path.</p>
+  </aside>
+</main>
+<script>
+const DATA = {"project": {"name": "RivalLens (working name)", "tagline": "Discovers Indian-market competitors, monitors their public pages, filters noise, proves real changes with receipts, and re-plans your launch."}, "phases": [{"id": "P1", "name": "Prototype", "summary": "Tonight's build. Next.js on Vercel + FastAPI on Render Free + Supabase Free. Real auth with anonymous guest clone; button-triggered monitoring; simulated changes only on fictional mock pages; seeded profiles labelled demo data; email only to the owner's address; keep-warm pinger."}, {"id": "P2", "name": "MVP", "summary": "Described only. Render Starter (no sleep), Render Cron for scheduled monitoring, verified email domain, Sentry, tests in CI with recorded LLM responses, Wayback Save Page Now on changes."}, {"id": "P3", "name": "Production", "summary": "Described only. Redis + RQ worker incl. Playwright for JS pages, staging + prod, Supabase Pro in Mumbai, RLS everywhere, dashboards, source-permission registry."}], "components": [{"id": "C-01", "name": "Web app", "layer": "client", "tech": "Next.js 15 + TS + Tailwind + shadcn/ui on Vercel", "responsibility": "Screens S-01 to S-18, Supabase session, job polling, print-to-PDF", "serves": ["UC-01", "UC-02", "UC-03", "UC-04", "UC-05", "UC-06", "UC-07", "UC-08", "UC-09", "UC-10", "UC-11", "UC-12", "UC-13"], "phases": ["P1", "P2", "P3"], "phase_notes": {"P3": "Vercel Pro with preview deployments for staging"}}, {"id": "C-02", "name": "Mock competitor site", "layer": "client", "tech": "Next.js dynamic route /mock/[instance]/[slug], no-store", "responsibility": "Fictional pricing pages per user instance, versioned by Demo Lab, Demo data ribbon", "serves": ["UC-10", "UC-04"], "phases": ["P1", "P2", "P3"]}, {"id": "C-03", "name": "API service", "layer": "service", "tech": "FastAPI + SQLAlchemy + psycopg on Render Singapore", "responsibility": "REST /api/v1, JWT verification, user scoping, background jobs and job table", "serves": ["UC-01", "UC-02", "UC-03", "UC-04", "UC-05", "UC-06", "UC-07", "UC-08", "UC-09", "UC-10", "UC-11", "UC-12", "UC-13", "NFR-security"], "phases": ["P1", "P2", "P3"], "phase_notes": {"P1": "Render Free, sleeps after 15 min, BackgroundTasks", "P2": "Render Starter, no sleep", "P3": "Stateless, jobs moved to C-26 worker"}}, {"id": "C-04", "name": "Profile and card drafting", "layer": "service", "tech": "Module in C-03", "responsibility": "Profiles CRUD, LLM-drafted Business or Idea Card with field origins", "serves": ["UC-02", "UC-13"], "phases": ["P1", "P2", "P3"]}, {"id": "C-05", "name": "Discovery engine", "layer": "service", "tech": "Module in C-03, Tavily, TF-IDF", "responsibility": "LLM candidates + search, verify robots and India signals, rank, find pricing pages, classify", "serves": ["UC-03"], "phases": ["P1", "P2", "P3"]}, {"id": "C-06", "name": "Collector", "layer": "service", "tech": "httpx, robotparser, selectolax", "responsibility": "Polite fetch with robots and SSRF guard, store gz snapshot and sectioned text", "serves": ["UC-04", "UC-03", "NFR-compliance"], "phases": ["P1", "P2", "P3"], "phase_notes": {"P3": "Playwright path for JS pages via worker"}}, {"id": "C-07", "name": "Extractor", "layer": "ai", "tech": "Rules-first + LLM on changed sections", "responsibility": "Section hashing, scoped price regex, structured extraction of plans, prices, features, headline", "serves": ["UC-04", "UC-11"], "phases": ["P1", "P2", "P3"]}, {"id": "C-08", "name": "Change detector and receipts", "layer": "service", "tech": "Module in C-03", "responsibility": "Field diff, noise ledger rules, suspicious checks, Change Receipts with excerpt offsets and Wayback link", "serves": ["UC-04", "UC-05", "UC-11"], "phases": ["P1", "P2", "P3"], "phase_notes": {"P2": "Adds Save Page Now archiving on meaningful changes"}}, {"id": "C-09", "name": "Prioritizer and alerts", "layer": "service", "tech": "Module in C-03 + Resend", "responsibility": "Explainable priority score, rules, dedupe, bell feed, email", "serves": ["UC-08", "UC-12"], "phases": ["P1", "P2", "P3"], "phase_notes": {"P1": "Email only to owner address via onboarding sender", "P2": "Verified domain sender"}}, {"id": "C-10", "name": "Comparison engine", "layer": "service", "tech": "Module in C-03", "responsibility": "Product or service criteria templates, weights, unknown-aware score, INR normalization", "serves": ["UC-06"], "phases": ["P1", "P2", "P3"]}, {"id": "C-11", "name": "Launch simulator", "layer": "service", "tech": "Pure Python deterministic model", "responsibility": "3 proposed options + user option, best expected worst, re-plan on receipts, viability flags", "serves": ["UC-07", "UC-14"], "phases": ["P1", "P2", "P3"]}, {"id": "C-12", "name": "Report builder", "layer": "service", "tech": "Module in C-03 + LLM summary", "responsibility": "Evidence-linked claims, AI suggestions citing claims, limitations", "serves": ["UC-09"], "phases": ["P1", "P2", "P3"]}, {"id": "C-13", "name": "Demo Lab and seeds", "layer": "service", "tech": "Module in C-03", "responsibility": "Mock instance scenarios, reset, guest clone of seeded profiles", "serves": ["UC-10", "UC-01"], "phases": ["P1", "P2", "P3"]}, {"id": "C-14", "name": "LLM gateway", "layer": "ai", "tech": "google-genai + groq SDKs, Postgres cache, token buckets", "responsibility": "Gemini primary, Groq fallback, JSON schema validation, global cache, replay mode", "serves": ["UC-02", "UC-03", "UC-04", "UC-09", "NFR-cost"], "phases": ["P1", "P2", "P3"]}, {"id": "C-15", "name": "Postgres", "layer": "data", "tech": "Supabase Postgres via session pooler", "responsibility": "All relational data", "serves": ["UC-01", "UC-02", "UC-03", "UC-04", "UC-05", "UC-06", "UC-07", "UC-08", "UC-09", "UC-10", "UC-11", "UC-12", "UC-13"], "phases": ["P1", "P2", "P3"], "phase_notes": {"P3": "Supabase Pro Mumbai, RLS, PITR"}}, {"id": "C-16", "name": "Object storage", "layer": "data", "tech": "Supabase Storage private bucket snapshots", "responsibility": "Immutable gzip raw HTML snapshots, signed URLs", "serves": ["UC-05", "NFR-evidence"], "phases": ["P1", "P2", "P3"]}, {"id": "C-17", "name": "Auth", "layer": "data", "tech": "Supabase Auth email password + anonymous", "responsibility": "Sign-up, login, guest sessions, JWT", "serves": ["UC-01"], "phases": ["P1", "P2", "P3"]}, {"id": "C-18", "name": "Tavily Search", "layer": "external", "tech": "Tavily API basic search", "responsibility": "Discovery search queries", "serves": ["UC-03"], "phases": ["P1", "P2", "P3"]}, {"id": "C-19", "name": "Gemini API", "layer": "external", "tech": "Flash-class free model", "responsibility": "Primary LLM", "serves": ["UC-02", "UC-03", "UC-04", "UC-09"], "phases": ["P1", "P2", "P3"]}, {"id": "C-20", "name": "Groq API", "layer": "external", "tech": "Llama 3.3 70B class", "responsibility": "Fallback LLM", "serves": ["UC-02", "UC-03", "UC-04", "UC-09"], "phases": ["P1", "P2", "P3"]}, {"id": "C-21", "name": "Resend", "layer": "external", "tech": "Resend email API", "responsibility": "Alert emails", "serves": ["UC-08"], "phases": ["P1", "P2", "P3"]}, {"id": "C-22", "name": "Internet Archive", "layer": "external", "tech": "Wayback CDX, Save Page Now in P2", "responsibility": "Permalinks and history backfill", "serves": ["UC-05", "UC-11"], "phases": ["P1", "P2", "P3"]}, {"id": "C-23", "name": "Competitor websites", "layer": "external", "tech": "Public HTTP pages", "responsibility": "Monitored sources", "serves": ["UC-03", "UC-04"], "phases": ["P1", "P2", "P3"]}, {"id": "C-24", "name": "CI/CD", "layer": "infra", "tech": "GitHub + Vercel Git + Render auto-deploy", "responsibility": "Push to main deploys both apps; P2 adds tests in GitHub Actions", "serves": ["NFR-delivery"], "phases": ["P1", "P2", "P3"]}, {"id": "C-25", "name": "Keep-warm pinger", "layer": "infra", "tech": "cron-job.org or GitHub Actions schedule", "responsibility": "Ping /healthz every 10 min so Render Free stays awake", "serves": ["NFR-latency"], "phases": ["P1", "P2"], "phase_notes": {"P2": "Only until Render Starter is enabled"}}, {"id": "C-26", "name": "Worker and scheduler", "layer": "service", "tech": "P2 Render Cron; P3 Redis + RQ workers with Playwright", "responsibility": "Scheduled monitoring and queued jobs off the request path", "serves": ["UC-04", "NFR-reliability"], "phases": ["P2", "P3"], "phase_notes": {"P2": "Render Cron calls internal monitor-due endpoint", "P3": "RQ worker executes all jobs"}}, {"id": "C-27", "name": "Observability", "layer": "ops", "tech": "Sentry + logs; P3 dashboards", "responsibility": "Errors, uptime, usage and failure metrics", "serves": ["NFR-observability"], "phases": ["P2", "P3"]}], "connections": [{"from": "C-01", "to": "C-17", "label": "auth session", "phases": ["P1", "P2", "P3"]}, {"from": "C-01", "to": "C-03", "label": "REST JSON bearer JWT", "phases": ["P1", "P2", "P3"]}, {"from": "C-02", "to": "C-15", "label": "read mock state view", "phases": ["P1", "P2", "P3"]}, {"from": "C-03", "to": "C-04", "label": "in-process", "phases": ["P1", "P2", "P3"]}, {"from": "C-03", "to": "C-05", "label": "job", "phases": ["P1", "P2", "P3"]}, {"from": "C-03", "to": "C-06", "label": "job", "phases": ["P1", "P2", "P3"]}, {"from": "C-03", "to": "C-10", "label": "in-process", "phases": ["P1", "P2", "P3"]}, {"from": "C-03", "to": "C-11", "label": "in-process", "phases": ["P1", "P2", "P3"]}, {"from": "C-03", "to": "C-12", "label": "job", "phases": ["P1", "P2", "P3"]}, {"from": "C-03", "to": "C-13", "label": "in-process", "phases": ["P1", "P2", "P3"]}, {"from": "C-03", "to": "C-17", "label": "verify JWT via JWKS", "phases": ["P1", "P2", "P3"]}, {"from": "C-03", "to": "C-15", "label": "SQL", "phases": ["P1", "P2", "P3"]}, {"from": "C-04", "to": "C-14", "label": "draft_card", "phases": ["P1", "P2", "P3"]}, {"from": "C-04", "to": "C-06", "label": "homepage fetch", "phases": ["P1", "P2", "P3"]}, {"from": "C-05", "to": "C-14", "label": "candidates, classify", "phases": ["P1", "P2", "P3"]}, {"from": "C-05", "to": "C-18", "label": "search", "phases": ["P1", "P2", "P3"]}, {"from": "C-05", "to": "C-06", "label": "verify fetch", "phases": ["P1", "P2", "P3"]}, {"from": "C-06", "to": "C-23", "label": "HTTP GET robots respected", "phases": ["P1", "P2", "P3"]}, {"from": "C-06", "to": "C-02", "label": "HTTP GET mock pages", "phases": ["P1", "P2", "P3"]}, {"from": "C-06", "to": "C-16", "label": "store gz snapshot", "phases": ["P1", "P2", "P3"]}, {"from": "C-06", "to": "C-07", "label": "sections", "phases": ["P1", "P2", "P3"]}, {"from": "C-07", "to": "C-14", "label": "extract_pricing", "phases": ["P1", "P2", "P3"]}, {"from": "C-07", "to": "C-08", "label": "observation", "phases": ["P1", "P2", "P3"]}, {"from": "C-08", "to": "C-22", "label": "CDX lookup", "phases": ["P1", "P2", "P3"]}, {"from": "C-08", "to": "C-09", "label": "change events", "phases": ["P1", "P2", "P3"]}, {"from": "C-08", "to": "C-11", "label": "re-plan trigger", "phases": ["P1", "P2", "P3"]}, {"from": "C-09", "to": "C-21", "label": "email", "phases": ["P1", "P2", "P3"]}, {"from": "C-12", "to": "C-14", "label": "report_summary", "phases": ["P1", "P2", "P3"]}, {"from": "C-14", "to": "C-19", "label": "primary", "phases": ["P1", "P2", "P3"]}, {"from": "C-14", "to": "C-20", "label": "fallback", "phases": ["P1", "P2", "P3"]}, {"from": "C-14", "to": "C-15", "label": "llm_cache", "phases": ["P1", "P2", "P3"]}, {"from": "C-13", "to": "C-15", "label": "seeds, mock state", "phases": ["P1", "P2", "P3"]}, {"from": "C-24", "to": "C-01", "label": "deploy", "phases": ["P1", "P2", "P3"]}, {"from": "C-24", "to": "C-03", "label": "deploy", "phases": ["P1", "P2", "P3"]}, {"from": "C-25", "to": "C-03", "label": "GET healthz", "phases": ["P1", "P2"]}, {"from": "C-26", "to": "C-03", "label": "monitor-due or jobs", "phases": ["P2", "P3"]}, {"from": "C-27", "to": "C-03", "label": "errors, logs", "phases": ["P2", "P3"]}, {"from": "C-27", "to": "C-01", "label": "errors", "phases": ["P2", "P3"]}, {"from": "C-03", "to": "C-08", "label": "job", "phases": ["P1", "P2", "P3"]}, {"from": "C-03", "to": "C-09", "label": "in-process", "phases": ["P1", "P2", "P3"]}, {"from": "C-04", "to": "C-15", "label": "profiles", "phases": ["P1", "P2", "P3"]}, {"from": "C-08", "to": "C-15", "label": "receipts, ledger", "phases": ["P1", "P2", "P3"]}, {"from": "C-10", "to": "C-15", "label": "observations", "phases": ["P1", "P2", "P3"]}, {"from": "C-11", "to": "C-15", "label": "simulations", "phases": ["P1", "P2", "P3"]}, {"from": "C-09", "to": "C-15", "label": "alerts", "phases": ["P1", "P2", "P3"]}, {"from": "C-06", "to": "C-15", "label": "snapshots text", "phases": ["P1", "P2", "P3"]}], "use_cases": [{"id": "UC-01", "name": "Sign up, log in, or try the demo", "phase": "P1", "path": ["C-01", "C-17", "C-03", "C-13", "C-15"]}, {"id": "UC-02", "name": "Create a Business or Idea Card", "phase": "P1", "path": ["C-01", "C-03", "C-04", "C-14", "C-19"]}, {"id": "UC-03", "name": "Discover, review, confirm competitors", "phase": "P1", "path": ["C-01", "C-03", "C-05", "C-06", "C-23"]}, {"id": "UC-04", "name": "Run monitoring and noise ledger", "phase": "P1", "path": ["C-01", "C-03", "C-06", "C-07", "C-08", "C-09", "C-15"]}, {"id": "UC-05", "name": "Inspect a Change Receipt", "phase": "P1", "path": ["C-01", "C-03", "C-08", "C-22"]}, {"id": "UC-06", "name": "Compare on configurable criteria", "phase": "P1", "path": ["C-01", "C-03", "C-10", "C-15"]}, {"id": "UC-07", "name": "Launch simulator and re-plan", "phase": "P1", "path": ["C-01", "C-03", "C-11", "C-15"]}, {"id": "UC-08", "name": "Alerts bell, center, email", "phase": "P1", "path": ["C-03", "C-08", "C-09", "C-21"]}, {"id": "UC-09", "name": "Evidence report and PDF", "phase": "P1", "path": ["C-01", "C-03", "C-12", "C-14", "C-19"]}, {"id": "UC-10", "name": "Demo Lab scenarios", "phase": "P1", "path": ["C-01", "C-03", "C-13", "C-15", "C-02"]}, {"id": "UC-11", "name": "Competitor history and backfill", "phase": "P1", "path": ["C-01", "C-03", "C-08", "C-22"]}, {"id": "UC-12", "name": "Alert rules and sources", "phase": "P1", "path": ["C-01", "C-03", "C-09", "C-15"]}, {"id": "UC-13", "name": "Switch profiles", "phase": "P1", "path": ["C-01", "C-03", "C-04", "C-15"]}, {"id": "UC-14", "name": "Viability risk flags", "phase": "P1", "path": ["C-01", "C-03", "C-11", "C-15"]}]};
+const LAYERS = [
+  ["client", "Clients"], ["edge", "Edge and API"], ["service", "Services"], ["ai", "AI and ML"],
+  ["data", "Data"], ["external", "External"], ["infra", "Infra"], ["ops", "Ops"]
+];
+const phaseIds = DATA.phases.map(p => p.id);
+const comps = Object.fromEntries(DATA.components.map(c => [c.id, c]));
+let state = { phase: phaseIds[0], uc: null, sel: null, ghosts: true };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+const inPhase = (c, p) => (c.phases || []).includes(p);
+const phaseIdx = p => phaseIds.indexOf(p);
+
+$("title").textContent = DATA.project.name || "Architecture";
+$("tagline").textContent = DATA.project.tagline || "";
+
+// Phase switcher
+DATA.phases.forEach((p, i) => {
+  const b = document.createElement("button");
+  b.innerHTML = `<span class="n">${i + 1}</span><span>${esc(p.name)}</span>`;
+  b.onclick = () => { state.phase = p.id; if (state.uc) { const u = DATA.use_cases.find(x => x.id === state.uc); if (u && phaseIdx(u.phase) > phaseIdx(p.id)) state.uc = null; } render(); };
+  b.dataset.phase = p.id;
+  $("phases").appendChild(b);
+});
+$("ghosts").onchange = e => { state.ghosts = e.target.checked; render(); };
+
+// Use cases
+DATA.use_cases.forEach(u => {
+  const li = document.createElement("li");
+  const b = document.createElement("button");
+  b.dataset.uc = u.id;
+  b.innerHTML = `<span class="uc-id">${esc(u.id)}</span>${esc(u.name)}`;
+  b.onclick = () => { state.uc = state.uc === u.id ? null : u.id; render(); };
+  li.appendChild(b); $("ucs").appendChild(li);
+});
+
+// Bands and cards
+const board = $("board");
+LAYERS.forEach(([key, label]) => {
+  const list = DATA.components.filter(c => c.layer === key);
+  if (!list.length) return;
+  const band = document.createElement("section");
+  band.className = "band"; band.style.setProperty("--c", `var(--${key})`);
+  band.innerHTML = `<div class="band-label">${label}</div><div class="band-cards"></div>`;
+  const holder = band.querySelector(".band-cards");
+  list.forEach(c => {
+    const card = document.createElement("button");
+    card.className = "card"; card.id = "card-" + c.id; card.style.setProperty("--c", `var(--${key})`);
+    card.innerHTML = `<span class="cid">${esc(c.id)}</span><span class="cname">${esc(c.name)}</span><span class="ctech">${esc(c.tech)}</span>`;
+    card.onclick = () => { state.sel = state.sel === c.id ? null : c.id; render(); };
+    holder.appendChild(card);
+  });
+  board.appendChild(band);
+});
+
+function render() {
+  const P = state.phase;
+  document.querySelectorAll("#phases button").forEach(b => b.setAttribute("aria-pressed", b.dataset.phase === P));
+  const ph = DATA.phases.find(p => p.id === P);
+  $("phase-summary").textContent = ph ? ph.summary || "" : "";
+
+  const uc = state.uc ? DATA.use_cases.find(u => u.id === state.uc) : null;
+  const path = uc ? uc.path : [];
+  document.querySelectorAll("#ucs button").forEach(b => {
+    const u = DATA.use_cases.find(x => x.id === b.dataset.uc);
+    const later = phaseIdx(u.phase) > phaseIdx(P);
+    b.disabled = later; b.title = later ? `Arrives in ${DATA.phases[phaseIdx(u.phase)].name}` : "";
+    b.setAttribute("aria-pressed", b.dataset.uc === state.uc);
+  });
+
+  DATA.components.forEach(c => {
+    const card = $("card-" + c.id);
+    const present = inPhase(c, P);
+    card.classList.toggle("absent", !present);
+    card.classList.toggle("hidden", !present && !state.ghosts);
+    card.classList.toggle("on-path", path.includes(c.id));
+    card.classList.toggle("dim", !!uc && present && !path.includes(c.id));
+    card.setAttribute("aria-pressed", state.sel === c.id);
+    card.querySelector(".step")?.remove();
+    const steps = path.map((id, i) => id === c.id ? i + 1 : null).filter(Boolean);
+    if (steps.length) { const s = document.createElement("span"); s.className = "step"; s.textContent = steps.join(","); card.appendChild(s); }
+  });
+  // collapse empty bands
+  document.querySelectorAll(".band").forEach(b => {
+    const any = [...b.querySelectorAll(".card")].some(c => !c.classList.contains("hidden"));
+    b.style.display = any ? "" : "none";
+  });
+  drawWires(path);
+  renderDetail();
+}
+
+function drawWires(path) {
+  const svg = $("wires"), P = state.phase;
+  const box = board.getBoundingClientRect();
+  const pathPairs = new Set();
+  for (let i = 0; i < path.length - 1; i++) { pathPairs.add(path[i] + ">" + path[i + 1]); pathPairs.add(path[i + 1] + ">" + path[i]); }
+  let out = `<defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" fill="var(--wire)"/></marker>
+  <marker id="arrow-hi" viewBox="0 0 8 8" refX="7" refY="4" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" fill="var(--hi)"/></marker></defs>`;
+  const obstacles = [...board.querySelectorAll(".card:not(.hidden)")].map(el => {
+    const r = el.getBoundingClientRect();
+    return { id: el.id.slice(5), l: r.left - box.left - 6, r: r.right - box.left + 6, t: r.top - box.top - 6, b: r.bottom - box.top + 6 };
+  });
+  DATA.connections.forEach(e => {
+    if (!(e.phases || []).includes(P)) return;
+    const a = $("card-" + e.from), b = $("card-" + e.to);
+    if (!a || !b || a.classList.contains("hidden") || b.classList.contains("hidden")) return;
+    const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+    const ax = ra.left + ra.width / 2 - box.left, ay = ra.top + ra.height / 2 - box.top;
+    const bx = rb.left + rb.width / 2 - box.left, by = rb.top + rb.height / 2 - box.top;
+    // clip to card edges
+    const clip = (x, y, r, tx, ty) => {
+      const dx = tx - x, dy = ty - y, hw = r.width / 2 + 3, hh = r.height / 2 + 3;
+      const s = Math.min(Math.abs(dx) > 0 ? hw / Math.abs(dx) : 1e9, Math.abs(dy) > 0 ? hh / Math.abs(dy) : 1e9);
+      return [x + dx * s, y + dy * s];
+    };
+    const [x1, y1] = clip(ax, ay, ra, bx, by), [x2, y2] = clip(bx, by, rb, ax, ay);
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    // Bend around other cards: try a straight line, then curves to either side
+    const len = Math.hypot(x2 - x1, y2 - y1) || 1, nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
+    const hits = off => {
+      const cx = mx + nx * off, cy = my + ny * off; let n = 0;
+      for (let t = 0.08; t < 0.93; t += 0.05) {
+        const u = 1 - t, px = u * u * x1 + 2 * u * t * cx + t * t * x2, py = u * u * y1 + 2 * u * t * cy + t * t * y2;
+        for (const r of obstacles) if (r.id !== e.from && r.id !== e.to && px > r.l && px < r.r && py > r.t && py < r.b) { n++; break; }
+      }
+      return n;
+    };
+    let off = Math.abs(y2 - y1) < 8 ? -40 : 0, best = hits(off);
+    for (const o of [90, -90, 150, -150, 220, -220]) { if (best === 0) break; const h = hits(o); if (h < best) { best = h; off = o; } }
+    const cx = mx + nx * off, cy = my + ny * off;
+    const lx = 0.25 * x1 + 0.5 * cx + 0.25 * x2, ly = 0.25 * y1 + 0.5 * cy + 0.25 * y2;
+    const d = `M${x1},${y1} Q${cx},${cy} ${x2},${y2}`;
+    const on = pathPairs.has(e.from + ">" + e.to);
+    const dim = path.length && !on;
+    out += `<path class="wire${on ? " on-path" : ""}${dim ? " dim" : ""}" d="${d}" marker-end="url(#${on ? "arrow-hi" : "arrow"})"/>`;
+    if (e.label && (!path.length || on)) out += `<text class="wire-label${on ? " on-path" : ""}" x="${lx}" y="${ly - 4}" text-anchor="middle">${esc(e.label)}</text>`;
+  });
+  svg.innerHTML = out;
+}
+
+function renderDetail() {
+  const el = $("detail");
+  if (!state.sel) {
+    const uc = state.uc && DATA.use_cases.find(u => u.id === state.uc);
+    if (uc) {
+      el.innerHTML = `<h3>${esc(uc.name)}</h3><p class="meta">${esc(uc.id)}, works from ${esc(DATA.phases[phaseIdx(uc.phase)].name)}</p>
+      <dl><dt>Path</dt><dd><ol style="margin:0;padding-left:18px">${uc.path.map(id => `<li>${esc(comps[id]?.name || id)}</li>`).join("")}</ol></dd></dl>`;
+    } else {
+      el.innerHTML = `<p class="empty">Select a component to see what it does, its technology, and how it changes across phases. Select a use case to trace its path.</p>`;
+    }
+    return;
+  }
+  const c = comps[state.sel];
+  const notes = c.phase_notes || {};
+  const links = DATA.connections.filter(e => e.from === c.id || e.to === c.id);
+  el.innerHTML = `<h3>${esc(c.name)}</h3><p class="meta">${esc(c.id)}, ${esc((LAYERS.find(l => l[0] === c.layer) || [, c.layer])[1])}</p>
+  <dl>
+    <dt>Responsibility</dt><dd>${esc(c.responsibility)}</dd>
+    <dt>Technology</dt><dd>${esc(c.tech)}</dd>
+    <dt>Phases</dt><dd class="chips">${DATA.phases.map(p => `<span class="chip${inPhase(c, p.id) ? "" : " off"}">${esc(p.name)}</span>`).join("")}</dd>
+    ${Object.keys(notes).length ? `<dt>By phase</dt><dd>${DATA.phases.filter(p => notes[p.id]).map(p => `<div><strong>${esc(p.name)}:</strong> ${esc(notes[p.id])}</div>`).join("")}</dd>` : ""}
+    <dt>Serves</dt><dd class="chips">${(c.serves || []).map(s => `<span class="chip">${esc(s)}</span>`).join("") || "—"}</dd>
+    <dt>Connections</dt><dd>${links.map(e => `<div>${e.from === c.id ? "to" : "from"} ${esc(comps[e.from === c.id ? e.to : e.from].name)}${e.label ? `, ${esc(e.label)}` : ""}${(e.phases || []).includes(state.phase) ? "" : " (not in this phase)"}</div>`).join("") || "None"}</dd>
+  </dl>`;
+}
+
+let raf; window.addEventListener("resize", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => drawWires(state.uc ? DATA.use_cases.find(u => u.id === state.uc).path : [])); });
+new ResizeObserver(() => drawWires(state.uc ? DATA.use_cases.find(u => u.id === state.uc).path : [])).observe(board);
+render();
+</script>
+</body>
+</html>

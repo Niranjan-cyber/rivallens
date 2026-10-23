@@ -1,0 +1,38 @@
+# robots.txt for www.netlify.com
+#
+# Netlify welcomes AI agents and crawlers. Both traditional search engines and
+# AI crawlers are allowed full access. See /llms.txt for an agent-oriented index.
+
+User-agent: *
+Allow: /
+# Content signals — usage Netlify permits for crawled content.
+# https://github.com/ai-robots-txt/content-signals
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+
+# AI crawlers — explicitly welcomed as part of Netlify's agent-experience work.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+Sitemap: https://www.netlify.com/sitemap-index.xml
+
+# NLWeb Schema Map: the site's structured-data feeds (RSS).
+# https://github.com/nlweb-ai/website/blob/main/SCHEMA_SPEC.md
+schemamap: https://www.netlify.com/schemamap.xml

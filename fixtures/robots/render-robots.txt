@@ -1,0 +1,33 @@
+# Individual pages may still declare more restrictive per-page robots directives.
+User-Agent: *
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
+Allow: /
+Disallow: /contact-sales
+Disallow: /newsletters/
+Disallow: /lp/
+
+# Explicitly allow major AI crawlers to access public content while reserving
+# rights against AI training and AI input usage via Content Signals.
+User-Agent: GPTBot
+User-Agent: ChatGPT-User
+User-Agent: OAI-SearchBot
+User-Agent: ClaudeBot
+User-Agent: Claude-User
+User-Agent: Claude-SearchBot
+User-Agent: Claude-Web
+User-Agent: Google-Extended
+User-Agent: Amazonbot
+User-Agent: Bytespider
+User-Agent: CCBot
+User-Agent: PerplexityBot
+User-Agent: Applebot-Extended
+User-Agent: meta-externalagent
+User-Agent: GoogleOther
+User-Agent: cohere-ai
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
+Allow: /
+Disallow: /contact-sales
+Disallow: /newsletters/
+Disallow: /lp/
+
+Sitemap: https://render.com/sitemap-index.xml

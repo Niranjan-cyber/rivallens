@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /v1/login
+Disallow: /auth-error
+Disallow: /community/login
+Disallow: /community/register
+
+Sitemap: https://www.digitalocean.com/sitemap.xml

@@ -1,0 +1,21 @@
+User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+Disallow: /new
+Disallow: /project
+Disallow: /dashboard
+Disallow: /workspace
+Disallow: /account
+Disallow: /admin
+Disallow: /auth
+Disallow: /design
+Disallow: /graphiql
+Disallow: /preferences
+Disallow: /invite
+Disallow: /oauth
+Disallow: /activate
+Allow: /auth.md
+
+Sitemap: https://railway.com/sitemap.xml
+Sitemap: https://railway.com/changelog-sitemap.xml
+Sitemap: https://railway.com/templates-sitemap.xml
+Sitemap: https://railway.com/changelog/rss.xml

@@ -1,0 +1,26 @@
+User-Agent: *
+
+# Allow robots to be able to crawl the OG Image API route and all the subpaths
+Allow: /api/og/*
+Allow: /api/docs-og*
+Allow: /api/product-og*
+Allow: /api/dynamic-og*
+Allow: /api/model-og*
+Allow: /api/www/avatar/*
+
+Disallow:
+Disallow: /api/
+Disallow: /oauth
+Disallow: /confirm
+Disallow: /notifications
+Disallow: /old-browser.html
+Disallow: /preauthorize
+Disallow: /signup?*
+Disallow: /invites/
+# No-index author pages (direct URL only, also marked noindex/nofollow)
+Disallow: /blog/authors
+Disallow: /changelog/authors
+
+
+
+Sitemap: https://vercel.com/sitemap.xml

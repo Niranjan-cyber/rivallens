@@ -1,0 +1,11 @@
+{
+  "enabledPlugins": {
+    "band-peer@jam": false,
+    "design@knowledge-work-plugins": false
+  },
+  "permissions": {
+    "deny": [
+      "Read(./fixtures/pricing-pages/**)"
+    ]
+  }
+}

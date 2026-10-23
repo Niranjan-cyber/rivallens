@@ -1,0 +1,46 @@
+# Learnings and decisions log
+
+This log records **every decision and learning** in the order it was made, so we can explain the "why" to judges. Newest entries go at the bottom of each table. Each decision lists the options we weighed and the evidence behind the choice.
+
+Each decision is tagged with one of: **Product**, **Scope**, **UX**, **Architecture**, **Data**, **AI**, **Security**, **Process**, **Design**.
+
+## Decisions
+
+| ID | When (IST) | Tag | Decision | Options considered | Why (evidence) | Where it shows |
+|---|---|---|---|---|---|---|
+| D-01 | 23 Oct 15:50 | Product | Winning feature is **"Change Receipt → Launch Re-plan"**: a visible noise ledger, a frozen-evidence receipt for each real change, and an automatic re-run of the launch simulator | Wayback backfill; personalised priority; comparison matrix | Visualping's top G2 con is false alerts (30 mentions); Competely links claims to *live* pages that change later; no reviewed CI tool links a change to a launch decision. It covers 5 of 7 judging criteria in one moment | Feature scope §5 |
+| D-02 | 23 Oct 15:50 | Scope | Core loop is built for real; review intelligence, inspiration analysis and add-ons stay seeded or lightweight | Keep everything; core only | Solo builder, ~5 build hours; 6 of 7 judging criteria score the monitoring → evidence loop | Feature scope §6 |
+| D-03 | 23 Oct 15:50 | Scope | **Automated** competitor discovery (no manual entry), India focus incl. foreign firms serving India | Manual competitor list | Your explicit requirement; differentiates from tools where you supply URLs (e.g. the Mastra template) | Feature scope §6, specs C-05 |
+| D-04 | 23 Oct 15:50 | Product | The quantum "will fail in 2–3 years" idea becomes **evidence-cited viability flags** + "no break-even within 36 months *under these assumptions*" | Predict failure outright | An unsupported prediction would contradict the "evidence accuracy" criterion and the concept doc ("does not guarantee success") | Specs §4.4 |
+| D-05 | 23 Oct 15:50 | Data | No scraping of Amazon/Flipkart/Swiggy; official brand pages + labelled seeded data instead | Scrape marketplaces | Marketplace ToS restrict scraping, and the PS requires permitted sources | Feature scope §9 |
+| D-06 | 23 Oct 16:00 | Scope | GitHub repo, PPT and deployed URL are **Must** (organizers confirmed); deploy first | Deploy at the end | Deploying last is the classic hackathon failure | Build plan B01–B02 |
+| D-07 | 23 Oct 16:05 | UX | **Real sign-up/login** plus a one-click **Try demo account** that clones seeded data into a private guest account | Workspace switcher without auth; shared demo account | Your choice; the guest clone stops judges seeing each other's changes | Journeys UC-01 |
+| D-08 | 23 Oct 16:05 | UX | Discovery shows a **review step** (deselect + add own URL) before monitoring starts | Fully automatic | PS wording says "selected sources"; the add-own path also brings the mock competitor into the demo | Journeys UC-03 |
+| D-09 | 23 Oct 16:05 | UX | Simulated changes are triggered from a clearly labelled in-app **Demo Lab** on **fictional** mock competitors | Hidden admin URL; real sites | Transparency: the demo must never imply a simulated change happened on a real company's site | Journeys UC-10 |
+| D-10 | 23 Oct 16:10 | Architecture | **Next.js on Vercel + FastAPI on Render (Singapore) + Supabase** (Postgres, Auth incl. anonymous, Storage) | TypeScript monolith; FastAPI + HTMX | Your stack choice: Python for scraping, diffing and the simulator. Supabase gives auth + DB + files on one free account. Singapore is closest to India | Architecture ADR-01/02 |
+| D-11 | 23 Oct 16:15 | Architecture | **No headless browser** in the prototype | Playwright | All 6 real pricing pages we fetched (Render, Railway, Netlify, Vercel, E2E Networks, DigitalOcean) serve prices in static HTML; Chromium doesn't fit Render Free's 512 MB | ADR-04, fixtures/ |
+| D-12 | 23 Oct 16:15 | Data | **Section-hash diffing + rules-first price extraction**; the LLM only reads changed sections | Raw-page diff; LLM on every page | Wayback shows render.com/pricing's raw hash changes on almost every capture (noise); free LLM quotas are small | ADR-05 |
+| D-13 | 23 Oct 16:15 | AI | LLM gateway: **Gemini primary, Groq fallback**, every response cached in Postgres, `replay` mode for tests | Single provider | Free tiers only; Gemini free limits are unverified (20–1,500 RPD reported), Groq ~12k tokens/min. The cache makes the demo repeatable | ADR-06, specs §4a |
+| D-14 | 23 Oct 16:15 | Data | **Tavily** for discovery search | Brave Search; scraping search engines | Tavily is 1,000 free credits/month with no card; Brave's free tier now needs a card; scraping search engines breaks ToS | ADR-07 |
+| D-15 | 23 Oct 16:15 | AI | Launch simulator is a **deterministic formula** with cited, editable assumptions; the LLM only explains | LLM-generated forecasts | Judges score evidence accuracy; a model that invents numbers can't be audited | ADR-08, specs §4.4 |
+| D-16 | 23 Oct 16:15 | Security | Evidence is **frozen snapshots** (gzip in private storage + text offsets); scraped HTML is never rendered in the app (sandboxed iframe only); SSRF guard on every fetch | Link to live pages | Live links don't prove past claims; scraped HTML can carry scripts | ADR-10, specs §6 |
+| D-17 | 23 Oct 16:15 | Data | Currency is stored **as observed**; conversion to INR happens only for comparison, with a visible assumption rate | Assume INR | E2E Networks (an Indian provider) served USD prices to our fetch | ADR-12 |
+| D-18 | 23 Oct 16:45 | Process | Agent skills: Supabase, FastAPI (official), Vercel React, Render (official), frontend-design, Ponytail; Matt Pocock plugin as the light process backbone | Superpowers, gstack, Addy Osmani packs | One backbone only; official vendor skills beat community copies; heavy methodology costs hours | SKILLS.md |
+| D-19 | 23 Oct 16:50 | Process | **Token budget rules**: one session per build step, load each skill once, read docs by section, no subagent fan-out, two unused plugins disabled for this repo | Default | Keeps the agent fast and cheap within a 4.5 h window | SKILL-PLAYBOOK.md |
+| D-20 | 23 Oct 16:35 | Process | 14 deploy-first build steps; freeze 20:15; explicit cut order (Wayback → email → extra profiles → viability flags → history) | Layered build | Every step ends deployed and demoable; the plan is ~0.7 h over budget, so the cuts are pre-agreed | docs/build-plan/ |
+| D-21 | 23 Oct 17:00 | Design | Use the provided reference's **design language** (cream canvas, pills, Sofia Sans, ink CTAs, orbit motif) but **not Mastercard's brand** (name, logo, red/yellow mark) | Copy it fully | Keeps a distinct product identity and avoids impersonating a real company | web/DESIGN.md |
+| D-22 | 23 Oct 17:00 | Design | **Signal orange `#CF4500` means "meaningful change"** in our product (the reference reserves it for compliance actions) | Use orange for CTAs | Same rule as the reference: one aggressive colour, used sparingly, with one meaning; CTAs stay ink | web/DESIGN.md |
+| D-23 | 23 Oct 17:00 | Design | Landing hero = **competitors orbiting your business**, one satellite showing a receipt (₹1,499 → ₹899, meaningful) | Stat tiles, generic hero | Maps the reference's orbit motif to the product's subject; the one memorable element | web/components/orbit-hero.tsx |
+| D-24 | 23 Oct 17:00 | Architecture | **Next.js 16.4.2** (current stable), not 15 as in the specs; `cacheComponents` on (default), so runtime reads sit inside `<Suspense>` | Pin Next 15 | Use the current stable release; build errors forced the Suspense boundaries | web/app/app/layout.tsx |
+| D-25 | 23 Oct 17:00 | Process | **shadcn/ui deferred** until a step needs a complex component | Install up front | Ponytail rule: no dependency before it's needed; the shell needs only buttons, pills and links | web/components/ui.tsx |
+
+## Learnings
+
+| ID | When | Learning | Consequence |
+|---|---|---|---|
+| L-01 | 23 Oct 15:50 | No confirmed hackathon winner on this PS exists on Devpost/Devfolio/lablab; the expected competitor build is a one-shot SWOT report | Our edge is monitoring *over time* with proof, not a one-off report |
+| L-02 | 23 Oct 15:50 | False alerts are the #1 complaint about page-change tools (Visualping G2: 30 mentions) | The noise ledger is the headline feature |
+| L-03 | 23 Oct 16:15 | Raw page hashes change on nearly every capture (render.com/pricing on Wayback) | Never diff raw HTML; diff extracted fields per section |
+| L-04 | 23 Oct 16:15 | Pricing pages contain non-plan numbers ($829,000 stats, $1,000–$10,000 credit tiers) | Price detection is scoped to pricing sections with plausibility checks |
+| L-05 | 23 Oct 16:15 | Free-tier limits are moving targets (Gemini cuts in 2026, Brave free tier removed, Render sleeps after 15 min, Resend sends only to your own address without a domain) | Cache + fallback + keep-warm + email override are designed in, not bolted on |
+| L-06 | 23 Oct 17:00 | Next.js 16 with `cacheComponents` refuses to prerender a client component using `usePathname()` outside `<Suspense>` | Wrap URL-dependent UI in Suspense with a static fallback |

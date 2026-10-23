@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RivalLens (working name) Journey Map</title>
+<style>
+  :root {
+    --bg: #f7f6f2; --surface: #ffffff; --surface-2: #f0eee8; --text: #1d1c1a; --muted: #6b6860;
+    --border: #e2dfd6; --accent: #3a5bd9; --accent-soft: #e5eafc; --pain: #b4372c; --pain-soft: #fbe9e7;
+    --opp: #22744a; --opp-soft: #e4f3ea; --pos: #22744a; --neg: #b4372c; --shadow: 0 1px 2px rgba(0,0,0,.06);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151514; --surface: #1f1f1d; --surface-2: #2a2a27; --text: #ecebe6; --muted: #a29f96;
+      --border: #383733; --accent: #8ea4ff; --accent-soft: #262e4d; --pain: #f08a7e; --pain-soft: #3a2422;
+      --opp: #7fd3a2; --opp-soft: #1f3529; --pos: #7fd3a2; --neg: #f08a7e; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151514; --surface: #1f1f1d; --surface-2: #2a2a27; --text: #ecebe6; --muted: #a29f96;
+    --border: #383733; --accent: #8ea4ff; --accent-soft: #262e4d; --pain: #f08a7e; --pain-soft: #3a2422;
+    --opp: #7fd3a2; --opp-soft: #1f3529; --pos: #7fd3a2; --neg: #f08a7e; --shadow: none;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 28px 20px 60px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 1.15rem; margin: 36px 0 12px; }
+  .tagline { color: var(--muted); margin: 0 0 20px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .tab { border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    padding: 8px 14px; border-radius: 999px; cursor: pointer; font: inherit; }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .persona { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 16px; box-shadow: var(--shadow);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 20px; }
+  .persona .who { grid-column: 1 / -1; font-weight: 600; }
+  .badge { display: inline-block; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: middle; }
+  .label { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+  .scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
+  .grid { display: grid; position: relative; min-width: max-content; width: 100%; }
+  .cell { padding: 10px 12px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); min-width: 210px; }
+  .rowhead { position: sticky; left: 0; z-index: 2; background: var(--surface-2); min-width: 120px; max-width: 120px;
+    font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .stage-name { font-weight: 700; }
+  .stage-goal { color: var(--muted); font-size: .88rem; }
+  ul { margin: 0; padding-left: 18px; } li { margin: 2px 0; }
+  .chip { display: inline-block; border: 1px solid var(--accent); color: var(--accent); background: var(--accent-soft);
+    border-radius: 6px; padding: 2px 8px; margin: 2px 4px 2px 0; font-size: .82rem; cursor: pointer; font-family: inherit; }
+  .thinking { font-style: italic; }
+  .pain li::marker { color: var(--pain); } .pain { background: var(--pain-soft); }
+  .opp li::marker { color: var(--opp); } .opp { background: var(--opp-soft); }
+  .emotion-cell { height: 96px; }
+  .emotion-svg { position: absolute; pointer-events: none; z-index: 1; overflow: visible; }
+  .screens { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .screen { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    box-shadow: var(--shadow); transition: outline-color .3s; outline: 2px solid transparent; }
+  .screen.flash { outline-color: var(--accent); }
+  .screen h3 { margin: 0 0 4px; font-size: 1rem; }
+  .screen .id { color: var(--accent); font-weight: 700; margin-right: 6px; }
+  .screen p { margin: 4px 0 8px; color: var(--muted); }
+  .screen .label { display: block; margin-top: 8px; }
+  .empty { color: var(--muted); padding: 24px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: .8rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Journey Map</h1>
+  <p class="tagline" id="tagline"></p>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div id="persona"></div>
+  <div class="scroll" id="scroll"><div class="grid" id="grid"></div></div>
+  <h2>Screen inventory</h2>
+  <div class="screens" id="screens"></div>
+  <footer>Generated by user-journey-mapper. Emotion scale: -2 (frustrated) to +2 (delighted).</footer>
+</main>
+<script id="journey-data" type="application/json">{"project": {"name": "RivalLens (working name)", "tagline": "Tell us your business. We find your Indian-market competitors, watch what they change, prove it, and show what it means for your launch."}, "personas": [{"id": "P1", "name": "Riya", "role": "Co-founder, StackNest (fictional) cloud-deployment startup, Pune", "goal": "Price the Pro plan for launch and know fast when a competitor moves", "context": "Laptop at work, a few times a week; alert emails on a phone", "pain": "Checks 6-8 pricing pages by hand; generic tools send false alarms; no memory of what pages said", "primary": true}, {"id": "P2", "name": "Kabir", "role": "Pricing & category lead, Stride & Co. (fictional) D2C shoe brand", "goal": "Track rival prices, launches and positioning; justify decisions with evidence", "context": "Office laptop, daily; shares PDF reports weekly", "pain": "Screenshot spreadsheets with no dates or verifiable sources", "primary": false}, {"id": "P3", "name": "Judge", "role": "HackNova'26 evaluator", "goal": "Verify detection, history, evidence, alerts and reports work on the deployed URL in about 5 minutes", "context": "Laptop at the judging table, once", "pain": "Demos that only work on the presenter's laptop; claims without evidence", "primary": false}, {"id": "P4", "name": "Demo operator", "role": "Presenter (you)", "goal": "Trigger a labelled simulated change on cue and reset", "context": "On stage, one shot", "pain": "Live scraping breaking mid-demo", "primary": false}], "journeys": [{"persona": "P1", "title": "From one line to a re-planned launch", "stages": [{"name": "Discover", "goal": "Decide if it's worth trying", "actions": ["Reads landing page", "Sees example receipt and noise ledger"], "screens": ["S-01"], "thinking": "Another alert tool that spams me?", "emotion": 0, "pain_points": ["Fatigue from generic change tools"], "opportunities": ["Show the noise ledger up front"]}, {"name": "Onboard", "goal": "Usable profile fast", "actions": ["Signs up", "Pastes website", "Checks AI-drafted card"], "screens": ["S-02", "S-04", "S-05", "S-06"], "thinking": "It got our Pro plan price right", "emotion": 1, "pain_points": ["Wizard fatigue"], "opportunities": ["Quick-start draft with AI badges"]}, {"name": "Discover rivals", "goal": "Trust the competitor list", "actions": ["Watches discovery", "Deselects one", "Adds a rival by URL"], "screens": ["S-07", "S-08"], "thinking": "It found the Indian providers I forgot", "emotion": 1, "pain_points": ["Irrelevant global giants"], "opportunities": ["India signals and similarity per competitor"]}, {"name": "Baseline", "goal": "See where StackNest stands", "actions": ["Opens dashboard, comparison, simulator"], "screens": ["S-09", "S-13", "S-14"], "thinking": "So 999 sits right at the median", "emotion": 1, "pain_points": ["Unknown cells"], "opportunities": ["Unknowns shown, never penalized"]}, {"name": "Change happens", "goal": "Learn about a competitor move", "actions": ["Gets email", "Opens receipt on phone"], "screens": ["S-16", "S-11"], "thinking": "Did they really cut it?", "emotion": -1, "pain_points": ["Distrust of automated claims"], "opportunities": ["Saved before/after with highlighted excerpt"]}, {"name": "Decide", "goal": "Adjust the launch plan", "actions": ["Opens re-planned simulator", "Edits elasticity"], "screens": ["S-14"], "thinking": "849 still works in the expected case", "emotion": 2, "pain_points": ["Black-box models"], "opportunities": ["Cited, editable assumptions"]}, {"name": "Share", "goal": "Brief co-founder", "actions": ["Generates and downloads PDF"], "screens": ["S-15"], "thinking": "Every number is linked", "emotion": 2, "pain_points": ["Unsupported AI text"], "opportunities": ["Facts and AI suggestions separated"]}, {"name": "Return", "goal": "Keep watching", "actions": ["Runs monitor weekly", "Tunes alert rules"], "screens": ["S-09", "S-10", "S-17"], "thinking": "Only two alerts this week, both real", "emotion": 1, "pain_points": ["Forgetting to run checks"], "opportunities": ["Scheduled runs (Could)"]}]}, {"persona": "P2", "title": "Evidence for the weekly pricing review", "stages": [{"name": "Onboard", "goal": "Product-type profile", "actions": ["Signs up", "One-line description", "Product criteria"], "screens": ["S-02", "S-04", "S-05", "S-06"], "thinking": "Specs and variants, not plans. Good", "emotion": 1, "pain_points": ["SaaS-only criteria elsewhere"], "opportunities": ["Product vs service templates"]}, {"name": "Discover rivals", "goal": "Brand competitors in India", "actions": ["Reviews comparable vs inspiration"], "screens": ["S-07", "S-08"], "thinking": "Inspiration ones are bigger brands, makes sense", "emotion": 0, "pain_points": ["Marketplaces not monitorable"], "opportunities": ["Official brand pages, explained"]}, {"name": "Track", "goal": "Spot launches and price moves", "actions": ["Runs monitor", "Opens competitor history"], "screens": ["S-10", "S-12"], "thinking": "Launched on the 14th, observed on the 16th", "emotion": 1, "pain_points": ["Unclear dates"], "opportunities": ["Observed vs published dates"]}, {"name": "Compare", "goal": "Prepare the review", "actions": ["Adjusts weights", "Checks unknowns"], "screens": ["S-13"], "thinking": "Ratings unknown for two brands, fair", "emotion": 0, "pain_points": ["Missing data"], "opportunities": ["Unknown count shown"]}, {"name": "Report", "goal": "Convince the manager", "actions": ["Downloads PDF"], "screens": ["S-15"], "thinking": "My manager can click every claim", "emotion": 2, "pain_points": ["Screenshot spreadsheets"], "opportunities": ["Evidence-linked PDF"]}]}, {"persona": "P3", "title": "Five-minute verification", "stages": [{"name": "Enter", "goal": "Get in without friction", "actions": ["Try demo account"], "screens": ["S-01", "S-02", "S-03"], "thinking": "No sign-up form, nice", "emotion": 1, "pain_points": ["Sign-up walls"], "opportunities": ["One-click guest clone"]}, {"name": "Verify detection", "goal": "Check real detection", "actions": ["Demo Lab cosmetic-only then price cut", "Run monitor"], "screens": ["S-18", "S-19", "S-09", "S-10"], "thinking": "It ignored the banner and caught the price", "emotion": 2, "pain_points": ["Staged-looking demos"], "opportunities": ["Judges trigger it themselves"]}, {"name": "Verify evidence", "goal": "Check source links", "actions": ["Opens receipt and source"], "screens": ["S-11"], "thinking": "The highlight matches the snapshot", "emotion": 2, "pain_points": ["Live-only links"], "opportunities": ["Saved snapshots"]}, {"name": "Explore", "goal": "Judge depth", "actions": ["Switches profiles", "Comparison and simulator"], "screens": ["S-13", "S-14"], "thinking": "Quantum idea flagged with reasons, not hype", "emotion": 1, "pain_points": ["Unsupported predictions"], "opportunities": ["Assumption-bound scenarios"]}]}, {"persona": "P4", "title": "Landing the demo moment", "stages": [{"name": "Prepare", "goal": "Known starting state", "actions": ["Warm URL", "Reset mocks to v1"], "screens": ["S-18"], "thinking": "Clean baseline", "emotion": 0, "pain_points": ["Cold starts"], "opportunities": ["Reset button; warm up 5 min before"]}, {"name": "Trigger", "goal": "Change on cue", "actions": ["Cut Pro price 40%"], "screens": ["S-18", "S-19"], "thinking": "One click, labelled demo", "emotion": 1, "pain_points": ["Fiddly admin tools"], "opportunities": ["In-app Demo Lab"]}, {"name": "Show", "goal": "Land the moment", "actions": ["Run monitor", "Alert, receipt, simulator"], "screens": ["S-09", "S-10", "S-11", "S-14"], "thinking": "That's the moment", "emotion": 2, "pain_points": ["LLM latency"], "opportunities": ["Cached LLM responses"]}]}], "screens": [{"id": "S-01", "name": "Landing", "purpose": "Explain value in 10 seconds and get people in", "components": ["Headline", "3-step strip", "Example noise ledger and receipt", "Permitted-sources note"], "actions": ["Try demo account", "Sign up", "Log in"], "use_cases": ["UC-01"]}, {"id": "S-02", "name": "Sign up / Log in", "purpose": "Authenticate", "components": ["Sign up tab", "Log in tab", "Try demo account button"], "actions": ["Create account", "Log in", "Try demo account"], "use_cases": ["UC-01"]}, {"id": "S-03", "name": "Home (profiles)", "purpose": "Pick or create a business profile", "components": ["Profile cards with alerts and last run", "Demo-data badges", "+ New profile"], "actions": ["Open profile", "+ New profile"], "use_cases": ["UC-13", "UC-01"]}, {"id": "S-04", "name": "New profile: path and quick start", "purpose": "Choose business or idea and get an AI draft", "components": ["Two path cards", "URL or one-line box", "Fill manually link"], "actions": ["Draft my card", "Fill manually"], "use_cases": ["UC-02"]}, {"id": "S-05", "name": "Profile wizard", "purpose": "Confirm and complete the card in 3 steps", "components": ["Basics", "Offering: product vs service, price", "Priorities", "AI-drafted badges"], "actions": ["Next", "Finish", "Back"], "use_cases": ["UC-02"]}, {"id": "S-06", "name": "Card preview", "purpose": "Show the Business or Idea Card", "components": ["Card fields labelled by origin", "Unknown values"], "actions": ["Find competitors", "Edit card"], "use_cases": ["UC-02", "UC-03"]}, {"id": "S-07", "name": "Discovery in progress", "purpose": "Make automated discovery transparent", "components": ["Live step list with counts", "Candidate log with pass/fail reasons"], "actions": ["Cancel"], "use_cases": ["UC-03"]}, {"id": "S-08", "name": "Discovered competitors review", "purpose": "Confirm who to monitor", "components": ["Comparable and Inspiration tabs", "India signals", "Similarity", "Pages to watch", "Add competitor URL"], "actions": ["Start monitoring", "Add competitor URL", "Re-run discovery"], "use_cases": ["UC-03", "UC-11"]}, {"id": "S-09", "name": "Profile dashboard", "purpose": "Latest picture for the profile", "components": ["Stats", "Run monitor", "Recent receipts", "Simulator summary", "Comparison snapshot", "Viability flags on ideas"], "actions": ["Run monitor", "Generate report"], "use_cases": ["UC-04", "UC-07", "UC-13", "UC-14"]}, {"id": "S-10", "name": "Run result and noise ledger", "purpose": "What changed vs what was ignored, and why", "components": ["Headline counts", "Meaningful changes", "Needs review", "Failed sources", "Noise ledger table"], "actions": ["Open receipt", "Retry failed source"], "use_cases": ["UC-04"]}, {"id": "S-11", "name": "Change Receipt", "purpose": "Prove one change", "components": ["Previous vs current, delta", "Observed and published dates", "Before/after snapshot with highlight", "Source and Wayback links", "Priority breakdown", "Simulator impact"], "actions": ["View evidence", "Open source", "Not relevant"], "use_cases": ["UC-05", "UC-08"]}, {"id": "S-12", "name": "Competitor detail and history", "purpose": "One competitor over time", "components": ["Current fields with dates", "Price history chart", "Timeline", "Load archived history"], "actions": ["Open receipt", "Load archived history"], "use_cases": ["UC-11", "UC-05"]}, {"id": "S-13", "name": "Comparison matrix", "purpose": "Sourced side-by-side on configurable criteria", "components": ["Product or service template", "Criteria toggles and weights", "Cells with date and source", "Unknown cells", "Weighted score"], "actions": ["Adjust weights", "Open cell evidence"], "use_cases": ["UC-06"]}, {"id": "S-14", "name": "Launch simulator", "purpose": "Compare launch options using evidence and stated assumptions", "components": ["Re-planned banner", "Option cards A B C", "Best expected worst", "Cited editable assumptions", "Viability flags on ideas"], "actions": ["Edit assumptions", "Add my own option"], "use_cases": ["UC-07", "UC-14"]}, {"id": "S-15", "name": "Evidence report", "purpose": "Concise sourced report for sharing", "components": ["Range and competitor pickers", "Report preview with inline citations", "AI suggestions block", "Limitations"], "actions": ["Generate", "Download PDF"], "use_cases": ["UC-09"]}, {"id": "S-16", "name": "Alert center", "purpose": "All alerts, filterable", "components": ["Alert rows with priority and dates", "Filters", "Email status"], "actions": ["Open receipt", "Mark read", "Mute"], "use_cases": ["UC-08"]}, {"id": "S-17", "name": "Alert and source settings", "purpose": "Tune alerts and monitored pages", "components": ["Change-type toggles", "Minimum priority", "Email toggle", "Sources list"], "actions": ["Save", "Add source"], "use_cases": ["UC-12"]}, {"id": "S-18", "name": "Demo Lab", "purpose": "Trigger labelled simulated changes", "components": ["Simulated-data banner", "Mock competitors with versions", "Scenario buttons"], "actions": ["Apply scenario", "View mock page", "Reset all"], "use_cases": ["UC-10"]}, {"id": "S-19", "name": "Mock competitor page", "purpose": "The monitored fictional pricing page", "components": ["Plans and prices", "Feature list", "Nav, footer, promo banner", "Demo data ribbon"], "actions": [], "use_cases": ["UC-10", "UC-04"]}]}</script>
+<script>
+(function () {
+  var raw = document.getElementById('journey-data').textContent.trim();
+  var data;
+  try { data = JSON.parse(raw); } catch (e) { data = null; }
+  if (!data) { document.getElementById('grid').innerHTML = '<div class="empty">No journey data found.</div>'; return; }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function list(items) { if (!items || !items.length) return '<span class="stage-goal">-</span>';
+    return '<ul>' + items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>'; }
+
+  var screensById = {};
+  (data.screens || []).forEach(function (s) { screensById[s.id] = s; });
+  var personasById = {};
+  (data.personas || []).forEach(function (p) { personasById[p.id] = p; });
+
+  var project = data.project || {};
+  document.getElementById('title').textContent = (project.name || 'Project') + ': Journey Map';
+  document.title = (project.name || 'Project') + ' Journey Map';
+  document.getElementById('tagline').textContent = project.tagline || '';
+
+  var journeys = data.journeys || [];
+  var current = 0;
+
+  function renderTabs() {
+    var tabs = document.getElementById('tabs');
+    tabs.innerHTML = journeys.map(function (j, i) {
+      var p = personasById[j.persona] || {};
+      return '<button class="tab" role="tab" aria-selected="' + (i === current) + '" data-i="' + i + '">' +
+        esc(p.name || j.persona) + (j.title ? ': ' + esc(j.title) : '') + '</button>';
+    }).join('');
+    tabs.querySelectorAll('.tab').forEach(function (b) {
+      b.addEventListener('click', function () { current = +b.dataset.i; render(); });
+    });
+  }
+
+  function renderPersona(j) {
+    var p = personasById[j.persona] || {};
+    document.getElementById('persona').innerHTML =
+      '<div class="persona"><div class="who">' + esc(p.name || j.persona) + ' · ' + esc(p.role || '') +
+      (p.primary ? '<span class="badge">primary</span>' : '') + '</div>' +
+      '<div><div class="label">Goal</div>' + esc(p.goal || '-') + '</div>' +
+      '<div><div class="label">Context</div>' + esc(p.context || '-') + '</div>' +
+      '<div><div class="label">Frustration today</div>' + esc(p.pain || '-') + '</div></div>';
+  }
+
+  function renderGrid(j) {
+    var stages = j.stages || [];
+    var grid = document.getElementById('grid');
+    grid.style.gridTemplateColumns = '120px repeat(' + stages.length + ', minmax(210px, 1fr))';
+    var rows = [
+      ['Stage', function (s) { return '<div class="stage-name">' + esc(s.name) + '</div><div class="stage-goal">' + esc(s.goal || '') + '</div>'; }, ''],
+      ['Actions', function (s) { return list(s.actions); }, ''],
+      ['Screens', function (s) { return (s.screens || []).map(function (id) {
+        var sc = screensById[id]; return '<button class="chip" data-screen="' + esc(id) + '">' + esc(id) + (sc ? ' ' + esc(sc.name) : '') + '</button>'; }).join('') || '-'; }, ''],
+      ['Thinking', function (s) { return s.thinking ? '<span class="thinking">"' + esc(s.thinking) + '"</span>' : '-'; }, ''],
+      ['Emotion', function () { return ''; }, 'emotion-cell'],
+      ['Pain points', function (s) { return list(s.pain_points); }, 'pain'],
+      ['Opportunities', function (s) { return list(s.opportunities); }, 'opp']
+    ];
+    var html = '';
+    rows.forEach(function (r) {
+      html += '<div class="cell rowhead">' + r[0] + '</div>';
+      stages.forEach(function (s, i) { html += '<div class="cell ' + r[2] + '" data-stage="' + i + '">' + r[1](s) + '</div>'; });
+    });
+    grid.innerHTML = html;
+    grid.querySelectorAll('.chip').forEach(function (c) {
+      c.addEventListener('click', function () { focusScreen(c.dataset.screen); });
+    });
+    drawEmotion(stages);
+  }
+
+  function drawEmotion(stages) {
+    var grid = document.getElementById('grid');
+    var cells = grid.querySelectorAll('.emotion-cell');
+    if (!cells.length) return;
+    var gridRect = grid.getBoundingClientRect();
+    var first = cells[0].getBoundingClientRect();
+    var top = first.top - gridRect.top, h = first.height;
+    var pts = [];
+    cells.forEach(function (c, i) {
+      var r = c.getBoundingClientRect();
+      var e = Math.max(-2, Math.min(2, Number(stages[i].emotion) || 0));
+      pts.push({ x: r.left - gridRect.left + r.width / 2, y: top + h / 2 - (e / 2) * (h / 2 - 14), e: e });
+    });
+    var w = grid.scrollWidth;
+    var path = pts.map(function (p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' ');
+    var svg = '<svg class="emotion-svg" width="' + w + '" height="' + grid.scrollHeight + '" style="left:0;top:0" aria-hidden="true">' +
+      '<line x1="' + pts[0].x + '" x2="' + pts[pts.length - 1].x + '" y1="' + (top + h / 2) + '" y2="' + (top + h / 2) + '" stroke="var(--border)" stroke-dasharray="4 4"/>' +
+      '<path d="' + path + '" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>' +
+      pts.map(function (p) {
+        var col = p.e > 0 ? 'var(--pos)' : p.e < 0 ? 'var(--neg)' : 'var(--muted)';
+        return '<circle cx="' + p.x + '" cy="' + p.y + '" r="7" fill="var(--surface)" stroke="' + col + '" stroke-width="3"/>' +
+          '<text x="' + (p.x + 12) + '" y="' + (p.y + 4) + '" font-size="12" fill="' + col + '">' + (p.e > 0 ? '+' : '') + p.e + '</text>';
+      }).join('') + '</svg>';
+    var old = grid.querySelector('.emotion-svg'); if (old) old.remove();
+    grid.insertAdjacentHTML('beforeend', svg);
+  }
+
+  function renderScreens() {
+    document.getElementById('screens').innerHTML = (data.screens || []).map(function (s) {
+      return '<div class="screen" id="screen-' + esc(s.id) + '"><h3><span class="id">' + esc(s.id) + '</span>' + esc(s.name) + '</h3>' +
+        '<p>' + esc(s.purpose || '') + '</p>' +
+        '<span class="label">What\'s on it</span>' + list(s.components) +
+        '<span class="label">Actions</span>' + list(s.actions) +
+        (s.use_cases && s.use_cases.length ? '<span class="label">Serves</span>' + esc(s.use_cases.join(', ')) : '') + '</div>';
+    }).join('');
+  }
+
+  function focusScreen(id) {
+    var el = document.getElementById('screen-' + id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('flash'); setTimeout(function () { el.classList.remove('flash'); }, 1400);
+  }
+
+  function render() {
+    if (!journeys.length) { document.getElementById('grid').innerHTML = '<div class="empty">No journeys defined.</div>'; return; }
+    renderTabs(); renderPersona(journeys[current]); renderGrid(journeys[current]);
+  }
+
+  renderScreens(); render();
+  var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { drawEmotion(journeys[current].stages || []); }, 120); });
+})();
+</script>
+</body>
+</html>
