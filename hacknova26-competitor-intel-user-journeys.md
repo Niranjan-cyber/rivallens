@@ -769,3 +769,21 @@ Total about 4 minutes. The seeded profiles exist, and the mocks are reset to v1 
   - Whether guest accounts get live discovery or the seeded profiles only, if the free LLM's limits turn out tight in testing. The current default is live with a rate limit.
   - Which real company pages are safe to monitor live (robots.txt check pending).
   - The final product name (RivalLens is a placeholder).
+
+## 11. Addendum (23 Oct 21:55): four dashboards
+
+Added after the prototype, planned as B14a–B14f (D-73, D-74).
+
+- **UC-16 Manage products.** A company lists its existing products and adds a new one; each gets a market category, features, add-ons and a price.
+- **UC-17 See economics.** A company enters cash, funding and monthly burn to see its runway, and sees competitors' funding and reported revenue with a source link and date (Unknown when nothing is found).
+- **UC-18 Hear customers.** A company sees reviews from its own pages, web and news mentions and uploaded review exports, with sentiment and themes, each linked to its source.
+- **UC-19 Simulate a product.** A product's simulator uses its category's competitor prices, the company's runway and its customers' sentiment and requested features, showing which dashboard each input came from.
+- **UC-20 Compare a product.** A product is compared with others in its market category on price, revenue, features and add-ons, with inspiration products from other categories.
+
+Screens:
+- **S-20 Product dashboard:** Existing / New tabs and Add product.
+- **S-21 Economics:** runway and competitor funding.
+- **S-22 Customers:** mentions, sentiment and themes.
+- **S-23 Product detail:** category comparison, inspiration and a link to the product's simulator.
+
+Navigation: each profile opens on four dashboards. Market intelligence holds the existing S-09, S-08, S-13, S-16, S-15 and S-17.

@@ -1,6 +1,6 @@
 # B14 — Prototype exit: golden path on the public URL
 
-Build step B14 of **RivalLens (working name)** (Prototype — 🏁 prototype exit). Paste this into Claude Code / Codex / Cursor at the repo root. Do only this step.
+Build step B14 of **RivalLens (working name)** (Prototype). Paste this into Claude Code / Codex / Cursor at the repo root. Do only this step.
 
 ## Read first
 - `docs/build-plan/BUILD-PLAN.md` (section B14) and `docs/build-plan/plan.json`

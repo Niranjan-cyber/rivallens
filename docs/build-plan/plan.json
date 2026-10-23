@@ -2,8 +2,8 @@
   "project": "RivalLens (working name)",
   "generated": "2026-10-23",
   "build_mode": "Sprint",
-  "deadline": "2026-10-23 21:00 IST (official submission time unknown)",
-  "time_budget_hours": 4.5,
+  "deadline": "2026-10-24 08:00 IST",
+  "time_budget_hours": 19.5,
   "team": [
     {
       "name": "Niranjan + AI coding agent",
@@ -84,7 +84,12 @@
       "S-14 simulator shows options A/B/C with cited assumptions and a Re-planned banner after the price-cut receipt; the quantum profile shows viability flags (UC-07, UC-14)",
       "S-15 report cites a receipt for every claim and prints to PDF (UC-09)",
       "S-12 shows the competitor timeline and price series (UC-11)",
-      "README, PPT and repo link ready; the public URL is warm (keep-warm pinger on)"
+      "README, PPT and repo link ready; the public URL is warm (keep-warm pinger on)",
+      "Each profile shows four dashboards; Product lists existing products and adds a new one with a market category (UC-16)",
+      "Economics shows runway from entered figures and competitors' funding with source links or Unknown (UC-17)",
+      "Customers shows own-site reviews, web mentions and CSV uploads with sentiment and themes, each linked (UC-18)",
+      "A product's simulator shows inputs from Market, Economics and Customers and reacts when they change (UC-19)",
+      "A product compares with its category on price, revenue, features and add-ons, plus inspiration (UC-20)"
     ],
     "mvp_exit": [
       "Monitoring runs on a schedule without anyone clicking (Render Cron → /internal/monitor-due) and the API does not sleep (Render Starter)",
@@ -112,6 +117,10 @@
       {
         "risk": "Render Free cold start (~1 min) during judging",
         "step": "B14"
+      },
+      {
+        "risk": "Cited funding/revenue extraction for Indian private competitors from news search",
+        "step": "B14b"
       }
     ]
   },
@@ -130,11 +139,15 @@
       "UC-11",
       "UC-12",
       "UC-13",
-      "UC-14"
-    ],
-    "mvp": [
+      "UC-14",
+      "UC-16",
+      "UC-17",
+      "UC-18",
+      "UC-19",
+      "UC-20",
       "UC-15"
-    ]
+    ],
+    "mvp": []
   },
   "steps": [
     {
@@ -1012,8 +1025,8 @@
       "id": "B14",
       "title": "Prototype exit: golden path on the public URL",
       "phase": "prototype",
-      "status": "todo",
-      "milestone": "prototype-exit",
+      "status": "done",
+      "milestone": null,
       "goal": "A judge walks the full journeys §9 golden path on the public URL twice in a row without errors, with README + PPT ready to submit.",
       "why_now": "Freeze at 20:15: harden the demo, then the deliverables (repo, PPT, deployed URL are required).",
       "use_cases": [
@@ -1112,6 +1125,379 @@
       "notes": "Submission-time unknown: confirm with organizers and shift the freeze if earlier."
     },
     {
+      "id": "B14a",
+      "title": "Four dashboards and a product portfolio",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "A company sees four dashboards (Product, Market intelligence, Economics, Customers) and, on Product, lists its existing products and adds a new one with a market category.",
+      "why_now": "Every later dashboard and the per-product simulator hang off products; the nav restructure is visible immediately.",
+      "use_cases": [
+        "UC-16"
+      ],
+      "screens": [
+        "S-20",
+        "S-09"
+      ],
+      "components": [
+        "C-28"
+      ],
+      "scope_in": [
+        "products table (profile_id, name, stage existing|new, category, price, unit, features, add_ons, url, is_demo_data)",
+        "LLM drafts category + features from a URL or description (cached, replay fixture)",
+        "App nav grouped into the four dashboards; current screens move under Market intelligence",
+        "Demo products for the 4 seeded profiles and guest clones, labelled demo data"
+      ],
+      "scope_out": [
+        "Per-product comparison (B14e)",
+        "Economics/Customers data (B14b, B14c)"
+      ],
+      "tasks": [
+        "Migration 0010_products",
+        "products router",
+        "S-20 Product dashboard: Existing / New tabs, Add product",
+        "Nav regroup",
+        "Seed + guest-clone products"
+      ],
+      "skills": [
+        {
+          "name": "supabase-postgres-best-practices",
+          "use": "products table + index"
+        },
+        {
+          "name": "fastapi",
+          "use": "products CRUD + draft endpoint"
+        },
+        {
+          "name": "frontend-design",
+          "use": "four-dashboard nav and S-20"
+        }
+      ],
+      "done_check": [
+        "Try demo account on <FRONTEND_URL> → StackNest shows the four dashboards",
+        "Product dashboard lists StackNest's existing products with a market category",
+        "Add product (New) from a one-line description → saved with a category and features"
+      ],
+      "deploys": [
+        "frontend",
+        "backend",
+        "database"
+      ],
+      "estimate_hours": 2,
+      "depends_on": [
+        "B14"
+      ],
+      "fallback": "If the LLM draft fails, category is a dropdown the user picks."
+    },
+    {
+      "id": "B14b",
+      "title": "Economics dashboard with cited funding",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "On Economics, a company enters its cash, funding and monthly burn to see its runway, and sees competitors' funding and reported revenue with a source link and date.",
+      "why_now": "Riskiest new unknown (news extraction quality for Indian private companies); its runway is a simulator input.",
+      "use_cases": [
+        "UC-17"
+      ],
+      "screens": [
+        "S-21"
+      ],
+      "components": [
+        "C-29"
+      ],
+      "scope_in": [
+        "company_finances (cash, monthly_burn, monthly_revenue, rounds jsonb) entered by the user",
+        "Runway = cash / (burn - revenue)",
+        "Tavily search per competitor for funding/revenue → LLM extracts amount, round, date with the quote; page saved as a snapshot; anything not found is Unknown",
+        "funding_facts table with evidence"
+      ],
+      "scope_out": [
+        "Paid databases (Crunchbase, Tracxn)",
+        "Bank or accounting integrations"
+      ],
+      "tasks": [
+        "Migration 0011_economics",
+        "economics router + funding job",
+        "S-21"
+      ],
+      "skills": [
+        {
+          "name": "fastapi",
+          "use": "finances + funding job"
+        },
+        {
+          "name": "tdd",
+          "use": "runway and money-amount parsing (₹ crore/lakh, $M)"
+        },
+        {
+          "name": "frontend-design",
+          "use": "S-21"
+        }
+      ],
+      "done_check": [
+        "On <FRONTEND_URL> Economics: enter cash ₹50L, burn ₹6L, revenue ₹1L → runway 10 months",
+        "Find funding for a real competitor → a round with amount, date and a working source link, or Unknown"
+      ],
+      "deploys": [
+        "frontend",
+        "backend",
+        "database"
+      ],
+      "estimate_hours": 1.5,
+      "depends_on": [
+        "B14a"
+      ],
+      "fallback": "Manual entry of competitor figures with a source URL."
+    },
+    {
+      "id": "B14c",
+      "title": "Customers dashboard from permitted sources",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "On Customers, a company sees reviews from its own site, web and news mentions, and uploaded review exports, with sentiment and themes, each linked to its source.",
+      "why_now": "Customer sentiment and requested features are simulator inputs; replaces MVP B16 with a prototype version.",
+      "use_cases": [
+        "UC-18",
+        "UC-15"
+      ],
+      "screens": [
+        "S-22"
+      ],
+      "components": [
+        "C-30"
+      ],
+      "scope_in": [
+        "Own-site reviews: schema.org Review/AggregateRating JSON-LD + review sections, robots respected",
+        "Web/news mentions via Tavily with URL and date",
+        "CSV upload (text, rating, date, source)",
+        "LLM sentiment + themes per batch (cached, replay fixture)",
+        "customer_mentions table"
+      ],
+      "scope_out": [
+        "Instagram, LinkedIn, X (ToS / paid API)",
+        "YouTube API"
+      ],
+      "tasks": [
+        "Migration 0012_customers",
+        "collector reuse for review pages",
+        "CSV parser",
+        "themes prompt",
+        "S-22"
+      ],
+      "skills": [
+        {
+          "name": "tdd",
+          "use": "JSON-LD review parsing on a fixture, CSV parsing"
+        },
+        {
+          "name": "fastapi",
+          "use": "upload + collect job"
+        },
+        {
+          "name": "frontend-design",
+          "use": "S-22"
+        }
+      ],
+      "done_check": [
+        "On <FRONTEND_URL> Customers: upload the sample CSV → mentions, sentiment split and top themes appear",
+        "Collect from a real product page with schema.org reviews → reviews listed with a link"
+      ],
+      "deploys": [
+        "frontend",
+        "backend",
+        "database"
+      ],
+      "estimate_hours": 1.5,
+      "depends_on": [
+        "B14a"
+      ],
+      "fallback": "CSV upload alone still feeds the simulator."
+    },
+    {
+      "id": "B14d",
+      "title": "Per-product simulator fed by all dashboards",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "Each product's simulator uses its category's competitor prices, the company's runway and its customers' sentiment and requested features, and shows which input came from which dashboard.",
+      "why_now": "The integration the user asked for; it ties the four dashboards together for the demo.",
+      "use_cases": [
+        "UC-19",
+        "UC-07"
+      ],
+      "screens": [
+        "S-14",
+        "S-20"
+      ],
+      "components": [
+        "C-12"
+      ],
+      "scope_in": [
+        "simulations keyed by product",
+        "Runway flag: an option's months to break-even > runway",
+        "Sentiment shifts c0 (labelled, bounded ±20%); requested features raise feature coverage",
+        "Input chips: Market / Economics / Customers with links"
+      ],
+      "scope_out": [
+        "Changing the core formula in specs §4.4"
+      ],
+      "tasks": [
+        "Migration 0013 product_id on simulations",
+        "simulator inputs",
+        "tests on hand-computed cases",
+        "S-14 per product"
+      ],
+      "skills": [
+        {
+          "name": "tdd",
+          "use": "runway flag and sentiment adjustment"
+        },
+        {
+          "name": "fastapi",
+          "use": "per-product simulation endpoint"
+        },
+        {
+          "name": "frontend-design",
+          "use": "input chips on S-14"
+        }
+      ],
+      "done_check": [
+        "On <FRONTEND_URL> lower cash on Economics → the product's simulator shows a runway flag",
+        "Upload negative reviews → expected conversion drops and the chip links to Customers",
+        "The NimbusDeploy price cut still re-plans the product"
+      ],
+      "deploys": [
+        "frontend",
+        "backend",
+        "database"
+      ],
+      "estimate_hours": 1.5,
+      "depends_on": [
+        "B14b",
+        "B14c"
+      ],
+      "fallback": "Show the inputs beside the existing profile-level simulator without changing its numbers."
+    },
+    {
+      "id": "B14e",
+      "title": "Per-product comparison and inspiration",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "On a product, a company compares it with products in the same market category on price, revenue, features and add-ons, and sees inspiration products from other categories.",
+      "why_now": "Uses the products, revenue facts and existing comparison engine; lowest risk, so it goes last.",
+      "use_cases": [
+        "UC-20",
+        "UC-06"
+      ],
+      "screens": [
+        "S-23",
+        "S-13"
+      ],
+      "components": [
+        "C-11"
+      ],
+      "scope_in": [
+        "Comparison filtered to competitors in the product's category",
+        "Revenue column from funding_facts (cited) or Unknown",
+        "Add-ons row",
+        "Inspiration tab"
+      ],
+      "scope_out": [
+        "New scoring formula"
+      ],
+      "tasks": [
+        "comparison?product=",
+        "S-23"
+      ],
+      "skills": [
+        {
+          "name": "fastapi",
+          "use": "product-scoped comparison"
+        },
+        {
+          "name": "frontend-design",
+          "use": "S-23"
+        }
+      ],
+      "done_check": [
+        "On <FRONTEND_URL> open a product → its category comparison shows price, revenue (cited or Unknown), features and add-ons",
+        "Inspiration tab shows a different set"
+      ],
+      "deploys": [
+        "frontend",
+        "backend"
+      ],
+      "estimate_hours": 1,
+      "depends_on": [
+        "B14d"
+      ],
+      "fallback": "Link the product to the existing profile comparison filtered by category."
+    },
+    {
+      "id": "B14f",
+      "title": "Prototype v2 exit: four-dashboard golden path",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": "prototype-exit",
+      "goal": "A judge walks the four-dashboard golden path on the public URL twice without errors, with the README, deck and public repo ready to submit by 8:00.",
+      "why_now": "Freeze 07:00, deliverables 07:15, submit by 08:00.",
+      "use_cases": [
+        "UC-16",
+        "UC-17",
+        "UC-18",
+        "UC-19",
+        "UC-20"
+      ],
+      "screens": [
+        "S-20",
+        "S-21",
+        "S-22",
+        "S-23",
+        "S-14"
+      ],
+      "components": [],
+      "scope_in": [
+        "Golden path v2 walk x2",
+        "README + deck slides for the four dashboards",
+        "Smoke test extended"
+      ],
+      "scope_out": [
+        "New features after 07:00"
+      ],
+      "tasks": [
+        "Walk",
+        "Deck + README",
+        "Smoke"
+      ],
+      "skills": [
+        {
+          "name": "code-review",
+          "use": "low review before the final deploy"
+        },
+        {
+          "name": "hackathon-demo-submission",
+          "use": "deliverables checklist"
+        }
+      ],
+      "done_check": [
+        "Golden path v2 twice on <FRONTEND_URL> with no errors",
+        "Smoke passes",
+        "Repo public, deck exported, links submitted"
+      ],
+      "deploys": [
+        "frontend",
+        "backend"
+      ],
+      "estimate_hours": 1,
+      "depends_on": [
+        "B14e"
+      ],
+      "fallback": "Submit the B14 version (still live) if v2 breaks."
+    },
+    {
       "id": "B15",
       "title": "Scheduled monitoring without sleep",
       "phase": "mvp",
@@ -1178,7 +1564,7 @@
       "id": "B16",
       "title": "Review themes from permitted sources",
       "phase": "mvp",
-      "status": "todo",
+      "status": "cut",
       "milestone": null,
       "goal": "S-12 shows review themes (praise, complaints, requests) for a competitor from a permitted source, each with source link, date and sample size.",
       "why_now": "UC-15, the main MVP Should item from the scope.",
@@ -1230,7 +1616,7 @@
         "B15"
       ],
       "fallback": "Keep the seeded, labelled themes.",
-      "notes": "Described only."
+      "notes": "Described only. Superseded by B14c (prototype version)."
     },
     {
       "id": "B17",
@@ -1289,7 +1675,7 @@
       ],
       "estimate_hours": 3,
       "depends_on": [
-        "B16"
+        "B14c"
       ],
       "fallback": "",
       "notes": "Described only."
@@ -1302,7 +1688,9 @@
     "Resend can only email your own address without a verified domain; the demo uses ALERT_EMAIL_OVERRIDE.",
     "Supabase JWT signing: JWKS (asymmetric) vs legacy HS256 depends on project settings; check in B03.",
     "Fixtures for Tavily, Gemini, Groq and Resend responses don't exist yet; they're recorded on first live calls in B07/B08 (record mode).",
-    "MVP steps B15–B17 are described for the roadmap slide only, not built tonight."
+    "MVP steps B15–B17 are described for the roadmap slide only, not built tonight.",
+    "Deadline moved to 08:00 on 24 Oct (submission: PPT + deployed app + GitHub). Four-dashboard redesign B14a–B14f ≈ 8.5 h against ≈ 9 h to the 07:00 freeze. Cut order: (1) B14e inspiration tab, (2) B14e entirely, (3) CSV upload in B14c, (4) web mentions in B14c. The B14 golden path is never broken.",
+    "Social sources limited to own-site reviews, Tavily web/news mentions and CSV uploads; Instagram, LinkedIn and X are excluded (ToS or paid APIs), YouTube skipped by the user."
   ],
   "changelog": [
     {
@@ -1324,6 +1712,10 @@
     {
       "date": "2026-10-23",
       "change": "B03 done: Supabase (Mumbai, ap-south-1) via IPv4 session pooler; anonymous guest clone + isolation verified live. Email sign-up auto-login waits on 'Confirm email' being switched off in Supabase."
+    },
+    {
+      "date": "2026-10-23",
+      "change": "21:55 re-plan: B14 done; deadline 08:00 24 Oct; added B14a–B14f (four dashboards, products, economics, customers, per-product simulator and comparison); B14f is the new prototype exit; B16 superseded by B14c."
     }
   ]
 }
