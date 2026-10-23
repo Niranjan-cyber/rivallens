@@ -324,7 +324,8 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 | Per product: a suggested customer segment that must cite its evidence (price position, review themes, onboarding answers), and a price simulator whose inputs come from Market (category median, receipts), Money (unit cost from the Damodaran margin, runway) and Customers (sentiment ±20%, requests), each a chip linking to its dashboard | |
 | Change detection + noise ledger | |
 | Market: "Simulate a competitor move" next to "Check competitors now", category prices now, Indian market news and funding with links | |
-| Receipts with frozen evidence | Four demo businesses (footwear D2C, bakery, SaaS, quick commerce) built from real datasets |
+| Receipts with frozen evidence | |
+| Four demo sign-ins (Stride & Co. running shoes, Kesar Bakehouse, StackNest SaaS, QuickKart) built by calling the live API on licensed datasets (UCI Online Retail II, The Bread Basket, Amazon Fine Food reviews) and public pages; one click each on the login page | |
 | Alerts (bell + email), alert rules | |
 | Competitor discovery in India | |
 | Sourced comparison matrix | |
@@ -333,11 +334,11 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 | Competitor history timeline | |
 
 
-**Screenshots to add:** the Money dashboard (`docs/screenshots/s24-money.png`: runway 19.4 months, margin −23% vs 8.3% for Shoe in India) and the product comparison (Stride Runner ₹1,999 vs 8 real running shoes from Puma and Brooks India, "56% below the median ₹4,499"). Take it from the live app, or use `docs/screenshots/s23-product-compare.png`.
+**Screenshots (final, from the live app):** `docs/screenshots/b14k-overview.png`, `b14k-product.png` (price position, segment, simulator inputs incl. the competitor receipt), `b14k-money.png` (runway 19.4 months, margin −23.3% vs 8.3% for Shoe in India), `b14k-noise-ledger.png`, `b14k-receipt.png`, `b14j-bakery-customers.png`.
 
 > If the deck can be resubmitted at 08:00, move the items finished overnight into the left column and replace one screenshot with the Product dashboard.
 
-**Speaker notes (30 s):** "Everything on the left works now on the link. Scan the code and try the demo account. The right column is what we're building next."
+**Speaker notes (30 s):** "Everything on the left works now on the link. Scan the code and open a demo business from the login page. The right column is what we're building next."
 
 ---
 

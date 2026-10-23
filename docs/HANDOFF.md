@@ -64,8 +64,8 @@ Read this first in a new session. Then read `AGENTS.md`, which loads automatical
 | B14g | done | Customers (S-26). Uploads (reviews, comments, social insight exports), own-page JSON-LD reviews, web mentions (brand word + customer voice; no social or company-database sites). LLM sentiment plus up to 8 themes (request, complaint, praise), each citing mention ids that exist | `api/app/modules/customers/{service,router}.py`, `web/components/customers.tsx` |
 | B14h | done | Market (S-09, slug `dashboard`). "Simulate a competitor move" (demo accounts with mock instances; replaces Demo Lab in the header), "Check competitors now", category prices now, Indian market news (Tavily news, Indian business domains, at least 2 market words) | `web/components/market-extras.tsx`, `api/app/modules/products/news.py` |
 | B14i | done | Customer segment plus a per-product simulator fed by every dashboard | see §5 |
-| **B14j** | **next** | Four demo businesses built from real data | see §5 |
-| B14k | todo | Exit: golden path v2 twice, README, deck, public repo | see §5 |
+| B14j | done | Four demo businesses built from real data | see §5 |
+| B14k | done | Exit: golden path v2 twice, README, deck, public repo | see §5 |
 
 **Shared helpers to reuse:**
 - `card_value(card, key)` in `api/app/modules/discovery/pipeline.py`. Card fields can be `{value, origin}` or plain strings, so always use it.
@@ -181,3 +181,10 @@ node ../scripts/e2e/new-account-onboarding.cjs "$PW" "<out-dir>" "$EXE"
 ## 9. First message to send in the new chat
 
 > Read `docs/HANDOFF.md`, then continue the build with B14i using `docs/build-plan/prompts/B14i-*.md`. Same rules as before: one step at a time, verify on the live URL, update plan.json, the decision log and PPT-CONTENT.md, commit and push, then wait for "continue".
+
+## 10. Status at 02:40 IST, 24 Oct (B14i–B14k done)
+
+- **Done:** B14i (per-product segment and simulator), B14j (four demo sign-ins built from real data, D-86 to D-88), B14k (golden path v2 walked live, README rewritten, deck content updated, smoke extended and passing).
+- **Demo sign-ins:** `stride@`, `bakery@`, `stacknest@`, `quickkart@rivallens.demo`, password `RivalLens-demo-2026`; one-click buttons on the login page. Rebuild any of them with `cd api && .venv/Scripts/python -m scripts.build_demo <stride|bakery|stacknest|quickkart>` (wait for the API deploy first: a deploy mid-build kills its jobs).
+- **Checks:** `node scripts/e2e/golden-path-v2.cjs …`, `node scripts/e2e/demo-businesses.cjs …`, `FRONTEND_URL=… BACKEND_URL=… SUPABASE_URL=… SUPABASE_ANON_KEY=… bash scripts/smoke.sh`.
+- **Owner actions left:** make the GitHub repo public; build the final PPT from `docs/deck/PPT-CONTENT.md` with the `docs/screenshots/b14k-*.png` images; optionally add cron-job.org on `/healthz`.

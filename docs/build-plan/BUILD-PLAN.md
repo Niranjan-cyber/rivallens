@@ -76,8 +76,8 @@
 | B14g | Prototype | On Customers, a user sees reviews and comments from uploads, their own product pages and web mentions, with sentiment and the top requests, each linked to its source. | UC-18, UC-15, S-26 | tdd, fastapi, frontend-design | 1 h | B14b | — | done |
 | B14h | Prototype | Market shows competitor changes, category news and funding with links, the category price trend, and a 'Simulate a competitor move' control that replaces Demo Lab. | UC-04, UC-10, UC-11, S-25, S-10 | frontend-design, fastapi | 0.75 h | B14b | — | done |
 | B14i | Prototype | Each product shows a suggested customer segment and a simulator whose inputs come from Market (category prices, receipts), Money (cost, margin, runway) and Customers (sentiment, requests), each input linked to its dashboard. | UC-19, UC-22, UC-07, S-23, S-14 | tdd, fastapi, frontend-design | 1 h | B14d, B14e, B14g | — | done |
-| B14j | Prototype | Four demo sign-ins (Stride & Co. footwear, a Pune bakery, StackNest SaaS, QuickKart quick commerce) each open with every dashboard filled by running the pipeline on licensed datasets and real public pages. | UC-21, UC-16, UC-17, UC-18, UC-19, S-21, S-22, S-24, S-25, S-26 | fastapi, supabase | 1 h | B14i, B14f, B14h | — | todo |
-| B14k 🏁 | Prototype | A judge signs in as Stride & Co., walks main dashboard → Product → Market (simulated move) → back to Product → report, then switches to the bakery, twice without errors; README, PPT and the public repo are ready by 08:00. | UC-16, UC-17, UC-18, UC-19, UC-20, UC-21, UC-22, S-21, S-22, S-23, S-24, S-25, S-26 | code-review, hackathon-demo-submission | 0.75 h | B14j | — | todo |
+| B14j | Prototype | Four demo sign-ins (Stride & Co. footwear, a Pune bakery, StackNest SaaS, QuickKart quick commerce) each open with every dashboard filled by running the pipeline on licensed datasets and real public pages. | UC-21, UC-16, UC-17, UC-18, UC-19, S-21, S-22, S-24, S-25, S-26 | fastapi, supabase | 1 h | B14i, B14f, B14h | — | done |
+| B14k 🏁 | Prototype | A judge signs in as Stride & Co., walks main dashboard → Product → Market (simulated move) → back to Product → report, then switches to the bakery, twice without errors; README, PPT and the public repo are ready by 08:00. | UC-16, UC-17, UC-18, UC-19, UC-20, UC-21, UC-22, S-21, S-22, S-23, S-24, S-25, S-26 | code-review, hackathon-demo-submission | 0.75 h | B14j | — | done |
 | B15 | MVP | A user's competitors are re-checked on a schedule and new alerts appear without anyone clicking Run monitor. | UC-04, UC-08, S-09, S-16, S-17 | render-deploy, fastapi | 3 h | B14 | — | todo |
 | B17 🏁 | MVP | Any signed-up user receives alert emails from a verified domain and every push runs the test suite in replay mode before deploying. | UC-08, UC-15, S-02, S-16 | supabase, code-review | 3 h | B14k | — | todo |
 
@@ -467,7 +467,7 @@
 - **Prompt:** `prompts/B14i-customer-segment-and-a-simulator-fed-by.md`
 
 ### B14j — Four demo businesses built from real data
-- **Status:** todo
+- **Status:** done
 - **Goal:** Four demo sign-ins (Stride & Co. footwear, a Pune bakery, StackNest SaaS, QuickKart quick commerce) each open with every dashboard filled by running the pipeline on licensed datasets and real public pages.
 - **Why now:** Nothing intelligent is hand-written: demo accounts get their inputs from licensed datasets or public pages, and every output is computed by the same pipeline a real user gets.
 - **Slice:** UC UC-21, UC-16, UC-17, UC-18, UC-19 · Screens S-21, S-22, S-24, S-25, S-26 · Components C-28
@@ -482,7 +482,7 @@
 - **Prompt:** `prompts/B14j-four-demo-businesses-built-from-real.md`
 
 ### B14k — Prototype v2 exit: a product a founder can use 🏁 prototype exit
-- **Status:** todo
+- **Status:** done
 - **Goal:** A judge signs in as Stride & Co., walks main dashboard → Product → Market (simulated move) → back to Product → report, then switches to the bakery, twice without errors; README, PPT and the public repo are ready by 08:00.
 - **Why now:** Freeze 07:00, submit by 08:00.
 - **Slice:** UC UC-16, UC-17, UC-18, UC-19, UC-20, UC-21, UC-22 · Screens S-21, S-22, S-23, S-24, S-25, S-26 · Components —

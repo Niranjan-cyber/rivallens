@@ -25,7 +25,7 @@ const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
     await page.getByLabel("Your main products (comma-separated)").fill("Chocolate truffle cake, Brownies");
     await page.getByRole("button", { name: "Next" }).click();
     await page.getByLabel("Funding stage (optional)").selectOption("Bootstrapped");
-    await page.getByLabel(/Who are your customers/).fill("Recreational runners aged 22-40 in Indian metros");
+    await page.getByLabel(/Who are your customers/).fill("Families and office teams ordering cakes and brownies");
     await page.getByRole("button", { name: "Draft my business card" }).click();
     await page.locator("[data-screen=S-05]").waitFor();
     console.log("2. card check, name =", await page.getByLabel(/^Name/).inputValue());
