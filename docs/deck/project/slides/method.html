@@ -1,0 +1,22 @@
+<section id="method" data-transition="fade" style="background:#F3F0EE;color:#141413;font-family:'Sofia Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:40px">
+<p style="font-size:30px;font-weight:700;color:#B03A00">Detection method</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.1;letter-spacing:-1px">Section hashes, then rules, then a field diff</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:30px;line-height:1.4;color:#3A3836">Each page is split into sections (nav, footer, banners, each block of main) and hashed three ways: normalised text, raw text, HTML.</p>
+<p style="font-size:30px;line-height:1.4;color:#3A3836">Prices are read only inside pricing sections, with plausibility checks learned from real pages ($829,000 ROI stats and “monthly spend” surveys are dropped).</p>
+<p style="font-size:30px;line-height:1.4;color:#3A3836">Suspicious moves (over 80%, vanished price, new currency) are kept for review and never alert.</p>
+</div>
+<table style="font-family:'Sofia Sans', Arial, sans-serif;font-size:26px;color:#141413">
+<tr><th style="width:55%">Changed section</th><th style="width:45%">Ledger reason</th></tr>
+<tr><td>nav, header, footer, aside</td><td>navigation_or_footer</td></tr>
+<tr><td>banner, promo, cookie</td><td>promo_banner</td></tr>
+<tr><td>HTML only, same text</td><td>formatting_only</td></tr>
+<tr><td>spacing or case only</td><td>whitespace</td></tr>
+<tr><td>same lines, new order</td><td>reordering</td></tr>
+<tr><td>digits only, outside pricing</td><td>dynamic_content</td></tr>
+<tr><td>pricing or headline</td><td>field diff → change</td></tr>
+</table>
+</div>
+<aside>Every changed section lands in exactly one bucket: the ledger or a change. That is why the cosmetic redesign gives 4 ledger rows and 0 changes, and the price cut gives 1 change. Both are unit tests on the real rendered mock pages.</aside>
+</section>

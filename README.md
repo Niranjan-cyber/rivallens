@@ -34,6 +34,12 @@ Other screens to explore:
 - **Competitor detail:** price history and timeline.
 - **Qubit Labs:** an idea profile whose viability flags fire.
 
+| Noise ignored (0 meaningful, 4 ignored) | The receipt for a real price cut |
+|---|---|
+| ![Noise ledger](docs/screenshots/s10-noise-ledger.png) | ![Receipt](docs/screenshots/s11-receipt.png) |
+| **Simulator re-planned by that receipt** | **Sourced comparison, Unknown never scored** |
+| ![Simulator](docs/screenshots/s14-simulator-replanned.png) | ![Comparison](docs/screenshots/s13-comparison.png) |
+
 ## How change detection works
 
 Detection is rules-first, so the core demo never depends on an LLM.
