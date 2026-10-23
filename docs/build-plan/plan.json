@@ -575,7 +575,7 @@
       "id": "B07",
       "title": "Card drafting via the LLM gateway",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "A signed-in user types one line about their business on S-04 and gets a pre-filled S-05 wizard with AI-drafted badges, then saves the profile and sees its card on S-06.",
       "why_now": "First live LLM call: proves the gateway (Gemini → Groq fallback, cache, rate limits, replay mode) before discovery and extraction depend on it.",

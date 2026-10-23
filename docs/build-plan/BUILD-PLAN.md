@@ -51,7 +51,7 @@
 | B04 | Prototype | In the Demo Lab, a user applies 'cosmetic' then 'price cut' to NimbusDeploy (demo) and Run monitor on S-10 shows 0 meaningful changes the first time and the Pro price drop as meaningful the second time, with every ignored diff listed with its reason. | UC-04, UC-10, S-09, S-10, S-18, S-19 | tdd, fastapi, vercel-react-best-practices, code-review | 0.55 h | B03 | — | done |
 | B05 | Prototype | Clicking the meaningful change on S-10 opens S-11, which shows prev → curr, delta, observed-at and the before/after snapshot text with the price highlighted. | UC-05, S-10, S-11 | supabase, frontend-design | 0.3 h | B04 | — | done |
 | B06 | Prototype | After a price-cut run, a high-priority alert linking to the receipt appears in the bell (an email copy goes to the owner address). | UC-08, UC-12, S-11, S-16, S-17 | tdd, fastapi | 0.35 h | B05 | — | done |
-| B07 | Prototype | A signed-in user types one line about their business on S-04 and gets a pre-filled S-05 wizard with AI-drafted badges, then saves the profile and sees its card on S-06. | UC-02, S-04, S-05, S-06 | tdd, frontend-design | 0.4 h | B03 | — | todo |
+| B07 | Prototype | A signed-in user types one line about their business on S-04 and gets a pre-filled S-05 wizard with AI-drafted badges, then saves the profile and sees its card on S-06. | UC-02, S-04, S-05, S-06 | tdd, frontend-design | 0.4 h | B03 | — | done |
 | B08 | Prototype | After saving a card, S-08 lists India-verified competitors found automatically (plus the user-added NimbusDeploy (demo) URL), ready to monitor. | UC-03, S-06, S-07, S-08, S-17 | tdd, fastapi | 0.55 h | B07, B04 | — | todo |
 | B09 | Prototype | S-13 ranks monitored competitors against the user's product on configurable, sourced criteria where Unknown cells never count against anyone. | UC-06, S-13, S-12 | tdd | 0.25 h | B08 | — | todo |
 | B10 | Prototype | After a competitor price-cut run, S-14 shows a re-planned launch recommendation from options A/B/C whose best/expected/worst outcomes cite editable assumptions. | UC-07, UC-14, S-09, S-11, S-14 | tdd, code-review | 0.4 h | B09, B06 | — | todo |
@@ -171,7 +171,7 @@
 - **Notes:** Cut order item 2: drop email if behind (keep bell + center).
 
 ### B07 — Card drafting via the LLM gateway
-- **Status:** todo
+- **Status:** done
 - **Goal:** A signed-in user types one line about their business on S-04 and gets a pre-filled S-05 wizard with AI-drafted badges, then saves the profile and sees its card on S-06.
 - **Why now:** First live LLM call: proves the gateway (Gemini → Groq fallback, cache, rate limits, replay mode) before discovery and extraction depend on it.
 - **Slice:** UC UC-02 · Screens S-04, S-05, S-06 · Components C-01, C-03, C-04, C-14, C-15, C-19, C-20
