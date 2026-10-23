@@ -222,3 +222,10 @@ def store_snapshot(source_id: str, observed_at: str, html: str) -> tuple[str, st
         return digest, path if r.status_code in (200, 201) else None
     except httpx.HTTPError:
         return digest, None
+
+
+def sign_snapshot(path: str, expires_in: int) -> str:
+    r = httpx.post(f"{SUPABASE_URL}/storage/v1/object/sign/snapshots/{path}", json={"expiresIn": expires_in}, timeout=15,
+                   headers={"apikey": SUPABASE_SECRET_KEY, "Authorization": f"Bearer {SUPABASE_SECRET_KEY}"})
+    r.raise_for_status()
+    return f"{SUPABASE_URL}/storage/v1{r.json()['signedURL']}"

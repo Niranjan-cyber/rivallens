@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { ReceiptView } from "@/components/receipt";
 import { RunMonitorButton } from "@/components/run-monitor";
 import { RunResult } from "@/components/run-result";
 import { StubPage } from "@/components/stub-page";
@@ -11,6 +12,7 @@ async function Section({ params }: { params: PageProps<"/app/[profileId]/[sectio
   const meta = sections.find((s) => s.slug === section) ?? extraScreens[section as keyof typeof extraScreens];
   if (!meta) notFound();
   if (section === "run") return <RunResult profileId={profileId} />;
+  if (section === "receipt") return <ReceiptView profileId={profileId} />;
 
   return (
     <StubPage title={meta.label} purpose={meta.purpose} screen={meta.screen}>

@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SampleBadge } from "@/components/ui";
 import { api, type Run } from "@/lib/api";
+import { CHANGES, fieldLabel } from "@/lib/labels";
 
 const REASONS: Record<string, string> = {
   navigation_or_footer: "Menu or footer",
@@ -15,25 +17,6 @@ const REASONS: Record<string, string> = {
   outside_pricing: "Outside pricing",
   no_tracked_field: "No tracked field",
 };
-
-const CHANGES: Record<string, string> = {
-  price_decrease: "Price cut",
-  price_increase: "Price rise",
-  plan_added: "New plan",
-  plan_removed: "Plan dropped",
-  feature_added: "Feature added",
-  feature_removed: "Feature removed",
-  positioning_change: "New positioning",
-  price_missing: "Price no longer shown",
-  price_added: "Price now shown",
-  currency_change: "Currency changed",
-};
-
-function fieldLabel(field: string) {
-  const [, plan, part] = field.split(".");
-  if (field === "headline") return "Headline";
-  return part ? `${plan} plan ${part === "price" ? "price" : part}` : `${plan} plan`;
-}
 
 // S-10: what changed since the last check, and every ignored difference with its reason.
 export function RunResult({ profileId }: { profileId: string }) {
@@ -88,8 +71,12 @@ export function RunResult({ profileId }: { profileId: string }) {
           <h2 className="mt-12 text-[24px] font-medium tracking-[-0.02em]">What changed</h2>
           <ul className="mt-4 grid gap-3">
             {meaningful.map((c) => (
-              <li key={c.change_event_id} className="rounded-btn border-[1.5px] border-ink bg-white p-6">
-                <p className="text-[15px] text-slate">{c.competitor} · {CHANGES[c.change_type] ?? c.change_type}</p>
+              <li key={c.change_event_id}>
+                <Link href={`/app/${profileId}/receipt?id=${c.change_event_id}`} className="block rounded-btn border-[1.5px] border-ink bg-white p-6 hover:shadow-lift-2">
+                <p className="flex justify-between gap-3 text-[15px] text-slate">
+                  <span>{c.competitor} · {CHANGES[c.change_type] ?? c.change_type}</span>
+                  <span className="font-medium text-ink">See receipt</span>
+                </p>
                 <p className="mt-1 text-[22px] font-medium tracking-[-0.02em]">
                   {fieldLabel(c.field)}: {c.prev ?? "none"} → {c.curr ?? "none"}
                   {c.delta_pct !== null && (
@@ -98,6 +85,7 @@ export function RunResult({ profileId }: { profileId: string }) {
                     </span>
                   )}
                 </p>
+                </Link>
               </li>
             ))}
           </ul>
@@ -110,9 +98,11 @@ export function RunResult({ profileId }: { profileId: string }) {
           <p className="mt-1 text-charcoal">These look unusual (a huge jump, a vanished price or a new currency), so they don&apos;t raise alerts until you check them.</p>
           <ul className="mt-4 grid gap-3">
             {review.map((c) => (
-              <li key={c.change_event_id} className="rounded-btn bg-lifted p-6">
-                <p className="text-[15px] text-slate">{c.competitor} · {CHANGES[c.change_type] ?? c.change_type}</p>
-                <p className="mt-1 text-[18px]">{fieldLabel(c.field)}: {c.prev ?? "none"} → {c.curr ?? "none"}</p>
+              <li key={c.change_event_id}>
+                <Link href={`/app/${profileId}/receipt?id=${c.change_event_id}`} className="block rounded-btn bg-lifted p-6 hover:shadow-lift-1">
+                  <p className="text-[15px] text-slate">{c.competitor} · {CHANGES[c.change_type] ?? c.change_type}</p>
+                  <p className="mt-1 text-[18px]">{fieldLabel(c.field)}: {c.prev ?? "none"} → {c.curr ?? "none"}</p>
+                </Link>
               </li>
             ))}
           </ul>

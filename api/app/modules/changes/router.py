@@ -1,7 +1,9 @@
+import json
 from datetime import datetime
 from typing import Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
+import httpx
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -10,6 +12,7 @@ from app import jobs
 from app.auth import UserDep
 from app.db import ConnDep, engine
 from app.modules.changes.runs import monitor, show, start_run
+from app.modules.collector.service import sign_snapshot
 
 router = APIRouter(prefix="/api/v1", tags=["monitoring"])
 
@@ -150,3 +153,142 @@ def get_job(job_id: UUID, user: UserDep, conn: ConnDep) -> JobStatus:
     if row is None:
         raise HTTPException(404, {"code": "not_found", "message": "Job not found."})
     return JobStatus(**row)
+
+
+# ---- Receipts (S-11) --------------------------------------------------------------------------------------------
+WINDOW = 600
+
+
+class Named(BaseModel):
+    id: UUID
+    name: str
+
+
+class Receipt(BaseModel):
+    id: UUID
+    profile_id: UUID
+    competitor: Named
+    source_url: str
+    change_type: str
+    field: str
+    prev_value: dict | str | None
+    curr_value: dict | str | None
+    prev_display: str | None
+    curr_display: str | None
+    delta_pct: float | None
+    status: str
+    observed_at: datetime
+    prev_observed_at: datetime | None
+    published_at: datetime | None
+    wayback_url: str | None
+    is_demo_data: bool
+    muted: bool
+    priority: int | None
+    priority_breakdown: dict | None
+    simulation_impact: dict | None
+
+
+class EvidenceSide(BaseModel):
+    snapshot_id: UUID
+    observed_at: datetime
+    text_window: str
+    highlight: dict | None
+
+
+class Evidence(BaseModel):
+    before: EvidenceSide | None
+    after: EvidenceSide | None
+    sha256: dict
+    evidence_missing: bool
+
+
+class SignedSnapshot(BaseModel):
+    signed_url: str
+    expires_in: int
+
+
+class FeedbackIn(BaseModel):
+    relevant: bool
+
+
+def _receipt_row(conn, receipt_id: UUID, user_id: UUID):
+    row = conn.execute(text("""
+        select e.*, c.name as competitor_name, c.profile_id, s.url as source_url from change_events e
+        join competitors c on c.id = e.competitor_id join profiles p on p.id = c.profile_id join sources s on s.id = e.source_id
+        where e.id = :id and p.user_id = :u
+    """), {"id": receipt_id, "u": user_id}).mappings().first()
+    if row is None:
+        raise HTTPException(404, {"code": "not_found", "message": "Receipt not found."})
+    return row
+
+
+@router.get("/receipts/{receipt_id}")
+def get_receipt(receipt_id: UUID, user: UserDep, conn: ConnDep) -> Receipt:
+    e = _receipt_row(conn, receipt_id, user.id)
+    muted = conn.execute(text("""
+        select exists (select 1 from alert_rules r, jsonb_array_elements(r.muted) m
+                       where r.profile_id = :p and m->>'competitor_id' = :c and m->>'field_path' = :f)
+    """), {"p": e["profile_id"], "c": str(e["competitor_id"]), "f": e["field_path"]}).scalar()
+    return Receipt(
+        id=e["id"], profile_id=e["profile_id"], competitor=Named(id=e["competitor_id"], name=e["competitor_name"]),
+        source_url=e["source_url"], change_type=e["change_type"], field=e["field_path"],
+        prev_value=e["prev_value"], curr_value=e["curr_value"], prev_display=show(e["prev_value"]), curr_display=show(e["curr_value"]),
+        delta_pct=e["delta_pct"], status=e["status"], observed_at=e["observed_at"], prev_observed_at=e["prev_observed_at"],
+        published_at=e["published_at"], wayback_url=e["wayback_url"], is_demo_data=e["is_demo_data"], muted=muted,
+        priority=e["priority"], priority_breakdown=e["priority_breakdown"], simulation_impact=None,
+    )
+
+
+def _side(conn, snapshot_id: UUID | None, span: dict | None) -> tuple[EvidenceSide | None, str | None]:
+    snap = conn.execute(text("select id, observed_at, text, sha256 from snapshots where id = :id"), {"id": snapshot_id}).mappings().first() if snapshot_id else None
+    if snap is None or snap["text"] is None:
+        return None, None
+    body = snap["text"]
+    if span is None:  # nothing to highlight: show the top of the page
+        return EvidenceSide(snapshot_id=snap["id"], observed_at=snap["observed_at"], text_window=body[: 2 * WINDOW], highlight=None), snap["sha256"]
+    lo = max(span["start"] - WINDOW, 0)
+    return EvidenceSide(snapshot_id=snap["id"], observed_at=snap["observed_at"], text_window=body[lo: span["end"] + WINDOW],
+                        highlight={"start": span["start"] - lo, "end": span["end"] - lo}), snap["sha256"]
+
+
+@router.get("/receipts/{receipt_id}/evidence")
+def get_evidence(receipt_id: UUID, user: UserDep, conn: ConnDep) -> Evidence:
+    e = _receipt_row(conn, receipt_id, user.id)
+    excerpt = e["excerpt"] or {}
+    before, sha_before = _side(conn, e["before_snapshot_id"], excerpt.get("before"))
+    after, sha_after = _side(conn, e["after_snapshot_id"], excerpt.get("after"))
+    return Evidence(before=before, after=after, sha256={"before": sha_before, "after": sha_after},
+                    evidence_missing=before is None or after is None)
+
+
+@router.get("/snapshots/{snapshot_id}/html")
+def snapshot_html(snapshot_id: UUID, user: UserDep, conn: ConnDep) -> SignedSnapshot:
+    path = conn.execute(text("""
+        select sn.storage_path from snapshots sn join sources s on s.id = sn.source_id join competitors c on c.id = s.competitor_id
+        join profiles p on p.id = c.profile_id where sn.id = :id and p.user_id = :u
+    """), {"id": snapshot_id, "u": user.id}).scalar()
+    if path is None:
+        raise HTTPException(404, {"code": "not_found", "message": "Saved page not found."})
+    try:
+        url = sign_snapshot(path, 300)
+    except httpx.HTTPError:
+        raise HTTPException(502, {"code": "storage_unavailable", "message": "The saved page can't be opened right now. The text evidence above is unaffected."})
+    return SignedSnapshot(signed_url=url, expires_in=300)
+
+
+@router.post("/receipts/{receipt_id}/feedback")
+def receipt_feedback(receipt_id: UUID, body: FeedbackIn, user: UserDep, conn: ConnDep) -> dict[str, UUID | None]:
+    e = _receipt_row(conn, receipt_id, user.id)
+    conn.execute(text("insert into alert_rules (profile_id) values (:p) on conflict (profile_id) do nothing"), {"p": e["profile_id"]})
+    match = {"competitor_id": str(e["competitor_id"]), "field_path": e["field_path"]}
+    # Drop any existing mute for this competitor + field, then add one back if the user says it's not relevant.
+    conn.execute(text("""
+        update alert_rules set muted = coalesce((select jsonb_agg(m) from jsonb_array_elements(muted) m
+            where not (m->>'competitor_id' = :c and m->>'field_path' = :f)), '[]'::jsonb) where profile_id = :p
+    """), {"p": e["profile_id"], "c": match["competitor_id"], "f": match["field_path"]})
+    if body.relevant:
+        return {"muted_rule_id": None}
+    rule_id = uuid4()
+    conn.execute(text("update alert_rules set muted = muted || cast(:m as jsonb) where profile_id = :p"),
+                 {"p": e["profile_id"], "m": json.dumps([{**match, "id": str(rule_id), "change_event_id": str(receipt_id)}])})
+    return {"muted_rule_id": rule_id}

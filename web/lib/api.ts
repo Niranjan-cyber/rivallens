@@ -60,3 +60,25 @@ export type Run = {
 };
 
 export type Mock = { slug: string; name: string; version: string[]; url: string };
+
+export type Receipt = {
+  id: string;
+  profile_id: string;
+  competitor: { id: string; name: string };
+  source_url: string;
+  change_type: string;
+  field: string;
+  prev_display: string | null;
+  curr_display: string | null;
+  delta_pct: number | null;
+  status: "confirmed" | "needs_review";
+  observed_at: string;
+  prev_observed_at: string | null;
+  published_at: string | null;
+  wayback_url: string | null;
+  is_demo_data: boolean;
+  muted: boolean;
+};
+
+export type EvidenceSide = { snapshot_id: string; observed_at: string; text_window: string; highlight: { start: number; end: number } | null };
+export type Evidence = { before: EvidenceSide | null; after: EvidenceSide | null; sha256: { before: string | null; after: string | null }; evidence_missing: boolean };
