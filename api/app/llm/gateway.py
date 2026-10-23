@@ -16,8 +16,8 @@ from app.db import engine
 log = logging.getLogger("llm")
 LLM_MODE = os.getenv("LLM_MODE", "live")  # live | replay | record
 GEMINI_KEY, GROQ_KEY = os.getenv("GEMINI_API_KEY", "").strip(), os.getenv("GROQ_API_KEY", "").strip()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-lite-latest")  # flash-latest timed out at 20 s (L-16)
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")  # Groq retired the Llama 3.3 models (404)
 RPM = {"gemini": int(os.getenv("GEMINI_RPM", "5")), "groq": int(os.getenv("GROQ_RPM", "30"))}
 FIXTURES = Path(__file__).resolve().parents[3] / "fixtures" / "llm"
 SYSTEM = ("Use only the provided text. Return null for anything unknown. Do not infer prices or features. "

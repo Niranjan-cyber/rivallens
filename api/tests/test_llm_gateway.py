@@ -68,3 +68,13 @@ def test_replay_mode_never_calls_a_provider(world, monkeypatch):
     with pytest.raises(LLMUnavailable):
         complete_json("t", Out, {"text": "unseen"})
     assert calls == []
+
+
+def test_draft_card_replays_the_recorded_gemini_answer(monkeypatch):
+    """fixtures/llm/draft_card-*.json was recorded from a live Gemini call on 23 Oct 2026."""
+    from app.modules.profiles.drafting import draft_card
+    monkeypatch.setattr(gateway, "LLM_MODE", "replay")
+    monkeypatch.setattr(gateway, "_cache_get", lambda key: None)
+    d = draft_card("business", "Pune startup, managed app deployment for Indian developers, Pro ₹999/mo", None)
+    assert (d["offering_type"], d["price"]["amount"], d["price"]["currency"], d["price"]["period"]) == ("service", 999.0, "INR", "month")
+    assert "Pune" in d["india_markets"]

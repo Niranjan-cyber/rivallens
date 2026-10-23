@@ -1,0 +1,18 @@
+{
+ "name": null,
+ "price": {
+  "amount": 999.0,
+  "period": "month",
+  "currency": "INR"
+ },
+ "problem": null,
+ "category": "managed app deployment",
+ "industry": null,
+ "attributes": [],
+ "india_markets": [
+  "Pune"
+ ],
+ "offering_type": "service",
+ "target_customer": "Indian developers",
+ "planned_features": []
+}

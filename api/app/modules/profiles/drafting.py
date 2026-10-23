@@ -7,7 +7,7 @@ from app.jobs import Job
 from app.llm.gateway import LLMUnavailable, complete_json
 from app.modules.collector.service import fetch, split_sections
 
-PROMPT_VERSION = "draft_card.v1"
+PROMPT_VERSION = "draft_card.v2"
 
 
 class Price(BaseModel):
@@ -20,7 +20,8 @@ class CardDraft(BaseModel):
     name: str | None = Field(None, description="Business or product name, if stated")
     industry: str | None = None
     category: str | None = Field(None, description="Short market category, e.g. 'Managed app deployment'")
-    offering_type: Literal["product", "service"] | None = None
+    offering_type: Literal["product", "service"] | None = Field(
+        None, description="service for software, SaaS, hosting, platforms or anything delivered as a service; product for physical goods")
     india_markets: list[str] = Field(default_factory=list, description="Indian cities or regions served, if stated")
     attributes: list[str] = Field(default_factory=list, description="Up to 5 key attributes or features")
     price: Price | None = None
