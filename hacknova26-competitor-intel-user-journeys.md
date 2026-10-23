@@ -770,20 +770,28 @@ Total about 4 minutes. The seeded profiles exist, and the mocks are reset to v1 
   - Which real company pages are safe to monitor live (robots.txt check pending).
   - The final product name (RivalLens is a placeholder).
 
-## 11. Addendum (23 Oct 21:55): four dashboards
+## 11. Addendum (23 Oct 22:45): the four-dashboard product
 
-Added after the prototype, planned as B14a–B14f (D-73, D-74).
+Added after the prototype, planned as B14a–B14k (D-73 to D-76).
 
-- **UC-16 Manage products.** A company lists its existing products and adds a new one; each gets a market category, features, add-ons and a price.
-- **UC-17 See economics.** A company enters cash, funding and monthly burn to see its runway, and sees competitors' funding and reported revenue with a source link and date (Unknown when nothing is found).
-- **UC-18 Hear customers.** A company sees reviews from its own pages, web and news mentions and uploaded review exports, with sentiment and themes, each linked to its source.
-- **UC-19 Simulate a product.** A product's simulator uses its category's competitor prices, the company's runway and its customers' sentiment and requested features, showing which dashboard each input came from.
-- **UC-20 Compare a product.** A product is compared with others in its market category on price, revenue, features and add-ons, with inspiration products from other categories.
+**Flow:** sign up (verified email or Google) → onboarding → business card → main dashboard → Product (first), Money, Market, Customers.
 
-Screens:
-- **S-20 Product dashboard:** Existing / New tabs and Add product.
-- **S-21 Economics:** runway and competitor funding.
-- **S-22 Customers:** mentions, sentiment and themes.
-- **S-23 Product detail:** category comparison, inspiration and a link to the product's simulator.
+**Use cases:**
+- **UC-16 Manage products.** List existing and new products; each gets an exact Google-taxonomy category, a price, features and add-ons.
+- **UC-17 See money.** Upload a CSV/Excel export or add entries by hand to see revenue, margin against the Indian industry benchmark, product prices, the transaction log, funding and runway. Competitors' revenue and funding are shown with a source link, or as Unknown.
+- **UC-18 Hear customers.** Reviews and comments from uploads, the company's own pages and web mentions, with sentiment and the top requests, each linked to its source.
+- **UC-19 Simulate a product.** A product's simulator takes its inputs from Market, Money and Customers, and each input links to its dashboard.
+- **UC-20 Compare a product.** Only products in the same category are compared, on price, features, add-ons and revenue, with premium inspirations.
+- **UC-21 Sign up and onboard.** Verified email or Google sign-in, then a short form, an optional step, and a confirmed business card.
+- **UC-22 Suggest a customer segment.** Each product gets a segment suggestion that cites its price position, review themes and target customers.
 
-Navigation: each profile opens on four dashboards. Market intelligence holds the existing S-09, S-08, S-13, S-16, S-15 and S-17.
+**Screens:**
+- **S-20** Onboarding
+- **S-21** Main dashboard
+- **S-22** Product dashboard (Existing / New)
+- **S-23** Product detail (comparison, inspirations, segment, simulator)
+- **S-24** Money
+- **S-25** Market overview: the existing S-09, S-08, S-13, S-16 and S-15 move under it, and the simulated competitor move replaces S-18 Demo Lab
+- **S-26** Customers
+
+**Demo accounts:** four separate sign-ins (Stride & Co., a Pune bakery, StackNest, QuickKart). Each is built by running the pipeline on licensed datasets and public pages, and is labelled "Demo business, modelled on …".

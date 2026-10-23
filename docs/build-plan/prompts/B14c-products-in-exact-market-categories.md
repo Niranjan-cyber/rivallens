@@ -1,4 +1,4 @@
-# B14c — Customers dashboard from permitted sources
+# B14c — Products in exact market categories
 
 Build step B14c of **RivalLens (working name)** (Prototype). Paste this into Claude Code / Codex / Cursor at the repo root. Do only this step.
 
@@ -12,51 +12,49 @@ Build step B14c of **RivalLens (working name)** (Prototype). Paste this into Cla
 - `fixtures/README.md` (Fixtures README: only for parser/test steps; never open raw HTML fixtures)
 
 ## The goal (the only goal of this step)
-On Customers, a company sees reviews from its own site, web and news mentions, and uploaded review exports, with sentiment and themes, each linked to its source.
+On Product, a user sees Existing and New products, adds one, and gets its exact category from the Google product taxonomy (a football lands in Soccer Balls, a chair in Chairs).
 
-**Why now:** Customer sentiment and requested features are simulator inputs; replaces MVP B16 with a prototype version.
+**Why now:** Category drives every comparison; wrong categories make everything after this meaningless.
 
 ## Slice
-- Use cases: UC-18, UC-15
+- Use cases: UC-16
 - Screens: S-22
-- Components: C-30
+- Components: C-29
 - Stack: frontend: Next.js 15 App Router + TS + Tailwind + shadcn/ui on Vercel (root: web/); backend: FastAPI + SQLAlchemy 2 + psycopg 3 on Render Free, Singapore (root: api/); data: Supabase Free: Postgres (session pooler), Auth (email + anonymous), Storage bucket 'snapshots'; ai: Gemini free (primary) + Groq free (fallback) via LLM gateway with Postgres cache; integrations: Tavily search, Resend email, Internet Archive CDX
 
 ## In scope
-- Own-site reviews: schema.org Review/AggregateRating JSON-LD + review sections, robots respected
-- Web/news mentions via Tavily with URL and date
-- CSV upload (text, rating, date, source)
-- LLM sentiment + themes per batch (cached, replay fixture)
-- customer_mentions table
+- products table (profile, name, stage existing|new, taxonomy id + path, price, unit, cost, features, add_ons, url)
+- Google product taxonomy (~5,500 paths) stored in Postgres
+- Classifier: keyword prefilter to 20 candidate paths → LLM picks one (cached, replay fixture); user can change it
+- Product from a URL reads schema.org Product JSON-LD (name, price, brand) when present
 
 ## Out of scope for this step
-- Instagram, LinkedIn, X (ToS / paid API)
-- YouTube API
+- Comparison (B14d)
 
 ## Suggested tasks
-- Migration 0012_customers
-- collector reuse for review pages
-- CSV parser
-- themes prompt
-- S-22
+- Migration 0010_products + taxonomy load
+- classify task + tests on 10 hand-labelled products
+- S-22 Existing / New tabs, Add product
 
 ## Skills — use in this order
-1. **tdd** — JSON-LD review parsing on a fixture, CSV parsing
-2. **fastapi** — upload + collect job
-3. **frontend-design** — S-22
+1. **supabase-postgres-best-practices** — products + taxonomy tables and indexes
+2. **tdd** — taxonomy prefilter and JSON-LD product parsing on fixtures
+3. **fastapi** — products CRUD + classify
+4. **frontend-design** — S-22
 
 Always-on rules for every step: **ponytail**.
 
 ## Done when (check on the deployed app, not locally)
-1. On <FRONTEND_URL> Customers: upload the sample CSV → mentions, sentiment split and top themes appear
-2. Collect from a real product page with schema.org reviews → reviews listed with a link
+1. On <FRONTEND_URL> add 'Size 5 training football' → category ends in Soccer Balls; 'Ergonomic office chair' → Office Chairs
+2. Add a product from a real product URL → name and price filled from the page
+3. Change the category by hand → it sticks
 
 ## If it goes wrong
-CSV upload alone still feeds the simulator.
+If the LLM is down, the top prefilter match is preselected and the user confirms.
 
 ## When finished
 1. Make sure everything above is deployed (frontend, backend, database) and the done-check passes on the public URL.
 2. Set `"status": "done"` for B14c in `docs/build-plan/plan.json`, then run `python C:\Users\Niranjan Iyer\.claude\skills\synced\4388f05c-eb72-4dd8-a66b-700dfbb34581_a5c3319d-ef87-457c-8cc8-fe986ddce72a\prototype-build-planner\scripts\build_plan.py render docs/build-plan/plan.json`.
-3. Commit as `B14c: Customers dashboard from permitted sources`.
+3. Commit as `B14c: Products in exact market categories`.
 4. Report what changed and the done-check result, then stop. Don't start the next step without being asked.
 

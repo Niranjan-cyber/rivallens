@@ -1,4 +1,4 @@
-# B14b — Economics dashboard with cited funding
+# B14b — Onboarding, business card and the main dashboard
 
 Build step B14b of **RivalLens (working name)** (Prototype). Paste this into Claude Code / Codex / Cursor at the repo root. Do only this step.
 
@@ -12,48 +12,50 @@ Build step B14b of **RivalLens (working name)** (Prototype). Paste this into Cla
 - `fixtures/README.md` (Fixtures README: only for parser/test steps; never open raw HTML fixtures)
 
 ## The goal (the only goal of this step)
-On Economics, a company enters its cash, funding and monthly burn to see its runway, and sees competitors' funding and reported revenue with a source link and date.
+After sign-up, a user fills a short onboarding form, confirms the drafted business card, and lands on a main dashboard with four dashboards: Product, Money, Market and Customers.
 
-**Why now:** Riskiest new unknown (news extraction quality for Indian private companies); its runway is a simulator input.
+**Why now:** This is the product's front door; every later step fills one of these four dashboards.
 
 ## Slice
-- Use cases: UC-17
-- Screens: S-21
-- Components: C-29
+- Use cases: UC-21, UC-02
+- Screens: S-20, S-21, S-06
+- Components: C-28
 - Stack: frontend: Next.js 15 App Router + TS + Tailwind + shadcn/ui on Vercel (root: web/); backend: FastAPI + SQLAlchemy 2 + psycopg 3 on Render Free, Singapore (root: api/); data: Supabase Free: Postgres (session pooler), Auth (email + anonymous), Storage bucket 'snapshots'; ai: Gemini free (primary) + Groq free (fallback) via LLM gateway with Postgres cache; integrations: Tavily search, Resend email, Internet Archive CDX
 
 ## In scope
-- company_finances (cash, monthly_burn, monthly_revenue, rounds jsonb) entered by the user
-- Runway = cash / (burn - revenue)
-- Tavily search per competitor for funding/revenue → LLM extracts amount, round, date with the quote; page saved as a snapshot; anything not found is Unknown
-- funding_facts table with evidence
+- Onboarding step 1 (required): business name, type (startup, D2C, local business, SaaS, vendor), city, website, one-line description, main products
+- Step 2 (optional): funding stage, monthly revenue range, target customers, social handles
+- Card drafted by the existing card task, user edits and confirms
+- Main dashboard: 4 summary cards (empty states that say what to add)
+- Nav: Product (first), Money, Market (existing screens move here), Customers
+- Business switcher hidden when an account has one business
 
 ## Out of scope for this step
-- Paid databases (Crunchbase, Tracxn)
-- Bank or accounting integrations
+- Dashboard contents (later steps)
 
 ## Suggested tasks
-- Migration 0011_economics
-- economics router + funding job
-- S-21
+- profiles.onboarding jsonb
+- S-20 onboarding
+- S-21 main dashboard
+- Nav regroup in screens.ts
 
 ## Skills — use in this order
-1. **fastapi** — finances + funding job
-2. **tdd** — runway and money-amount parsing (₹ crore/lakh, $M)
-3. **frontend-design** — S-21
+1. **frontend-design** — onboarding and main dashboard in the existing DESIGN.md style
+2. **fastapi** — profile create from onboarding
 
 Always-on rules for every step: **ponytail**.
 
 ## Done when (check on the deployed app, not locally)
-1. On <FRONTEND_URL> Economics: enter cash ₹50L, burn ₹6L, revenue ₹1L → runway 10 months
-2. Find funding for a real competitor → a round with amount, date and a working source link, or Unknown
+1. New account on <FRONTEND_URL> → onboarding → card → main dashboard with 4 cards and Product first in the nav
+2. Market holds the existing monitor, competitors, comparison, alerts and reports, all still working
+3. Golden path B14 still passes
 
 ## If it goes wrong
-Manual entry of competitor figures with a source URL.
+Keep the old dashboard reachable under Market if the regroup breaks a route.
 
 ## When finished
 1. Make sure everything above is deployed (frontend, backend, database) and the done-check passes on the public URL.
 2. Set `"status": "done"` for B14b in `docs/build-plan/plan.json`, then run `python C:\Users\Niranjan Iyer\.claude\skills\synced\4388f05c-eb72-4dd8-a66b-700dfbb34581_a5c3319d-ef87-457c-8cc8-fe986ddce72a\prototype-build-planner\scripts\build_plan.py render docs/build-plan/plan.json`.
-3. Commit as `B14b: Economics dashboard with cited funding`.
+3. Commit as `B14b: Onboarding, business card and the main dashboard`.
 4. Report what changed and the done-check result, then stop. Don't start the next step without being asked.
 

@@ -79,17 +79,17 @@
       "Discovery on S-07 returns India-verified competitors with signals; 'Add competitor URL' adds the mock NimbusDeploy (demo) page (UC-03)",
       "Demo Lab 'cosmetic' then Run monitor shows 0 meaningful changes and a non-empty noise ledger; 'price_cut_40' then Run monitor shows the Pro price change as meaningful on S-10 (UC-04, UC-10)",
       "The Change Receipt on S-11 shows prev → curr, observed-at and the highlighted before/after snapshot text (UC-05)",
-      "The alert bell shows a high-priority alert; S-16 lists it; an email arrives at the owner address (UC-08); S-17 rules change what alerts (UC-12)",
       "S-13 comparison shows sourced cells with dates and Unknown cells excluded from the score; weights change the ranking (UC-06)",
       "S-14 simulator shows options A/B/C with cited assumptions and a Re-planned banner after the price-cut receipt; the quantum profile shows viability flags (UC-07, UC-14)",
       "S-15 report cites a receipt for every claim and prints to PDF (UC-09)",
-      "S-12 shows the competitor timeline and price series (UC-11)",
       "README, PPT and repo link ready; the public URL is warm (keep-warm pinger on)",
-      "Each profile shows four dashboards; Product lists existing products and adds a new one with a market category (UC-16)",
-      "Economics shows runway from entered figures and competitors' funding with source links or Unknown (UC-17)",
-      "Customers shows own-site reviews, web mentions and CSV uploads with sentiment and themes, each linked (UC-18)",
-      "A product's simulator shows inputs from Market, Economics and Customers and reacts when they change (UC-19)",
-      "A product compares with its category on price, revenue, features and add-ons, plus inspiration (UC-20)"
+      "A new user signs up with a verified email or Google, completes onboarding and confirms a business card (UC-21)",
+      "The main dashboard shows Product, Money, Market and Customers; Product lists existing and new products in exact Google-taxonomy categories (UC-16)",
+      "A product is compared only with its category on price, features, add-ons and cited revenue, with premium inspirations (UC-20)",
+      "Money shows revenue, margin vs the Damodaran India benchmark, transactions and runway from an upload or manual entry (UC-17)",
+      "Customers shows sentiment and top requests from uploads, own-site reviews and web mentions, each linked (UC-18)",
+      "Each product's segment and simulator cite inputs from Money, Market and Customers (UC-19, UC-22)",
+      "Four demo business sign-ins are built by running the pipeline on licensed datasets and public pages, with no hand-written results"
     ],
     "mvp_exit": [
       "Monitoring runs on a schedule without anyone clicking (Render Cron → /internal/monitor-due) and the API does not sleep (Render Starter)",
@@ -119,8 +119,16 @@
         "step": "B14"
       },
       {
-        "risk": "Cited funding/revenue extraction for Indian private competitors from news search",
-        "step": "B14b"
+        "risk": "Exact category matching (taxonomy prefilter + LLM) must not put a football with football boots",
+        "step": "B14c"
+      },
+      {
+        "risk": "Enough real category comparables from robots-allowed product pages",
+        "step": "B14d"
+      },
+      {
+        "risk": "Building four demo businesses from datasets in time",
+        "step": "B14j"
       }
     ]
   },
@@ -145,7 +153,9 @@
       "UC-18",
       "UC-19",
       "UC-20",
-      "UC-15"
+      "UC-15",
+      "UC-21",
+      "UC-22"
     ],
     "mvp": []
   },
@@ -1126,174 +1136,174 @@
     },
     {
       "id": "B14a",
-      "title": "Four dashboards and a product portfolio",
+      "title": "Real accounts: verified email and Google sign-in",
       "phase": "prototype",
       "status": "todo",
       "milestone": null,
-      "goal": "A company sees four dashboards (Product, Market intelligence, Economics, Customers) and, on Product, lists its existing products and adds a new one with a market category.",
-      "why_now": "Every later dashboard and the per-product simulator hang off products; the nav restructure is visible immediately.",
+      "goal": "A new user signs up with email, confirms it from a real verification email (or uses Google), and lands signed in; each demo business has its own sign-in.",
+      "why_now": "Everything after this belongs to a real account; the user asked for real sign-up first.",
       "use_cases": [
-        "UC-16"
+        "UC-21",
+        "UC-01",
+        "UC-13"
+      ],
+      "screens": [
+        "S-02"
+      ],
+      "components": [
+        "C-01",
+        "C-02"
+      ],
+      "scope_in": [
+        "Supabase Auth: email confirmation on, custom SMTP = Gmail app password (free, ~500/day)",
+        "Google OAuth provider",
+        "Sign-in page: email, Google; 'Try demo account' guest stays",
+        "Redirect URLs for Vercel"
+      ],
+      "scope_out": [
+        "Phone OTP (paid, future scope)",
+        "Verified sending domain (future scope)"
+      ],
+      "tasks": [
+        "User: create Gmail app password + Google OAuth client, paste into Supabase",
+        "Auth callback route",
+        "Error and 'check your inbox' states"
+      ],
+      "skills": [
+        {
+          "name": "supabase",
+          "use": "SMTP, OAuth provider, redirect URLs, confirm-email flow"
+        },
+        {
+          "name": "vercel-react-best-practices",
+          "use": "auth callback route + session refresh"
+        },
+        {
+          "name": "frontend-design",
+          "use": "sign-in and check-your-inbox screens"
+        }
+      ],
+      "done_check": [
+        "On <FRONTEND_URL>, sign up with a fresh email → the verification email arrives from the Gmail sender → link signs you in",
+        "Continue with Google signs in and shows your name",
+        "Sign out, sign back in: still your account"
+      ],
+      "deploys": [
+        "frontend",
+        "infra"
+      ],
+      "estimate_hours": 0.75,
+      "depends_on": [
+        "B14"
+      ],
+      "fallback": "If Gmail SMTP is rejected, keep confirmation off for the demo and say so; Google sign-in still works."
+    },
+    {
+      "id": "B14b",
+      "title": "Onboarding, business card and the main dashboard",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "After sign-up, a user fills a short onboarding form, confirms the drafted business card, and lands on a main dashboard with four dashboards: Product, Money, Market and Customers.",
+      "why_now": "This is the product's front door; every later step fills one of these four dashboards.",
+      "use_cases": [
+        "UC-21",
+        "UC-02"
       ],
       "screens": [
         "S-20",
-        "S-09"
+        "S-21",
+        "S-06"
       ],
       "components": [
         "C-28"
       ],
       "scope_in": [
-        "products table (profile_id, name, stage existing|new, category, price, unit, features, add_ons, url, is_demo_data)",
-        "LLM drafts category + features from a URL or description (cached, replay fixture)",
-        "App nav grouped into the four dashboards; current screens move under Market intelligence",
-        "Demo products for the 4 seeded profiles and guest clones, labelled demo data"
+        "Onboarding step 1 (required): business name, type (startup, D2C, local business, SaaS, vendor), city, website, one-line description, main products",
+        "Step 2 (optional): funding stage, monthly revenue range, target customers, social handles",
+        "Card drafted by the existing card task, user edits and confirms",
+        "Main dashboard: 4 summary cards (empty states that say what to add)",
+        "Nav: Product (first), Money, Market (existing screens move here), Customers",
+        "Business switcher hidden when an account has one business"
       ],
       "scope_out": [
-        "Per-product comparison (B14e)",
-        "Economics/Customers data (B14b, B14c)"
+        "Dashboard contents (later steps)"
       ],
       "tasks": [
-        "Migration 0010_products",
-        "products router",
-        "S-20 Product dashboard: Existing / New tabs, Add product",
-        "Nav regroup",
-        "Seed + guest-clone products"
+        "profiles.onboarding jsonb",
+        "S-20 onboarding",
+        "S-21 main dashboard",
+        "Nav regroup in screens.ts"
       ],
       "skills": [
         {
-          "name": "supabase-postgres-best-practices",
-          "use": "products table + index"
+          "name": "frontend-design",
+          "use": "onboarding and main dashboard in the existing DESIGN.md style"
         },
         {
           "name": "fastapi",
-          "use": "products CRUD + draft endpoint"
-        },
-        {
-          "name": "frontend-design",
-          "use": "four-dashboard nav and S-20"
+          "use": "profile create from onboarding"
         }
       ],
       "done_check": [
-        "Try demo account on <FRONTEND_URL> → StackNest shows the four dashboards",
-        "Product dashboard lists StackNest's existing products with a market category",
-        "Add product (New) from a one-line description → saved with a category and features"
+        "New account on <FRONTEND_URL> → onboarding → card → main dashboard with 4 cards and Product first in the nav",
+        "Market holds the existing monitor, competitors, comparison, alerts and reports, all still working",
+        "Golden path B14 still passes"
       ],
       "deploys": [
         "frontend",
         "backend",
         "database"
       ],
-      "estimate_hours": 2,
+      "estimate_hours": 1,
       "depends_on": [
-        "B14"
+        "B14a"
       ],
-      "fallback": "If the LLM draft fails, category is a dropdown the user picks."
+      "fallback": "Keep the old dashboard reachable under Market if the regroup breaks a route."
     },
     {
-      "id": "B14b",
-      "title": "Economics dashboard with cited funding",
+      "id": "B14c",
+      "title": "Products in exact market categories",
       "phase": "prototype",
       "status": "todo",
       "milestone": null,
-      "goal": "On Economics, a company enters its cash, funding and monthly burn to see its runway, and sees competitors' funding and reported revenue with a source link and date.",
-      "why_now": "Riskiest new unknown (news extraction quality for Indian private companies); its runway is a simulator input.",
+      "goal": "On Product, a user sees Existing and New products, adds one, and gets its exact category from the Google product taxonomy (a football lands in Soccer Balls, a chair in Chairs).",
+      "why_now": "Category drives every comparison; wrong categories make everything after this meaningless.",
       "use_cases": [
-        "UC-17"
+        "UC-16"
       ],
       "screens": [
-        "S-21"
+        "S-22"
       ],
       "components": [
         "C-29"
       ],
       "scope_in": [
-        "company_finances (cash, monthly_burn, monthly_revenue, rounds jsonb) entered by the user",
-        "Runway = cash / (burn - revenue)",
-        "Tavily search per competitor for funding/revenue → LLM extracts amount, round, date with the quote; page saved as a snapshot; anything not found is Unknown",
-        "funding_facts table with evidence"
+        "products table (profile, name, stage existing|new, taxonomy id + path, price, unit, cost, features, add_ons, url)",
+        "Google product taxonomy (~5,500 paths) stored in Postgres",
+        "Classifier: keyword prefilter to 20 candidate paths → LLM picks one (cached, replay fixture); user can change it",
+        "Product from a URL reads schema.org Product JSON-LD (name, price, brand) when present"
       ],
       "scope_out": [
-        "Paid databases (Crunchbase, Tracxn)",
-        "Bank or accounting integrations"
+        "Comparison (B14d)"
       ],
       "tasks": [
-        "Migration 0011_economics",
-        "economics router + funding job",
-        "S-21"
+        "Migration 0010_products + taxonomy load",
+        "classify task + tests on 10 hand-labelled products",
+        "S-22 Existing / New tabs, Add product"
       ],
       "skills": [
         {
-          "name": "fastapi",
-          "use": "finances + funding job"
+          "name": "supabase-postgres-best-practices",
+          "use": "products + taxonomy tables and indexes"
         },
         {
           "name": "tdd",
-          "use": "runway and money-amount parsing (₹ crore/lakh, $M)"
-        },
-        {
-          "name": "frontend-design",
-          "use": "S-21"
-        }
-      ],
-      "done_check": [
-        "On <FRONTEND_URL> Economics: enter cash ₹50L, burn ₹6L, revenue ₹1L → runway 10 months",
-        "Find funding for a real competitor → a round with amount, date and a working source link, or Unknown"
-      ],
-      "deploys": [
-        "frontend",
-        "backend",
-        "database"
-      ],
-      "estimate_hours": 1.5,
-      "depends_on": [
-        "B14a"
-      ],
-      "fallback": "Manual entry of competitor figures with a source URL."
-    },
-    {
-      "id": "B14c",
-      "title": "Customers dashboard from permitted sources",
-      "phase": "prototype",
-      "status": "todo",
-      "milestone": null,
-      "goal": "On Customers, a company sees reviews from its own site, web and news mentions, and uploaded review exports, with sentiment and themes, each linked to its source.",
-      "why_now": "Customer sentiment and requested features are simulator inputs; replaces MVP B16 with a prototype version.",
-      "use_cases": [
-        "UC-18",
-        "UC-15"
-      ],
-      "screens": [
-        "S-22"
-      ],
-      "components": [
-        "C-30"
-      ],
-      "scope_in": [
-        "Own-site reviews: schema.org Review/AggregateRating JSON-LD + review sections, robots respected",
-        "Web/news mentions via Tavily with URL and date",
-        "CSV upload (text, rating, date, source)",
-        "LLM sentiment + themes per batch (cached, replay fixture)",
-        "customer_mentions table"
-      ],
-      "scope_out": [
-        "Instagram, LinkedIn, X (ToS / paid API)",
-        "YouTube API"
-      ],
-      "tasks": [
-        "Migration 0012_customers",
-        "collector reuse for review pages",
-        "CSV parser",
-        "themes prompt",
-        "S-22"
-      ],
-      "skills": [
-        {
-          "name": "tdd",
-          "use": "JSON-LD review parsing on a fixture, CSV parsing"
+          "use": "taxonomy prefilter and JSON-LD product parsing on fixtures"
         },
         {
           "name": "fastapi",
-          "use": "upload + collect job"
+          "use": "products CRUD + classify"
         },
         {
           "name": "frontend-design",
@@ -1301,121 +1311,62 @@
         }
       ],
       "done_check": [
-        "On <FRONTEND_URL> Customers: upload the sample CSV → mentions, sentiment split and top themes appear",
-        "Collect from a real product page with schema.org reviews → reviews listed with a link"
+        "On <FRONTEND_URL> add 'Size 5 training football' → category ends in Soccer Balls; 'Ergonomic office chair' → Office Chairs",
+        "Add a product from a real product URL → name and price filled from the page",
+        "Change the category by hand → it sticks"
       ],
       "deploys": [
         "frontend",
         "backend",
         "database"
       ],
-      "estimate_hours": 1.5,
+      "estimate_hours": 1,
       "depends_on": [
-        "B14a"
+        "B14b"
       ],
-      "fallback": "CSV upload alone still feeds the simulator."
+      "fallback": "If the LLM is down, the top prefilter match is preselected and the user confirms."
     },
     {
       "id": "B14d",
-      "title": "Per-product simulator fed by all dashboards",
+      "title": "Like-for-like product comparison and inspirations",
       "phase": "prototype",
       "status": "todo",
       "milestone": null,
-      "goal": "Each product's simulator uses its category's competitor prices, the company's runway and its customers' sentiment and requested features, and shows which input came from which dashboard.",
-      "why_now": "The integration the user asked for; it ties the four dashboards together for the demo.",
-      "use_cases": [
-        "UC-19",
-        "UC-07"
-      ],
-      "screens": [
-        "S-14",
-        "S-20"
-      ],
-      "components": [
-        "C-12"
-      ],
-      "scope_in": [
-        "simulations keyed by product",
-        "Runway flag: an option's months to break-even > runway",
-        "Sentiment shifts c0 (labelled, bounded ±20%); requested features raise feature coverage",
-        "Input chips: Market / Economics / Customers with links"
-      ],
-      "scope_out": [
-        "Changing the core formula in specs §4.4"
-      ],
-      "tasks": [
-        "Migration 0013 product_id on simulations",
-        "simulator inputs",
-        "tests on hand-computed cases",
-        "S-14 per product"
-      ],
-      "skills": [
-        {
-          "name": "tdd",
-          "use": "runway flag and sentiment adjustment"
-        },
-        {
-          "name": "fastapi",
-          "use": "per-product simulation endpoint"
-        },
-        {
-          "name": "frontend-design",
-          "use": "input chips on S-14"
-        }
-      ],
-      "done_check": [
-        "On <FRONTEND_URL> lower cash on Economics → the product's simulator shows a runway flag",
-        "Upload negative reviews → expected conversion drops and the chip links to Customers",
-        "The NimbusDeploy price cut still re-plans the product"
-      ],
-      "deploys": [
-        "frontend",
-        "backend",
-        "database"
-      ],
-      "estimate_hours": 1.5,
-      "depends_on": [
-        "B14b",
-        "B14c"
-      ],
-      "fallback": "Show the inputs beside the existing profile-level simulator without changing its numbers."
-    },
-    {
-      "id": "B14e",
-      "title": "Per-product comparison and inspiration",
-      "phase": "prototype",
-      "status": "todo",
-      "milestone": null,
-      "goal": "On a product, a company compares it with products in the same market category on price, revenue, features and add-ons, and sees inspiration products from other categories.",
-      "why_now": "Uses the products, revenue facts and existing comparison engine; lowest risk, so it goes last.",
+      "goal": "Opening a product shows it against products in the same category on price, features and add-ons, each value with its source and date, plus premium inspirations from the top of the category.",
+      "why_now": "The user's core ask for the Product layer; reuses the comparison engine.",
       "use_cases": [
         "UC-20",
         "UC-06"
       ],
       "screens": [
-        "S-23",
-        "S-13"
+        "S-23"
       ],
       "components": [
-        "C-11"
+        "C-11",
+        "C-29"
       ],
       "scope_in": [
-        "Comparison filtered to competitors in the product's category",
-        "Revenue column from funding_facts (cited) or Unknown",
-        "Add-ons row",
-        "Inspiration tab"
+        "Category comparables from (1) competitors' product pages read via JSON-LD, robots respected and (2) Flipkart products dataset (CC BY-SA, dated) as a price benchmark",
+        "Price position: your price vs category median and range",
+        "Inspiration = top-price-quartile products in the same category",
+        "Unknown stays Unknown"
       ],
       "scope_out": [
-        "New scoring formula"
+        "Revenue column (B14f fills it)"
       ],
       "tasks": [
+        "Dataset import script (HF mirror, attribution file)",
         "comparison?product=",
-        "S-23"
+        "S-23 product detail"
       ],
       "skills": [
         {
+          "name": "tdd",
+          "use": "category median and quartile on a fixture set"
+        },
+        {
           "name": "fastapi",
-          "use": "product-scoped comparison"
+          "use": "product comparison endpoint"
         },
         {
           "name": "frontend-design",
@@ -1423,53 +1374,440 @@
         }
       ],
       "done_check": [
-        "On <FRONTEND_URL> open a product → its category comparison shows price, revenue (cited or Unknown), features and add-ons",
-        "Inspiration tab shows a different set"
+        "On <FRONTEND_URL> open a running shoe → only running shoes listed, each with source and date",
+        "Price position says e.g. '18% above category median (n=…)'",
+        "Inspirations tab lists premium running shoes"
+      ],
+      "deploys": [
+        "frontend",
+        "backend",
+        "database"
+      ],
+      "estimate_hours": 1,
+      "depends_on": [
+        "B14c"
+      ],
+      "fallback": "Dataset benchmark only, if live product pages yield too little."
+    },
+    {
+      "id": "B14e",
+      "title": "Money dashboard from uploads and manual entry",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "On Money, a user uploads a CSV or Excel export (or adds entries by hand) and sees revenue, profit margin against the Indian industry benchmark, product prices, the transaction log and runway.",
+      "why_now": "Money is the second input to the product decisions.",
+      "use_cases": [
+        "UC-17"
+      ],
+      "screens": [
+        "S-24"
+      ],
+      "components": [
+        "C-30"
+      ],
+      "scope_in": [
+        "transactions table (date, product, qty, amount, type sale|expense|funding, source file)",
+        "CSV/XLSX upload with column mapping preview (openpyxl)",
+        "Manual entry form",
+        "Metrics: monthly revenue, gross margin, burn, runway, funding total, price per product",
+        "Benchmark: Damodaran 'Margins by industry, India' (Jan 2026), credited",
+        "Sample file built from UCI Online Retail II (CC BY 4.0)"
+      ],
+      "scope_out": [
+        "Bank, Razorpay, Shopify, Tally live sync (future scope)"
+      ],
+      "tasks": [
+        "Migration 0011_money",
+        "parser + metrics with tests",
+        "S-24"
+      ],
+      "skills": [
+        {
+          "name": "tdd",
+          "use": "column mapping, ₹ parsing, margin and runway on fixtures"
+        },
+        {
+          "name": "fastapi",
+          "use": "upload endpoint"
+        },
+        {
+          "name": "frontend-design",
+          "use": "S-24 with the dataviz rules"
+        }
+      ],
+      "done_check": [
+        "On <FRONTEND_URL> upload the sample XLSX → mapping preview → revenue chart, margin vs benchmark, runway",
+        "Add one expense by hand → margin and runway update",
+        "Transaction log shows both, with the source file"
+      ],
+      "deploys": [
+        "frontend",
+        "backend",
+        "database"
+      ],
+      "estimate_hours": 1.25,
+      "depends_on": [
+        "B14b"
+      ],
+      "fallback": "CSV only if XLSX parsing breaks."
+    },
+    {
+      "id": "B14f",
+      "title": "Competitors' revenue and funding, cited",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "Money and the product comparison show competitors' reported revenue, margin and funding, each with a source link and date, or Unknown.",
+      "why_now": "Revenue comparison was asked for and must be real; listed companies publish it.",
+      "use_cases": [
+        "UC-17",
+        "UC-20"
+      ],
+      "screens": [
+        "S-24",
+        "S-23"
+      ],
+      "components": [
+        "C-30"
+      ],
+      "scope_in": [
+        "Tavily search per competitor: revenue, funding round, filings coverage",
+        "LLM extracts amount, period, quote; the source page saved as a snapshot (evidence)",
+        "₹ crore/lakh and $M parsing",
+        "money_facts table"
+      ],
+      "scope_out": [
+        "Paid databases (Crunchbase, Tracxn: future scope)"
+      ],
+      "tasks": [
+        "Migration 0012_money_facts",
+        "facts job",
+        "UI columns"
+      ],
+      "skills": [
+        {
+          "name": "tdd",
+          "use": "amount parsing and quote check"
+        },
+        {
+          "name": "fastapi",
+          "use": "facts job"
+        }
+      ],
+      "done_check": [
+        "On <FRONTEND_URL> fetch facts for Campus Activewear → FY26 revenue ≈ ₹1,774 crore with a working source link",
+        "A private competitor with no coverage shows Unknown"
+      ],
+      "deploys": [
+        "frontend",
+        "backend",
+        "database"
+      ],
+      "estimate_hours": 0.75,
+      "depends_on": [
+        "B14e",
+        "B14d"
+      ],
+      "fallback": "Manual entry with a source URL."
+    },
+    {
+      "id": "B14g",
+      "title": "Customers dashboard: what customers actually want",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "On Customers, a user sees reviews and comments from uploads, their own product pages and web mentions, with sentiment and the top requests, each linked to its source.",
+      "why_now": "The third input to the product decisions; replaces MVP B16.",
+      "use_cases": [
+        "UC-18",
+        "UC-15"
+      ],
+      "screens": [
+        "S-26"
+      ],
+      "components": [
+        "C-31"
+      ],
+      "scope_in": [
+        "customer_mentions (source, url, text, rating, date, product)",
+        "CSV upload (reviews, Meta/LinkedIn/YouTube Studio insight exports)",
+        "Own-site reviews from schema.org Review JSON-LD, robots respected",
+        "Web mentions via Tavily",
+        "LLM: sentiment + themes + requests per batch, each theme citing mention ids (cached, replay)",
+        "Social metrics tiles from insight exports"
+      ],
+      "scope_out": [
+        "X, Instagram, Facebook APIs (future scope)",
+        "YouTube API (only if time)"
+      ],
+      "tasks": [
+        "Migration 0013_customers",
+        "parsers + themes task",
+        "S-26"
+      ],
+      "skills": [
+        {
+          "name": "tdd",
+          "use": "JSON-LD review parsing and CSV import"
+        },
+        {
+          "name": "fastapi",
+          "use": "upload + collect"
+        },
+        {
+          "name": "frontend-design",
+          "use": "S-26"
+        }
+      ],
+      "done_check": [
+        "On <FRONTEND_URL> upload the sample reviews CSV → sentiment split and top requests, each opening the quoted reviews",
+        "Collect from a real product page with reviews → listed with links"
+      ],
+      "deploys": [
+        "frontend",
+        "backend",
+        "database"
+      ],
+      "estimate_hours": 1,
+      "depends_on": [
+        "B14b"
+      ],
+      "fallback": "Upload only."
+    },
+    {
+      "id": "B14h",
+      "title": "Market dashboard: news, funding and a simulated competitor move",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "Market shows competitor changes, category news and funding with links, the category price trend, and a 'Simulate a competitor move' control that replaces Demo Lab.",
+      "why_now": "Keeps the required simulated-change demo inside a clean product.",
+      "use_cases": [
+        "UC-04",
+        "UC-10",
+        "UC-11"
+      ],
+      "screens": [
+        "S-25",
+        "S-10"
+      ],
+      "components": [
+        "C-03",
+        "C-19"
+      ],
+      "scope_in": [
+        "Market overview: latest receipts, alerts, category news + funding (Tavily, cited)",
+        "Category price trend from our own observations",
+        "Simulate control only on demo accounts, labelled 'changes a fictional competitor's website'",
+        "Demo Lab route removed from nav"
+      ],
+      "scope_out": [
+        "New detection logic"
+      ],
+      "tasks": [
+        "S-25",
+        "news task",
+        "simulate control"
+      ],
+      "skills": [
+        {
+          "name": "frontend-design",
+          "use": "S-25"
+        },
+        {
+          "name": "fastapi",
+          "use": "news endpoint"
+        }
+      ],
+      "done_check": [
+        "On <FRONTEND_URL> Market → Simulate a competitor move → Check competitors now → 1 change, 4 ignored, receipt, alert",
+        "Category news shows dated items with links"
       ],
       "deploys": [
         "frontend",
         "backend"
       ],
-      "estimate_hours": 1,
+      "estimate_hours": 0.75,
       "depends_on": [
-        "B14d"
+        "B14b"
       ],
-      "fallback": "Link the product to the existing profile comparison filtered by category."
+      "fallback": "Keep Demo Lab reachable by URL."
     },
     {
-      "id": "B14f",
-      "title": "Prototype v2 exit: four-dashboard golden path",
+      "id": "B14i",
+      "title": "Customer segment and a simulator fed by every dashboard",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "Each product shows a suggested customer segment and a simulator whose inputs come from Market (category prices, receipts), Money (cost, margin, runway) and Customers (sentiment, requests), each input linked to its dashboard.",
+      "why_now": "Ties the four dashboards together; the decision layer the user described.",
+      "use_cases": [
+        "UC-19",
+        "UC-22",
+        "UC-07"
+      ],
+      "screens": [
+        "S-23",
+        "S-14"
+      ],
+      "components": [
+        "C-12"
+      ],
+      "scope_in": [
+        "simulations keyed by product",
+        "Inputs replace defaults: unit cost and margin from Money, runway flag, sentiment shifts conversion (bounded ±20%, labelled), requested features raise feature coverage",
+        "Segment = LLM over price position, review themes and onboarding target customers, must cite evidence ids; rules check the cited ids exist",
+        "Re-plan on receipts still works"
+      ],
+      "scope_out": [
+        "Changing the core §4.4 formula"
+      ],
+      "tasks": [
+        "Migration product_id on simulations",
+        "inputs + tests",
+        "segment task",
+        "UI chips"
+      ],
+      "skills": [
+        {
+          "name": "tdd",
+          "use": "input mapping and bounds on hand-computed cases"
+        },
+        {
+          "name": "fastapi",
+          "use": "per-product simulator"
+        },
+        {
+          "name": "frontend-design",
+          "use": "segment card and input chips"
+        }
+      ],
+      "done_check": [
+        "On <FRONTEND_URL> lower cash on Money → the product shows a runway flag",
+        "Upload negative reviews → expected conversion drops, chip links to Customers",
+        "Segment card cites price position and two review themes"
+      ],
+      "deploys": [
+        "frontend",
+        "backend",
+        "database"
+      ],
+      "estimate_hours": 1,
+      "depends_on": [
+        "B14d",
+        "B14e",
+        "B14g"
+      ],
+      "fallback": "Show inputs beside the business-level simulator without changing its numbers."
+    },
+    {
+      "id": "B14j",
+      "title": "Four demo businesses built from real data",
+      "phase": "prototype",
+      "status": "todo",
+      "milestone": null,
+      "goal": "Four demo sign-ins (Stride & Co. footwear, a Pune bakery, StackNest SaaS, QuickKart quick commerce) each open with every dashboard filled by running the pipeline on licensed datasets and real public pages.",
+      "why_now": "Nothing intelligent is hand-written: demo accounts get their inputs from licensed datasets or public pages, and every output is computed by the same pipeline a real user gets.",
+      "use_cases": [
+        "UC-21",
+        "UC-16",
+        "UC-17",
+        "UC-18",
+        "UC-19"
+      ],
+      "screens": [
+        "S-21",
+        "S-22",
+        "S-24",
+        "S-25",
+        "S-26"
+      ],
+      "components": [
+        "C-28"
+      ],
+      "scope_in": [
+        "Builder script creates each account through the same endpoints a user hits (onboarding, product add, uploads, discovery, facts)",
+        "Stride: unit economics scaled from Campus Activewear FY26 (cited), transaction pattern from UCI Online Retail II, real running-shoe pages",
+        "Bakery: The Bread Basket transactions (CC0) priced from real Pune menu pages",
+        "StackNest: existing real competitors + public SaaS benchmark report",
+        "QuickKart: Eternal and Swiggy filings for competitors",
+        "Every demo account labelled 'Demo business, modelled on …'",
+        "Old hand-seeded histories removed"
+      ],
+      "scope_out": [
+        "Hand-written results of any kind"
+      ],
+      "tasks": [
+        "scripts/build_demo.py",
+        "fixtures/datasets/ with ATTRIBUTION.md",
+        "credentials in README"
+      ],
+      "skills": [
+        {
+          "name": "fastapi",
+          "use": "reuse endpoints from the builder"
+        },
+        {
+          "name": "supabase",
+          "use": "create the four auth users"
+        }
+      ],
+      "done_check": [
+        "Sign in on <FRONTEND_URL> as each demo business → all four dashboards populated with source labels",
+        "Delete and rebuild Stride → same dashboards (deterministic inputs)"
+      ],
+      "deploys": [
+        "backend",
+        "database"
+      ],
+      "estimate_hours": 1,
+      "depends_on": [
+        "B14i",
+        "B14f",
+        "B14h"
+      ],
+      "fallback": "Stride and StackNest first; bakery and QuickKart may ship with Product + Money only."
+    },
+    {
+      "id": "B14k",
+      "title": "Prototype v2 exit: a product a founder can use",
       "phase": "prototype",
       "status": "todo",
       "milestone": "prototype-exit",
-      "goal": "A judge walks the four-dashboard golden path on the public URL twice without errors, with the README, deck and public repo ready to submit by 8:00.",
-      "why_now": "Freeze 07:00, deliverables 07:15, submit by 08:00.",
+      "goal": "A judge signs in as Stride & Co., walks main dashboard → Product → Market (simulated move) → back to Product → report, then switches to the bakery, twice without errors; README, PPT and the public repo are ready by 08:00.",
+      "why_now": "Freeze 07:00, submit by 08:00.",
       "use_cases": [
         "UC-16",
         "UC-17",
         "UC-18",
         "UC-19",
-        "UC-20"
+        "UC-20",
+        "UC-21",
+        "UC-22"
       ],
       "screens": [
-        "S-20",
         "S-21",
         "S-22",
         "S-23",
-        "S-14"
+        "S-24",
+        "S-25",
+        "S-26"
       ],
       "components": [],
       "scope_in": [
-        "Golden path v2 walk x2",
-        "README + deck slides for the four dashboards",
-        "Smoke test extended"
+        "Golden path v2 x2",
+        "PPT slides 3, 7, 8 updated with real screenshots",
+        "README rewritten for the product",
+        "Smoke extended"
       ],
       "scope_out": [
         "New features after 07:00"
       ],
       "tasks": [
         "Walk",
-        "Deck + README",
+        "Screenshots",
+        "README + PPT content",
         "Smoke"
       ],
       "skills": [
@@ -1485,17 +1823,17 @@
       "done_check": [
         "Golden path v2 twice on <FRONTEND_URL> with no errors",
         "Smoke passes",
-        "Repo public, deck exported, links submitted"
+        "Repo public, PPT updated, links submitted"
       ],
       "deploys": [
         "frontend",
         "backend"
       ],
-      "estimate_hours": 1,
+      "estimate_hours": 0.75,
       "depends_on": [
-        "B14e"
+        "B14j"
       ],
-      "fallback": "Submit the B14 version (still live) if v2 breaks."
+      "fallback": "Submit with the B14 golden path if v2 breaks."
     },
     {
       "id": "B15",
@@ -1675,7 +2013,7 @@
       ],
       "estimate_hours": 3,
       "depends_on": [
-        "B14c"
+        "B14k"
       ],
       "fallback": "",
       "notes": "Described only."
@@ -1689,8 +2027,10 @@
     "Supabase JWT signing: JWKS (asymmetric) vs legacy HS256 depends on project settings; check in B03.",
     "Fixtures for Tavily, Gemini, Groq and Resend responses don't exist yet; they're recorded on first live calls in B07/B08 (record mode).",
     "MVP steps B15–B17 are described for the roadmap slide only, not built tonight.",
-    "Deadline moved to 08:00 on 24 Oct (submission: PPT + deployed app + GitHub). Four-dashboard redesign B14a–B14f ≈ 8.5 h against ≈ 9 h to the 07:00 freeze. Cut order: (1) B14e inspiration tab, (2) B14e entirely, (3) CSV upload in B14c, (4) web mentions in B14c. The B14 golden path is never broken.",
-    "Social sources limited to own-site reviews, Tavily web/news mentions and CSV uploads; Instagram, LinkedIn and X are excluded (ToS or paid APIs), YouTube skipped by the user."
+    "Timeline: PPT content v2 by 23:10 (not a build step), B14a–B14j 23:10–07:00 (≈ 9.25 h estimated against ≈ 7.8 h), B14k 07:00–08:00. Cut order if behind: (1) YouTube in B14g, (2) category price trend in B14h, (3) QuickKart depth in B14j, (4) bakery competitors in B14j, (5) web mentions in B14g. Stride & Co. and StackNest stay complete; the B14 golden path is never broken.",
+    "Free sources only. Future scope (paid or needs approval): X API (pay-per-use), Instagram/Facebook Graph API (app review), Razorpay/Shopify/Tally sync, phone OTP, verified email domain, always-on hosting, licensed marketplace data, Crunchbase/Tracxn.",
+    "Licences to confirm while building: Amazon Reviews 2023 (else reviews come from CSV only), a grocery basket dataset for QuickKart, a public SaaS benchmark report for StackNest.",
+    "Owner actions: Gmail app password and Google OAuth client (B14a), optional YouTube key (B14g), make the repo public (B14k)."
   ],
   "changelog": [
     {
@@ -1716,6 +2056,10 @@
     {
       "date": "2026-10-23",
       "change": "21:55 re-plan: B14 done; deadline 08:00 24 Oct; added B14a–B14f (four dashboards, products, economics, customers, per-product simulator and comparison); B14f is the new prototype exit; B16 superseded by B14c."
+    },
+    {
+      "date": "2026-10-23",
+      "change": "22:45 re-plan v2: B14a–B14k replace the first draft. Real accounts → onboarding + main dashboard → products in exact categories → comparison → Money → cited competitor money → Customers → Market + simulated move → segment + simulator → demo businesses built from real datasets → exit."
     }
   ]
 }
