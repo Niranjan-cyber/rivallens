@@ -49,7 +49,7 @@ Always-on rules for every step: **ponytail**.
 2. Sign out, sign back in: still your account
 
 ## If it goes wrong
-If Gmail SMTP is rejected, keep confirmation off for the demo and say so; Google sign-in still works.
+If Gmail SMTP is rejected, keep confirmation off for the demo and say so in the README.
 
 ## When finished
 1. Make sure everything above is deployed (frontend, infra) and the done-check passes on the public URL.

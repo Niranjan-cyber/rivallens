@@ -18,7 +18,7 @@
 - S-14 simulator shows options A/B/C with cited assumptions and a Re-planned banner after the price-cut receipt; the quantum profile shows viability flags (UC-07, UC-14)
 - S-15 report cites a receipt for every claim and prints to PDF (UC-09)
 - README, PPT and repo link ready; the public URL is warm (keep-warm pinger on)
-- A new user signs up with a verified email or Google, completes onboarding and confirms a business card (UC-21)
+- A new user signs up with email and password, confirms the email, completes onboarding and confirms a business card (UC-21)
 - The main dashboard shows Product, Money, Market and Customers; Product lists existing and new products in exact Google-taxonomy categories (UC-16)
 - A product is compared only with its category on price, features, add-ons and cited revenue, with premium inspirations (UC-20)
 - Money shows revenue, margin vs the Damodaran India benchmark, transactions and runway from an upload or manual entry (UC-17)
@@ -335,7 +335,7 @@
 - **Done when (on the public URL):**
   1. On <FRONTEND_URL>, sign up with a fresh email → the verification email arrives from the Gmail sender → link signs you in
   2. Sign out, sign back in: still your account
-- **Fallback:** If Gmail SMTP is rejected, keep confirmation off for the demo and say so; Google sign-in still works.
+- **Fallback:** If Gmail SMTP is rejected, keep confirmation off for the demo and say so in the README.
 - **Deploys:** frontend, infra · **After:** B14 · **Est.:** 0.75 h
 - **Prompt:** `prompts/B14a-real-accounts-email-and-password-with-a.md`
 
