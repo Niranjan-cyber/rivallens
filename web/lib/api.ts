@@ -78,7 +78,24 @@ export type Receipt = {
   wayback_url: string | null;
   is_demo_data: boolean;
   muted: boolean;
+  priority: number | null;
+  priority_breakdown: { m: number; r: number; s: number; undercut: boolean } | null;
 };
 
 export type EvidenceSide = { snapshot_id: string; observed_at: string; text_window: string; highlight: { start: number; end: number } | null };
 export type Evidence = { before: EvidenceSide | null; after: EvidenceSide | null; sha256: { before: string | null; after: string | null }; evidence_missing: boolean };
+
+export type Alert = {
+  id: string;
+  profile_id: string;
+  change_event_id: string;
+  bucket: "high" | "medium" | "low";
+  priority: number;
+  text: string;
+  observed_at: string;
+  read: boolean;
+  seen_again: number;
+  email_status: "not_sent" | "sent" | "failed" | "skipped";
+};
+
+export type AlertRules = { change_types: Record<string, boolean>; min_priority: number; email_enabled: boolean };

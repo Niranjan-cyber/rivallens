@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app import jobs
 from app.config import GIT_SHA, WEB_ORIGIN
+from app.modules.alerts.router import router as alerts_router
 from app.modules.changes.router import router as changes_router
 from app.modules.demo.router import router as demo_router
 from app.modules.profiles.router import router as profiles_router
@@ -27,6 +28,7 @@ app.add_middleware(
 app.include_router(profiles_router)
 app.include_router(demo_router)
 app.include_router(changes_router)
+app.include_router(alerts_router)
 
 
 @app.exception_handler(HTTPException)

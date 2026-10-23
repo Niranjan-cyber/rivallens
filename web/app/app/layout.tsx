@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { AlertBell } from "@/components/alert-bell";
 import { AuthGate } from "@/components/auth-gate";
 import { ProfileSwitcher } from "@/components/profile-switcher";
 import { SideNav } from "@/components/side-nav";
@@ -18,12 +19,9 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
             <Link href="/app/demo-lab" className="rounded-pill px-4 py-2 text-[15px] font-medium hover:bg-canvas">
               Demo Lab
             </Link>
-            <button type="button" aria-label="Alerts" className="flex size-11 items-center justify-center rounded-full border border-ink">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                <path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z" />
-                <path d="M10 20a2 2 0 0 0 4 0" />
-              </svg>
-            </button>
+            <Suspense fallback={<div className="size-11 rounded-full border border-ink" />}>
+              <AlertBell />
+            </Suspense>
           </div>
         </div>
       </header>

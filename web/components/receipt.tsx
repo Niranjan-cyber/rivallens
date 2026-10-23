@@ -136,6 +136,19 @@ export function ReceiptView({ profileId }: { profileId: string }) {
             {receipt.status === "confirmed" ? "Confirmed by comparing the saved pages" : "Needs a second look: unusual change, no alert sent"}
           </dd>
         </div>
+        {receipt.priority !== null && receipt.priority_breakdown && (
+          <div className="sm:col-span-2">
+            <dt className="text-[14px] text-slate">Priority</dt>
+            <dd className="text-[17px]">
+              <span className="font-medium">{receipt.priority} of 100 ({receipt.priority >= 70 ? "high" : receipt.priority >= 40 ? "medium" : "low"})</span>
+              <span className="block text-[15px] text-charcoal">
+                Size of change {Math.round(receipt.priority_breakdown.m * 100)}% · relevance {Math.round(receipt.priority_breakdown.r * 100)}% · source
+                reliability {Math.round(receipt.priority_breakdown.s * 100)}%
+                {receipt.priority_breakdown.undercut && ". Their price is now below your planned price."}
+              </span>
+            </dd>
+          </div>
+        )}
         {receipt.wayback_url && (
           <div>
             <dt className="text-[14px] text-slate">Independent copy</dt>

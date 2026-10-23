@@ -11,6 +11,7 @@ from sqlalchemy import text
 from app import jobs
 from app.auth import UserDep
 from app.db import ConnDep, engine
+from app.modules.alerts.service import bucket
 from app.modules.changes.runs import monitor, show, start_run
 from app.modules.collector.service import sign_snapshot
 
@@ -139,7 +140,7 @@ def get_run(run_id: UUID, user: UserDep, conn: ConnDep) -> Run:
         **run,
         changes=[Change(change_event_id=c["id"], competitor=c["name"], change_type=c["change_type"], field=c["field_path"],
                         prev=show(c["prev_value"]), curr=show(c["curr_value"]), delta_pct=c["delta_pct"], status=c["status"],
-                        priority=c["priority"], bucket=None) for c in changes],
+                        priority=c["priority"], bucket=bucket(c["priority"]) if c["priority"] is not None else None) for c in changes],
         ledger=[LedgerEntry(source_id=e["source_id"], competitor=e["name"], section_key=e["section_key"], reason=e["reason"], summary=e["summary"])
                 for e in ledger],
         failures=[Failure(**f) for f in failures],

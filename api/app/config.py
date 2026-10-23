@@ -14,3 +14,6 @@ SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")  # only if the projec
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()  # dashboard pastes can carry a trailing newline
 MOCK_BASE_URL = os.getenv("MOCK_BASE_URL", f"{WEB_ORIGIN}/mock")
 SEED_USER_EMAIL = os.getenv("SEED_USER_EMAIL", "seed@rivallens.demo")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "").strip()
+ALERT_FROM = os.getenv("ALERT_FROM", "RivalLens <onboarding@resend.dev>")
+ALERT_EMAIL_OVERRIDE = os.getenv("ALERT_EMAIL_OVERRIDE", "").strip()  # P1: the Resend account owner's address

@@ -8,6 +8,7 @@ from sqlalchemy import text
 
 from app.db import engine
 from app.jobs import Job
+from app.modules.alerts.router import raise_alert, rules_for
 from app.modules.changes.service import compare
 from app.modules.collector.service import fetch, split_sections, store_snapshot
 from app.modules.extractor.service import extract
@@ -34,7 +35,7 @@ def _excerpt(snap_text: str, value) -> dict | None:
 def _sources(conn, profile_id: UUID):
     # Mock pages only for now; real competitor pages join in B08.
     return conn.execute(text("""
-        select s.id, s.url, c.id as competitor_id, c.is_demo_data from sources s join competitors c on c.id = s.competitor_id
+        select s.id, s.url, c.id as competitor_id, c.name, c.relation, c.is_demo_data from sources s join competitors c on c.id = s.competitor_id
         where c.profile_id = :p and c.selected and s.is_mock order by c.created_at
     """), {"p": profile_id}).mappings().all()
 
@@ -60,12 +61,17 @@ def monitor(job: Job, profile_id: UUID, run_id: UUID) -> dict:
     counts = {"sources": 0, "diffs": 0, "ignored": 0, "meaningful": 0, "needs_review": 0, "failed": 0}
     with engine.begin() as conn:
         sources = _sources(conn, profile_id)
+        profile = conn.execute(text("select user_id, card from profiles where id = :p"), {"p": profile_id}).one()
+        planned = (profile.card or {}).get("price") or {}
+        planned = planned.get("value", planned) if isinstance(planned, dict) else {}  # card leaves may be {value, origin}
+        ctx = {"profile_id": profile_id, "user_id": profile.user_id, "rules": rules_for(conn, profile_id),
+               "planned_price": planned.get("amount") if isinstance(planned, dict) else None}
     counts["sources"] = len(sources)
     job.step("fetch", "running", len(sources), "Fetching pricing pages")
     status = "failed"
     try:
         for src in sources:
-            _check_source(src, run_id, counts)
+            _check_source(src, run_id, counts, ctx)
             job.step("source", "done", counts["meaningful"], src["url"])
         status = "done"
     finally:
@@ -76,7 +82,13 @@ def monitor(job: Job, profile_id: UUID, run_id: UUID) -> dict:
     return {"run_id": str(run_id)}
 
 
-def _check_source(src, run_id: UUID, counts: dict) -> None:
+def _fingerprint(competitor_id, field_path: str, value) -> str:
+    if isinstance(value, dict):  # normalized: amount, currency and period only
+        value = [value.get("amount"), value.get("currency"), value.get("period")]
+    return hashlib.sha256(f"{competitor_id}|{field_path}|{json.dumps(value)}".encode()).hexdigest()[:32]
+
+
+def _check_source(src, run_id: UUID, counts: dict, ctx: dict) -> None:
     observed_at = datetime.now(UTC)
     page = fetch(src["url"])
     with engine.begin() as conn:
@@ -108,15 +120,17 @@ def _check_source(src, run_id: UUID, counts: dict) -> None:
             conn.execute(text("insert into ledger_entries (run_id, source_id, section_key, reason, summary) values (:r, :s, :k, :re, :su)"),
                          {"r": run_id, "s": src["id"], "k": e["section_key"], "re": e["reason"], "su": e["summary"]})
         for c in changes:
-            fingerprint = hashlib.sha256(f"{src['competitor_id']}|{c['field_path']}|{json.dumps(c['curr'], sort_keys=True)}".encode()).hexdigest()[:32]
-            conn.execute(text("""
+            fingerprint = _fingerprint(src["competitor_id"], c["field_path"], c["curr"])
+            event_id = conn.execute(text("""
                 insert into change_events (run_id, source_id, competitor_id, change_type, field_path, prev_value, curr_value, delta_pct,
                     status, before_snapshot_id, after_snapshot_id, excerpt, observed_at, prev_observed_at, fingerprint, is_demo_data)
                 values (:r, :s, :c, :t, :f, cast(:pv as jsonb), cast(:cv as jsonb), :d, :st, :b, :a, cast(:ex as jsonb), :o, :po, :fp, :demo)
+                returning id
             """), {"r": run_id, "s": src["id"], "c": src["competitor_id"], "t": c["change_type"], "f": c["field_path"],
                    "pv": json.dumps(c["prev"]), "cv": json.dumps(c["curr"]), "d": c["delta_pct"], "st": c["status"],
                    "b": prev["id"], "a": snap_id, "o": observed_at, "po": prev["observed_at"], "fp": fingerprint, "demo": src["is_demo_data"],
-                   "ex": json.dumps({"before": _excerpt(prev["text"], c["prev"]), "after": _excerpt(snap_text, c["curr"])})})
+                   "ex": json.dumps({"before": _excerpt(prev["text"], c["prev"]), "after": _excerpt(snap_text, c["curr"])})}).scalar()
+            raise_alert(conn, ctx, src, event_id, c, fingerprint, show(c["prev"]), show(c["curr"]), observed_at)
         counts["diffs"] += len(ledger) + len(changes)
         counts["ignored"] += len(ledger)
         counts["meaningful"] += sum(c["status"] == "confirmed" for c in changes)

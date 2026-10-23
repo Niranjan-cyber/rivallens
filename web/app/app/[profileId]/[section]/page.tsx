@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { AlertCenter } from "@/components/alert-center";
+import { AlertRulesForm } from "@/components/alert-rules";
 import { ReceiptView } from "@/components/receipt";
 import { RunMonitorButton } from "@/components/run-monitor";
 import { RunResult } from "@/components/run-result";
@@ -13,6 +15,8 @@ async function Section({ params }: { params: PageProps<"/app/[profileId]/[sectio
   if (!meta) notFound();
   if (section === "run") return <RunResult profileId={profileId} />;
   if (section === "receipt") return <ReceiptView profileId={profileId} />;
+  if (section === "alerts") return <AlertCenter profileId={profileId} />;
+  if (section === "settings") return <AlertRulesForm profileId={profileId} />;
 
   return (
     <StubPage title={meta.label} purpose={meta.purpose} screen={meta.screen}>
