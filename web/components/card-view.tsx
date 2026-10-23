@@ -58,7 +58,8 @@ export function CardView({ profileId }: { profileId: string }) {
         })}
       </dl>
       <div className="mt-6 flex flex-wrap gap-3">
-        <ButtonLink href={`/app/${p.id}/dashboard`}>Go to dashboard</ButtonLink>
+        <ButtonLink href={`/app/${p.id}/competitors?discover=1`}>Find competitors</ButtonLink>
+        <ButtonLink href={`/app/${p.id}/dashboard`} variant="secondary">Go to dashboard</ButtonLink>
       </div>
     </section>
   );

@@ -53,7 +53,7 @@ def _gemini(system: str, user: str) -> str:
     _wait_for_capacity("gemini")
     try:
         r = httpx.post(f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent",
-                       headers={"x-goog-api-key": GEMINI_KEY}, timeout=20,
+                       headers={"x-goog-api-key": GEMINI_KEY}, timeout=30,
                        json={"systemInstruction": {"parts": [{"text": system}]}, "contents": [{"role": "user", "parts": [{"text": user}]}],
                              "generationConfig": {"responseMimeType": "application/json", "temperature": 0}})
     except httpx.HTTPError as e:

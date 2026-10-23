@@ -99,3 +99,9 @@ export type Alert = {
 };
 
 export type AlertRules = { change_types: Record<string, boolean>; min_priority: number; email_enabled: boolean };
+
+export type Candidate = { id: string; name: string; domain: string; origin: string; status: "verified" | "rejected"; reasons: string[]; india_signals: { score: number; hits: string[] }; similarity: number | null };
+export type Competitor = {
+  id: string; name: string; domain: string; relation: "comparable" | "inspiration"; origin: string; selected: boolean; monitorable: boolean;
+  india_signals: { score?: number; hits?: string[] }; similarity: number | null; is_demo_data: boolean; sources: { id: string; url: string; page_type: string }[];
+};

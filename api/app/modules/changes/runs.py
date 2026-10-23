@@ -33,10 +33,10 @@ def _excerpt(snap_text: str, value) -> dict | None:
 
 
 def _sources(conn, profile_id: UUID):
-    # Mock pages only for now; real competitor pages join in B08.
+    # Seeded real competitors (Render, Railway, E2E) stay out of demo runs; discovered and user-added ones are monitored.
     return conn.execute(text("""
         select s.id, s.url, c.id as competitor_id, c.name, c.relation, c.is_demo_data from sources s join competitors c on c.id = s.competitor_id
-        where c.profile_id = :p and c.selected and s.is_mock order by c.created_at
+        where c.profile_id = :p and c.selected and (s.is_mock or not c.is_demo_data) order by c.created_at
     """), {"p": profile_id}).mappings().all()
 
 
