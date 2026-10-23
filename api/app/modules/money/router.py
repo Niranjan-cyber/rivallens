@@ -10,6 +10,7 @@ from sqlalchemy import Connection, text
 
 from app import jobs
 from app.auth import UserDep
+from app.modules.discovery.pipeline import card_value
 from app.db import ConnDep
 from app.modules.money.facts import find_job
 from app.modules.money.service import benchmark, industries, metrics, parse_table, suggest_mapping, to_transactions
@@ -110,7 +111,7 @@ def save_settings(profile_id: UUID, body: SettingsIn, user: UserDep, conn: ConnD
 def guess_industry(conn: Connection, profile_id: UUID, card: dict) -> str | None:
     """Damodaran industry whose name shares the most words with the business's product categories and description."""
     paths = [r[0] for r in conn.execute(text("select category_path from products where profile_id = :p and category_path is not null"), {"p": profile_id})]
-    v = lambda k: str((card.get(k) or {}).get("value") or "")
+    v = lambda k: str(card_value(card, k) or "")
     words = tokens(" ".join(paths + [v("industry"), v("category"), v("business_type"), v("description")]), query=True)
     best = max(industries(), key=lambda i: (len(tokens(i) & words), -len(i)))
     return best if tokens(best) & words else None

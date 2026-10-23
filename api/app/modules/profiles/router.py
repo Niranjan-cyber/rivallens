@@ -10,6 +10,7 @@ from sqlalchemy import text
 from app import jobs
 from app.auth import UserDep
 from app.db import ConnDep
+from app.modules.discovery.pipeline import card_value
 from app.modules.products.router import add_from_onboarding
 from app.modules.profiles.drafting import draft_job
 
@@ -98,7 +99,7 @@ def create_profile(body: ProfileIn, user: UserDep, conn: ConnDep) -> Profile:
         returning id, name, kind, offering_type, card, is_demo_data, created_at
     """), {"u": user.id, "n": body.name, "k": body.kind, "o": body.offering_type, "c": json.dumps(body.card)}).mappings().one()
     conn.execute(text("insert into alert_rules (profile_id) values (:p) on conflict do nothing"), {"p": row["id"]})
-    if (body.card.get("main_products") or {}).get("value"):
+    if card_value(body.card, "main_products"):
         add_from_onboarding(row["id"])  # its own thread; waits for this transaction to commit
     return Profile(**row)
 

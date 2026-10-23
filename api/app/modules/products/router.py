@@ -13,6 +13,7 @@ from sqlalchemy import Connection, text
 
 from app import jobs
 from app.auth import UserDep
+from app.modules.discovery.pipeline import card_value
 from app.db import ConnDep
 from app.modules.collector.service import fetch
 from app.modules.products.classify import classify, classify_many
@@ -83,7 +84,7 @@ def _own(conn: Connection, profile_id: UUID, user_id: UUID) -> dict:
 
 def _business(profile: dict) -> str:
     card = profile["card"] or {}
-    v = lambda k: (card.get(k) or {}).get("value") or ""
+    v = lambda k: card_value(card, k) or ""
     return " ".join(str(x) for x in (v("business_type"), v("industry"), v("category"), v("description")) if x)
 
 
@@ -192,7 +193,7 @@ def _add_from_onboarding(profile_id) -> None:
         time.sleep(0.5)
     with engine.connect() as conn:
         profile = dict(conn.execute(text("select name, kind, card from profiles where id = :p"), {"p": profile_id}).mappings().one())
-    names = [str(n)[:160] for n in ((profile["card"].get("main_products") or {}).get("value") or [])][:10]
+    names = [str(n)[:160] for n in (card_value(profile["card"], "main_products") or [])][:10]
     stage = "new" if profile["kind"] == "idea" else "existing"
     for name, cat in zip(names, classify_many(names, _business(profile))):
         try:

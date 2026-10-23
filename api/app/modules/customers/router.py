@@ -9,6 +9,7 @@ from sqlalchemy import Connection, text
 
 from app import jobs
 from app.auth import UserDep
+from app.modules.discovery.pipeline import card_value
 from app.db import ConnDep, engine
 from app.jobs import Job
 from app.modules.collector.service import fetch
@@ -30,7 +31,7 @@ def _own(conn: Connection, profile_id: UUID, user_id: UUID) -> dict:
 
 
 def _business(p: dict) -> str:
-    v = lambda k: str(((p["card"] or {}).get(k) or {}).get("value") or "")
+    v = lambda k: str(card_value(p["card"] or {}, k) or "")
     return f"{p['name']}: {v('business_type')} {v('description')}".strip()
 
 
@@ -106,7 +107,7 @@ def _collect_job(job: Job, profile_id: UUID, p: dict) -> dict:
     found = []
     with engine.connect() as conn:
         pages = [r[0] for r in conn.execute(text("select url from products where profile_id = :p and url is not null"), {"p": profile_id})]
-    website = str(((p["card"] or {}).get("website") or {}).get("value") or "")
+    website = str(card_value(p["card"] or {}, "website") or "")
     job.step("own_site", "running", len(pages), "Reading reviews on your product pages (robots.txt respected)…")
     for url in pages[:10]:
         page = fetch(url)
