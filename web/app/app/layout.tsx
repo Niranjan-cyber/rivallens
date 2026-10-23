@@ -25,13 +25,13 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
           </div>
         </div>
       </header>
-      <div className="mt-8 grid gap-8 md:grid-cols-[200px_1fr]">
-        <aside className="md:sticky md:top-28 md:self-start">
+      <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-[200px_1fr]">
+        <aside className="min-w-0 md:sticky md:top-28 md:self-start">
           <Suspense fallback={<div className="h-10 md:h-80" />}>
             <SideNav />
           </Suspense>
         </aside>
-        <main>{children}</main>
+        <main className="min-w-0">{children}</main>
       </div>
     </div>
   );
