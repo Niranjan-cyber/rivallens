@@ -1,9 +1,9 @@
 // The landing page's one memorable element: competitors orbiting your product,
 // with one satellite carrying a real-looking change receipt.
 const rivals = [
-  { x: 92, y: 120, r: 34, label: "KiteHost" },
-  { x: 404, y: 96, r: 40, label: "NimbusDeploy" },
-  { x: 372, y: 392, r: 30, label: "Orbitly" },
+  { x: 92, y: 112, r: 34, label: "KiteHost" },
+  { x: 400, y: 120, r: 32, label: "Orbitly" },
+  { x: 104, y: 326, r: 42, label: "NimbusDeploy" },
 ];
 
 export function OrbitHero() {
@@ -24,7 +24,7 @@ export function OrbitHero() {
           </g>
         ))}
       </svg>
-      <div className="absolute right-0 top-[30%] w-[210px] translate-x-2 rounded-stadium bg-white p-5 shadow-lift-2 sm:translate-x-6">
+      <div className="absolute bottom-[-6%] left-[30%] w-[210px] rounded-stadium bg-white p-5 shadow-lift-2">
         <p className="text-[13px] text-slate">NimbusDeploy · Pro plan</p>
         <p className="mt-1 text-[22px] font-medium tracking-[-0.02em]">
           <span className="text-slate line-through decoration-1">₹1,499</span> → ₹899
