@@ -87,7 +87,7 @@ function ProductCard({ product: p, onChange }: { product: Product; onChange: (p:
       </div>
       {p.niche && <p className="mt-1 text-[17px]">{p.niche}</p>}
       <p className="mt-2 text-[14px] text-slate">
-        {path.length ? path.map((s, i) => <span key={i}>{i > 0 && " › "}<span className={i === path.length - 1 ? "font-medium text-ink" : ""}>{s}</span></span>) : "Finding the category…"}
+        {path.length ? path.map((s, i) => <span key={i}>{i > 0 && " › "}<span className={i === path.length - 1 ? "font-medium text-ink" : ""}>{s}</span></span>) : p.category_source === "user" ? "No category (none fits)" : "Finding the category…"}
       </p>
       <p className="mt-1 text-[13px] text-slate">{SOURCE[p.category_source]} · Google product taxonomy</p>
       <p className="mt-4 text-[17px]">{rupees(p.price, p.unit)}</p>

@@ -79,7 +79,9 @@ def compute(conn: Connection, profile_id: UUID, overrides: dict, extra_option: f
     sim["market"] = {"median_price_inr": m, "origin": m_origin, "n_priced": len(priced),
                      "evidence": [{k: c[k] for k in ("name", "price_inr", "source_url", "observed_at", "evidence_id")} for c in priced]}
     sim["viability_flags"] = flags
-    sim["price_unit"] = "" if (card_value(card, "price") or {}).get("period") == "one_time" else "/month"  # products: price per unit sold
+    period = (card_value(card, "price") or {}).get("period")
+    one_off = period == "one_time" or (period is None and card_value(card, "offering_type") == "product")
+    sim["price_unit"] = "" if one_off else "/month"  # products: price per unit sold
     return sim
 
 
@@ -210,7 +212,8 @@ def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
     if met["operating_margin"] is not None:
         inputs.append(_in("Your operating margin", f"{met['operating_margin']:.1%}", "money"))
     inputs.append(_in("Runway", f"{runway:g} months" if runway is not None else
-                      "not burning cash" if money["transactions_count"] and money["cash"] is not None else "unknown: add cash and transactions", "money"))
+                      "not burning cash" if met["monthly_burn"] == 0 else
+                      "unknown: add your costs" if met["monthly_burn"] is None else "unknown: add cash in the bank", "money"))
     cs = customer_summary(conn, pid)
     shift = sentiment_shift(cs["sentiment"])
     if shift is not None:

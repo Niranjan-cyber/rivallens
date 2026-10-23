@@ -62,8 +62,14 @@ def test_metrics_revenue_margin_burn_runway():
 
 
 def test_no_burn_means_no_runway_limit():
+    sale = {"date": date(2026, 1, 1), "kind": "sale", "amount": 100, "product": None, "quantity": None}
+    m = metrics([sale, sale | {"kind": "expense", "amount": 60}], cash=50)
+    assert m["monthly_burn"] == 0 and m["runway_months"] is None and m["operating_margin"] == 0.4
+
+
+def test_sales_without_costs_leave_margin_burn_and_runway_unknown():
     m = metrics([{"date": date(2026, 1, 1), "kind": "sale", "amount": 100, "product": None, "quantity": None}], cash=50)
-    assert m["monthly_burn"] == 0 and m["runway_months"] is None
+    assert (m["monthly_revenue"], m["monthly_expenses"], m["operating_margin"], m["monthly_burn"], m["runway_months"]) == (100, None, None, None, None)
 
 
 def test_benchmark_lookup():

@@ -9,7 +9,7 @@ type Bench = { industry: string; firms: number; gross_margin: number | null; ope
 type Money = {
   cash: number | null; cash_as_of: string | null; industry: string | null; industry_guessed: boolean; benchmark: Bench | null;
   metrics: {
-    months: Month[]; monthly_revenue: number; monthly_expenses: number; operating_margin: number | null; monthly_burn: number;
+    months: Month[]; monthly_revenue: number; monthly_expenses: number | null; operating_margin: number | null; monthly_burn: number;
     runway_months: number | null; funding_total: number; products: { product: string; units: number; revenue: number; avg_price: number | null }[];
   };
   transactions_count: number;
@@ -26,7 +26,7 @@ export const inr = (v: number | null | undefined) => {
   const s = a >= 1e7 ? `₹${(a / 1e7).toFixed(2)} cr` : a >= 1e5 ? `₹${(a / 1e5).toFixed(2)} L` : `₹${Math.round(a).toLocaleString("en-IN")}`;
   return v < 0 ? `−${s}` : s;
 };
-const pct = (v: number | null | undefined) => (v == null ? "—" : `${(v * 100).toFixed(1)}%`);
+const pct = (v: number | null | undefined) => (v == null ? "Unknown" : `${(v * 100).toFixed(1)}%`);
 const input = "w-full rounded-[14px] border border-ink/30 bg-white px-4 py-2.5 text-[16px] focus:border-ink focus:outline-none";
 const FIELD_LABEL: Record<string, string> = { date: "Date", amount: "Amount", credit: "Money in (credit)", debit: "Money out (debit)", quantity: "Quantity",
   unit_price: "Unit price", product: "Product", description: "Description", kind: "Type (sale / expense / funding)" };
@@ -59,12 +59,16 @@ export function MoneyDashboard({ profileId }: { profileId: string }) {
         <p className="mt-6 rounded-stadium bg-lifted p-7 text-charcoal">No money data yet. Upload a bank statement, payment gateway or store export below, or add entries by hand.</p>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Revenue per month" value={inr(m.monthly_revenue)} note={`Expenses ${inr(m.monthly_expenses)} per month`} />
+          <Stat label="Revenue per month" value={inr(m.monthly_revenue)} note={m.monthly_expenses != null ? `Expenses ${inr(m.monthly_expenses)} per month` : "No costs uploaded yet"} />
           <Stat label="Operating margin" value={pct(m.operating_margin)}
             note={b ? `${b.industry} in India: ${pct(b.operating_margin)} (${b.firms} listed firms)${marginGap != null ? `, you are ${marginGap >= 0 ? "above" : "below"} by ${pct(Math.abs(marginGap))}` : ""}` : "Pick your industry for a benchmark"} />
-          <Stat label={m.monthly_burn ? "Burn per month" : "Monthly result"} value={m.monthly_burn ? inr(m.monthly_burn) : inr(m.monthly_revenue - m.monthly_expenses)}
-            note={m.monthly_burn ? "Expenses above revenue" : "Revenue covers expenses"} />
-          <Stat label="Runway" value={m.runway_months != null ? `${m.runway_months} months` : m.monthly_burn ? "Add cash" : "Not burning"}
+          {m.monthly_burn == null || m.monthly_expenses == null ? (
+            <Stat label="Burn per month" value="Unknown" note="Upload a bank statement or add expenses to see margin, burn and runway" />
+          ) : (
+            <Stat label={m.monthly_burn ? "Burn per month" : "Monthly result"} value={m.monthly_burn ? inr(m.monthly_burn) : inr(m.monthly_revenue - m.monthly_expenses)}
+              note={m.monthly_burn ? "Expenses above revenue" : "Revenue covers expenses"} />
+          )}
+          <Stat label="Runway" value={m.runway_months != null ? `${m.runway_months} months` : m.monthly_burn == null ? "Unknown" : m.monthly_burn ? "Add cash" : "Not burning"}
             note={data.cash != null ? `Cash ${inr(data.cash)}${data.cash_as_of ? ` on ${new Date(data.cash_as_of).toLocaleDateString("en-IN", { dateStyle: "medium" })}` : ""}` : "Enter cash in the bank below"} />
         </div>
       )}

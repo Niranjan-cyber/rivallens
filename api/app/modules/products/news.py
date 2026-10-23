@@ -30,8 +30,8 @@ def _news(query: str) -> list[dict]:
 
 
 def _clean(text: str) -> str:
-    """Drop markdown link clutter that news snippets carry ('+ [](https://…)')."""
-    return re.sub(r"\s+", " ", re.sub(r"\+?\s*!?\[[^\]]*\]\([^)]*\)|#+\s", " ", text)).strip()
+    """Drop markdown link clutter that news snippets carry ('+ [](https://…)', also cut off before the ')')."""
+    return re.sub(r"\s+", " ", re.sub(r"\+?\s*!?\[[^\]]*\]\([^)\s]*\)?|#+\s", " ", text)).strip()
 
 
 def _iso(v: str | None) -> str:

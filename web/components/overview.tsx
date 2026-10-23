@@ -11,18 +11,22 @@ type Profile = { id: string; name: string; card: Card; is_demo_data: boolean };
 
 const list = (v: unknown) => (Array.isArray(v) ? v.map(String) : typeof v === "string" && v ? v.split(",").map((s) => s.trim()) : []);
 
+type Customers = { total: number; sentiment: Record<string, number>; themes: { label: string; kind: string }[] };
+
 // S-21: the main dashboard. One card per dashboard, each saying what needs attention or what to add first.
 export function Overview({ profileId }: { profileId: string }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [items, setItems] = useState<Product[] | null>(null);
-  const [money, setMoney] = useState<{ transactions_count: number; metrics: { monthly_revenue: number; operating_margin: number | null; runway_months: number | null; monthly_burn: number }; benchmark: { industry: string; operating_margin: number | null } | null } | null>(null);
+  const [customers, setCustomers] = useState<Customers | null>(null);
+  const [money, setMoney] = useState<{ transactions_count: number; metrics: { monthly_revenue: number; operating_margin: number | null; runway_months: number | null; monthly_burn: number | null }; benchmark: { industry: string; operating_margin: number | null } | null } | null>(null);
 
   useEffect(() => {
     api<Profile>(`/api/v1/profiles/${profileId}`).then(setProfile, () => {});
     api<Product[]>(`/api/v1/profiles/${profileId}/products`).then(setItems, () => {});
     api<NonNullable<typeof money>>(`/api/v1/profiles/${profileId}/money`).then(setMoney, () => {});
     api<ProfileSummary[]>("/api/v1/profiles").then((ps) => setSummary(ps.find((p) => p.id === profileId) ?? null), () => {});
+    api<Customers>(`/api/v1/profiles/${profileId}/customers`).then(setCustomers, () => {});
   }, [profileId]);
 
   const card = profile?.card ?? {};
@@ -56,7 +60,7 @@ export function Overview({ profileId }: { profileId: string }) {
           {money?.transactions_count ? (
             <>
               <p className="text-[28px] font-medium tracking-[-0.02em]">
-                {money.metrics.runway_months != null ? `${money.metrics.runway_months} months of runway` : money.metrics.monthly_burn ? "Add cash to see runway" : "Not burning cash"}
+                {money.metrics.runway_months != null ? `${money.metrics.runway_months} months of runway` : money.metrics.monthly_burn == null ? `${inr(money.metrics.monthly_revenue)} revenue a month` : money.metrics.monthly_burn ? "Add cash to see runway" : "Not burning cash"}
               </p>
               <p className="mt-1 text-charcoal">
                 {inr(money.metrics.monthly_revenue)} revenue a month, operating margin {money.metrics.operating_margin != null ? `${(money.metrics.operating_margin * 100).toFixed(1)}%` : "—"}
@@ -80,8 +84,18 @@ export function Overview({ profileId }: { profileId: string }) {
             <p className="text-charcoal">Find competitors in India and watch their prices, plans and features.</p>
           )}
         </Tile>
-        <Tile title="Customers" href={`/app/${profileId}/customers`} cta="Add reviews or comments">
-          <p className="text-charcoal">Upload reviews or social media exports, or point us at your product pages, to see what customers actually ask for.</p>
+        <Tile title="Customers" href={`/app/${profileId}/customers`} cta={customers?.total ? "Open customers" : "Add reviews or comments"}>
+          {customers?.total ? (
+            <>
+              <p className="text-[28px] font-medium tracking-[-0.02em]">{customers.total} mentions</p>
+              <p className="mt-1 text-charcoal">
+                {customers.sentiment.positive ?? 0} positive · {customers.sentiment.negative ?? 0} negative
+                {customers.themes[0] ? `. Top theme: ${customers.themes[0].label} (${customers.themes[0].kind}).` : "."}
+              </p>
+            </>
+          ) : (
+            <p className="text-charcoal">Upload reviews or social media exports, or point us at your product pages, to see what customers actually ask for.</p>
+          )}
         </Tile>
       </div>
     </section>

@@ -152,12 +152,13 @@ def metrics(txs: list[dict], cash: float | None) -> dict:
     rev = sum(m["revenue"] for m in last) / len(last) if last else 0
     exp = sum(m["expenses"] for m in last) / len(last) if last else 0
     burn = max(exp - rev, 0)
+    costs = any(t["kind"] == "expense" for t in txs)  # sales alone say nothing about margin, burn or runway: Unknown, not 100%
     return {
         "months": months,
-        "monthly_revenue": round(rev), "monthly_expenses": round(exp),
-        "operating_margin": round((rev - exp) / rev, 4) if rev else None,
-        "monthly_burn": round(burn),
-        "runway_months": round(cash / burn, 1) if burn and cash is not None else None,
+        "monthly_revenue": round(rev), "monthly_expenses": round(exp) if costs else None,
+        "operating_margin": round((rev - exp) / rev, 4) if rev and costs else None,
+        "monthly_burn": round(burn) if costs else None,
+        "runway_months": round(cash / burn, 1) if costs and burn and cash is not None else None,
         "funding_total": round(funding),
         "products": sorted(({"product": k, "units": round(v["units"]), "revenue": round(v["revenue"]),
                              "avg_price": round(v["revenue"] / v["units"]) if v["units"] else None} for k, v in products.items()),

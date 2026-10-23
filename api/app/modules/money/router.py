@@ -110,7 +110,9 @@ def save_settings(profile_id: UUID, body: SettingsIn, user: UserDep, conn: ConnD
 
 def guess_industry(conn: Connection, profile_id: UUID, card: dict) -> str | None:
     """Damodaran industry whose name shares the most words with the business's product categories and description."""
-    paths = [r[0] for r in conn.execute(text("select category_path from products where profile_id = :p and category_path is not null"), {"p": profile_id})]
+    # The last two levels only: "Food, Beverages & Tobacco > Food Items > Bakery" is about food, not tobacco
+    paths = [" ".join(r[0].split(" > ")[-2:]) for r in conn.execute(text(
+        "select category_path from products where profile_id = :p and category_path is not null"), {"p": profile_id})]
     v = lambda k: str(card_value(card, k) or "")
     words = tokens(" ".join(paths + [v("industry"), v("category"), v("business_type"), v("description")]), query=True)
     best = max(industries(), key=lambda i: (len(tokens(i) & words), -len(i)))
