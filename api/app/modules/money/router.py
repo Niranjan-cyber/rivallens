@@ -145,7 +145,8 @@ def get_money(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict:
 
 def rival_names(conn: Connection, profile_id: UUID) -> list[str]:
     """The business's competitors plus the brands most often seen in its products' categories."""
-    names = [r[0] for r in conn.execute(text("select name from competitors where profile_id = :p and selected and not is_demo_data"), {"p": profile_id})]
+    asked = conn.execute(text("select rivals from money_settings where profile_id = :p"), {"p": profile_id}).scalar() or []
+    names = list(asked) + [r[0] for r in conn.execute(text("select name from competitors where profile_id = :p and selected and not is_demo_data"), {"p": profile_id})]
     names += [r[0] for r in conn.execute(text("""
         select mp.brand from market_products mp join products pr on pr.taxonomy_id = mp.taxonomy_id
         where pr.profile_id = :p and mp.brand is not null group by mp.brand order by count(*) desc limit 6"""), {"p": profile_id})]
@@ -174,7 +175,9 @@ class RivalsIn(BaseModel):
 @router.post("/profiles/{profile_id}/money/rivals/find", status_code=202)
 def find_rival_money(profile_id: UUID, body: RivalsIn, user: UserDep, conn: ConnDep, background: BackgroundTasks) -> dict:
     _own(conn, profile_id, user.id)
-    names = [c.strip()[:80] for c in body.companies if c.strip()] or rival_names(conn, profile_id)
+    names = list(dict.fromkeys(c.strip()[:80] for c in body.companies if c.strip())) or rival_names(conn, profile_id)
+    conn.execute(text("""insert into money_settings (profile_id, rivals) values (:p, cast(:r as jsonb))
+                         on conflict (profile_id) do update set rivals = cast(:r as jsonb), updated_at = now()"""), {"p": profile_id, "r": json.dumps(names[:8])})
     if not names:
         raise HTTPException(409, {"code": "no_companies", "message": "Add competitors or products first, or type a company name."})
     job_id = jobs.create(user.id, profile_id, "money_facts")

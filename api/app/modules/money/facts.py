@@ -32,10 +32,18 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s.replace("’", "'")).strip().lower()
 
 
+PRIOR = re.compile(r"\bfrom\s*(₹|rs\.?|inr|\$|usd)|a year ago|last year|previous year|year-ago|corresponding", re.I)
+
+
 def verified(fact: dict, source_text: str) -> bool:
+    """The quote is in the source, its amount matches, it isn't a comparison figure, and results state their period."""
     quote = fact.get("quote") or ""
     parsed = amount_inr(quote)
-    return bool(quote) and _norm(quote) in _norm(source_text) and parsed is not None and abs(parsed - fact["amount_inr"]) <= 0.02 * parsed
+    if not quote or _norm(quote) not in _norm(source_text) or parsed is None or abs(parsed - fact["amount_inr"]) > 0.02 * parsed:
+        return False
+    if PRIOR.search(quote):  # "up 12% from Rs 343 crore a year ago": the old figure, not the new one
+        return False
+    return fact.get("kind") == "funding" or bool(fact.get("period"))
 
 
 class Fact(BaseModel):

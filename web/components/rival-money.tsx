@@ -70,7 +70,8 @@ export function RivalMoney({ profileId }: { profileId: string }) {
       ) : (
         <ul className="mt-4 grid gap-3 md:grid-cols-2">
           {companies.map((c) => {
-            const facts = data.facts.filter((f) => f.company.toLowerCase() === c.toLowerCase());
+            const facts = data.facts.filter((f, i, all) => f.company.toLowerCase() === c.toLowerCase()
+              && all.findIndex((g) => g.company === f.company && g.kind === f.kind && g.amount_inr === f.amount_inr) === i); // one row per figure
             return (
               <li key={c} className="rounded-[20px] bg-white p-5">
                 <p className="text-[17px] font-medium">{c}</p>
