@@ -69,7 +69,7 @@
 | B14 | Prototype | A judge walks the full journeys §9 golden path on the public URL twice in a row without errors, with README + PPT ready to submit. | UC-01, UC-02, UC-03, UC-04, UC-05, UC-06, UC-07, UC-08, UC-09, UC-10, UC-11, UC-12, UC-13, UC-14, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-09, S-10, S-11, S-13, S-14, S-15, S-16, S-18 | diagnosing-bugs, render-debug, hackathon-demo-submission, pptx | 0.75 h | B13 | — | done |
 | B14a | Prototype | A new user signs up with email, confirms it from a real verification email (or uses Google), and lands signed in; each demo business has its own sign-in. | UC-21, UC-01, UC-13, S-02 | supabase, vercel-react-best-practices, frontend-design | 0.75 h | B14 | — | in-progress |
 | B14b | Prototype | After sign-up, a user fills a short onboarding form, confirms the drafted business card, and lands on a main dashboard with four dashboards: Product, Money, Market and Customers. | UC-21, UC-02, S-20, S-21, S-06 | frontend-design, fastapi | 1 h | B14a | — | done |
-| B14c | Prototype | On Product, a user sees Existing and New products, adds one, and gets its exact category from the Google product taxonomy (a football lands in Soccer Balls, a chair in Chairs). | UC-16, S-22 | supabase-postgres-best-practices, tdd, fastapi, frontend-design | 1 h | B14b | — | todo |
+| B14c | Prototype | On Product, a user sees Existing and New products, adds one, and gets its exact category from the Google product taxonomy (a football lands in Soccer Balls, a chair in Chairs). | UC-16, S-22 | supabase-postgres-best-practices, tdd, fastapi, frontend-design | 1 h | B14b | — | done |
 | B14d | Prototype | Opening a product shows it against products in the same category on price, features and add-ons, each value with its source and date, plus premium inspirations from the top of the category. | UC-20, UC-06, S-23 | tdd, fastapi, frontend-design | 1 h | B14c | — | todo |
 | B14e | Prototype | On Money, a user uploads a CSV or Excel export (or adds entries by hand) and sees revenue, profit margin against the Indian industry benchmark, product prices, the transaction log and runway. | UC-17, S-24 | tdd, fastapi, frontend-design | 1.25 h | B14b | — | todo |
 | B14f | Prototype | Money and the product comparison show competitors' reported revenue, margin and funding, each with a source link and date, or Unknown. | UC-17, UC-20, S-24, S-23 | tdd, fastapi | 0.75 h | B14e, B14d | — | todo |
@@ -357,7 +357,7 @@
 - **Prompt:** `prompts/B14b-onboarding-business-card-and-the-main.md`
 
 ### B14c — Products in exact market categories
-- **Status:** todo
+- **Status:** done
 - **Goal:** On Product, a user sees Existing and New products, adds one, and gets its exact category from the Google product taxonomy (a football lands in Soccer Balls, a chair in Chairs).
 - **Why now:** Category drives every comparison; wrong categories make everything after this meaningless.
 - **Slice:** UC UC-16 · Screens S-22 · Components C-29

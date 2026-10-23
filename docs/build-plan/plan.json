@@ -1265,7 +1265,7 @@
       "id": "B14c",
       "title": "Products in exact market categories",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "On Product, a user sees Existing and New products, adds one, and gets its exact category from the Google product taxonomy (a football lands in Soccer Balls, a chair in Chairs).",
       "why_now": "Category drives every comparison; wrong categories make everything after this meaningless.",
