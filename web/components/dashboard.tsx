@@ -62,7 +62,7 @@ export function Dashboard({ profileId }: { profileId: string }) {
 
       <h2 className="mt-10 text-[24px] font-medium tracking-[-0.02em]">Recent checks</h2>
       {runs.length === 0 ? (
-        <p className="mt-2 text-charcoal">No checks yet. Run monitor saves a baseline of every watched page.</p>
+        <p className="mt-2 text-charcoal">No checks yet. The first check saves a baseline of every watched page.</p>
       ) : (
         <ul className="mt-3 divide-y divide-ghost rounded-btn bg-lifted px-6">
           {runs.map((r) => (

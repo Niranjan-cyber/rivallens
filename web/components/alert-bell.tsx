@@ -49,7 +49,7 @@ export function AlertBell() {
       </summary>
       <div className="absolute right-0 z-20 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-[24px] bg-white p-3 shadow-lift-2">
         {data.top.length === 0 ? (
-          <p className="px-3 py-4 text-[15px] text-slate">No unread alerts. Run monitor to check for changes.</p>
+          <p className="px-3 py-4 text-[15px] text-slate">No unread alerts. Check competitors on Market to look for changes.</p>
         ) : (
           <ul>
             {data.top.map((a) => (

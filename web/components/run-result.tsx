@@ -28,7 +28,7 @@ export function RunResult({ profileId }: { profileId: string }) {
     const runId = id
       ? Promise.resolve(id)
       : api<{ id: string }[]>(`/api/v1/profiles/${profileId}/runs?limit=1`).then((r) => {
-          if (!r[0]) throw new Error("No checks yet. Run monitor from the dashboard to make the first one.");
+          if (!r[0]) throw new Error("No checks yet. Press Check competitors now on Market to make the first one.");
           return r[0].id;
         });
     runId.then((rid) => api<Run>(`/api/v1/runs/${rid}`)).then(setRun, (e: Error) => setError(e.message));
