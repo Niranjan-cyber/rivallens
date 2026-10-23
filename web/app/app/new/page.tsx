@@ -33,24 +33,41 @@ const inputCls = "mt-1 w-full rounded-[14px] border border-ink/30 bg-white px-4 
 export default function NewProfile() {
   const router = useRouter();
   const [kind, setKind] = useState<Kind>("business");
-  const [input, setInput] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [card, setCard] = useState<Card | null>(null);
   const [step, setStep] = useState(0);
 
+  const [about, setAbout] = useState<Record<string, string>>({});
+  const [onboard, setOnboard] = useState(0);
+  const a = (k: string) => about[k] ?? "";
+  const setA = (k: string, v: string) => setAbout((s) => ({ ...s, [k]: v }));
+
+  // The onboarding answers are the user's own words: they go on the card as origin "user" and win over the draft.
+  function withAbout(drafted: Card): Card {
+    const mine: Record<string, unknown> = {
+      name: a("name"), website: a("website"), business_type: a("business_type"), india_markets: a("city") ? [a("city")] : [],
+      description: a("description"), main_products: a("products").split(",").map((s) => s.trim()).filter(Boolean),
+      funding_stage: a("funding_stage"), revenue_range: a("revenue_range"), target_customer: a("target_customer"), social_handles: a("social"),
+    };
+    const out = { ...drafted };
+    for (const [k, v] of Object.entries(mine)) if (v && !(Array.isArray(v) && !v.length)) out[k] = { value: v, origin: "user" };
+    return out;
+  }
+
   async function draft() {
     setError(null);
-    const isUrl = /^https?:\/\//i.test(input.trim());
-    setStatus(isUrl ? "Reading your site…" : "Drafting your card…");
+    const description = [`${a("name")}, ${a("business_type") || "business"}${a("city") ? ` in ${a("city")}` : ""}.`, a("description"),
+      a("products") && `Products: ${a("products")}.`, a("target_customer") && `Customers: ${a("target_customer")}.`].filter(Boolean).join(" ").slice(0, 500);
+    setStatus("Drafting your business card…");
     try {
       const { job_id } = await api<{ job_id: string }>("/api/v1/profiles/draft", {
         method: "POST",
-        body: JSON.stringify({ kind, ...(isUrl ? { url: input.trim() } : { description: input.trim() }) }),
+        body: JSON.stringify({ kind, description }),
       });
       for (let i = 0; i < 60; i++) {
         const job = await api<Job & { result: Record<string, unknown> | null }>(`/api/v1/jobs/${job_id}`);
-        if (job.status === "done" && job.result) return (setCard(fromDraft(job.result)), setStep(0), setStatus(null));
+        if (job.status === "done" && job.result) return (setCard(withAbout(fromDraft(job.result))), setStep(0), setStatus(null));
         if (job.status === "failed" || job.status === "stale") throw new Error(job.error?.message ?? "Drafting failed. Fill the card in manually.");
         await new Promise((r) => setTimeout(r, 1000));
       }
@@ -58,6 +75,7 @@ export default function NewProfile() {
     } catch (e) {
       setError((e as Error).message);
       setStatus(null);
+      setCard(withAbout({}));
     }
   }
 
@@ -96,40 +114,82 @@ export default function NewProfile() {
     const offering = (get("offering_type") as string) === "product" ? "product" : "service";
     const full: Card = { ...card, watch: { value: watch, origin: card.watch?.origin ?? "user" } };
     await api<{ id: string }>("/api/v1/profiles", { method: "POST", body: JSON.stringify({ kind, offering_type: offering, name, card: full }) }).then(
-      (p) => router.push(`/app/${p.id}/card`),
+      (p) => router.push(`/app/${p.id}/home`),
       (e: Error) => setError(e.message),
     );
   }
 
-  if (!card)
+  if (!card) {
+    const field = (k: string, label: string, placeholder = "", required = false) => (
+      <label key={k} className="block">
+        <span className="text-[15px] font-medium">{label}{!required && <span className="font-normal text-slate"> (optional)</span>}</span>
+        <input className={inputCls} value={a(k)} required={required} placeholder={placeholder} onChange={(e) => setA(k, e.target.value)} />
+      </label>
+    );
+    const choice = (k: string, label: string, options: string[], required = false) => (
+      <label key={k} className="block">
+        <span className="text-[15px] font-medium">{label}{!required && <span className="font-normal text-slate"> (optional)</span>}</span>
+        <select className={inputCls} value={a(k)} required={required} onChange={(e) => setA(k, e.target.value)}>
+          <option value="">Choose…</option>
+          {options.map((o) => <option key={o}>{o}</option>)}
+        </select>
+      </label>
+    );
+    const ready = a("name").trim() && a("business_type") && a("city").trim() && a("description").trim() && a("products").trim();
     return (
-      <section data-screen="S-04">
-        <h1 className="text-[32px] leading-tight md:text-[40px]">Add a business</h1>
-        <p className="mt-3 max-w-[40rem] text-[17px] text-charcoal">Describe it in one line or paste your website. We draft the profile; you check it.</p>
-        <div role="radiogroup" aria-label="What are you adding?" className="mt-6 grid gap-3 sm:grid-cols-2">
-          {([["business", "I run a business", "Watch competitors of something already selling."], ["idea", "I have an idea", "Size up the market before you launch."]] as const).map(([k, title, hint]) => (
-            <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)}
-              className={`rounded-stadium p-6 text-left ${kind === k ? "border-[1.5px] border-ink bg-white" : "border-[1.5px] border-transparent bg-lifted"}`}>
-              <span className="block text-[20px] font-medium">{title}</span>
-              <span className="mt-1 block text-charcoal">{hint}</span>
-            </button>
+      <section data-screen="S-20" className="max-w-[44rem]">
+        <h1 className="text-[32px] leading-tight md:text-[40px]">Tell us about your business</h1>
+        <p className="mt-3 text-[17px] text-charcoal">Two short steps. We draft your business card from your answers, and you check it before anything is saved.</p>
+        <ol className="mt-4 flex gap-2 text-[15px]" aria-label="Steps">
+          {["Your business", "A bit more"].map((s, i) => (
+            <li key={s} aria-current={i === onboard ? "step" : undefined}
+              className={`rounded-pill px-4 py-1.5 ${i === onboard ? "bg-ink text-canvas" : i < onboard ? "bg-ghost" : "bg-lifted text-slate"}`}>
+              {i + 1}. {s}
+            </li>
           ))}
-        </div>
-        <label className="mt-6 block max-w-[40rem]">
-          <span className="text-[15px] font-medium">Your website or a one-line description</span>
-          <textarea className={`${inputCls} min-h-24`} maxLength={500} value={input} onChange={(e) => setInput(e.target.value)}
-            placeholder="Pune startup, managed app deployment for Indian developers, Pro ₹999/mo" />
-        </label>
-        <div className="mt-4 flex flex-wrap items-center gap-4">
-          <button type="button" disabled={!input.trim() || status !== null} onClick={draft}
-            className="inline-flex min-h-11 items-center rounded-btn border-[1.5px] border-ink bg-ink px-6 text-[16px] font-medium text-canvas disabled:opacity-50">
-            {status ?? "Draft my card"}
-          </button>
-          <button type="button" onClick={() => setCard({})} className="text-[15px] underline">Fill manually</button>
-        </div>
-        {error && <p className="mt-4 max-w-[40rem] rounded-btn bg-lifted p-4 text-charcoal">{error}</p>}
+        </ol>
+        <form className="mt-6 grid gap-4 rounded-stadium bg-lifted p-7"
+          onSubmit={(e) => { e.preventDefault(); if (onboard === 0) setOnboard(1); else draft(); }}>
+          {onboard === 0 ? (
+            <>
+              {field("name", "Business name", "Stride & Co.", true)}
+              {choice("business_type", "What kind of business is it?", ["Startup", "D2C brand", "Local business", "SaaS", "Vendor or supplier", "Other"], true)}
+              <div role="radiogroup" aria-label="Are you already selling?" className="grid gap-3 sm:grid-cols-2">
+                {([["business", "Already selling"], ["idea", "Not launched yet"]] as const).map(([k, title]) => (
+                  <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)}
+                    className={`min-h-11 rounded-[14px] px-4 py-2.5 text-left text-[16px] ${kind === k ? "border-[1.5px] border-ink bg-white" : "border-[1.5px] border-ink/20 bg-white/60"}`}>
+                    {title}
+                  </button>
+                ))}
+              </div>
+              {field("city", "City", "Pune", true)}
+              {field("website", "Website", "https://")}
+              {field("description", "What you do, in one line", "Running shoes for Indian roads, sold online", true)}
+              {field("products", "Your main products (comma-separated)", "Stride Runner, Stride Trail, running socks", true)}
+            </>
+          ) : (
+            <>
+              {choice("funding_stage", "Funding stage", ["Bootstrapped", "Friends and family", "Angel", "Seed", "Series A or later", "Profitable, not raising"])}
+              {choice("revenue_range", "Monthly revenue", ["Not selling yet", "Under ₹1 lakh", "₹1–10 lakh", "₹10 lakh–1 crore", "Over ₹1 crore"])}
+              {field("target_customer", "Who are your customers?", "Recreational runners aged 22–40 in Indian metros")}
+              {field("social", "Social media handles", "@stride.co on Instagram, X")}
+            </>
+          )}
+          {error && <p className="rounded-btn bg-white p-4 text-charcoal">{error}</p>}
+          <div className="flex flex-wrap gap-3">
+            {onboard === 1 && (
+              <button type="button" onClick={() => setOnboard(0)}
+                className="inline-flex min-h-11 items-center rounded-btn border-[1.5px] border-ink bg-white px-6 text-[16px] font-medium">Back</button>
+            )}
+            <button disabled={!ready || status !== null}
+              className="inline-flex min-h-11 items-center rounded-btn border-[1.5px] border-ink bg-ink px-6 text-[16px] font-medium text-canvas disabled:opacity-50">
+              {status ?? (onboard === 0 ? "Next" : "Draft my business card")}
+            </button>
+          </div>
+        </form>
       </section>
     );
+  }
 
   return (
     <section data-screen="S-05" className="max-w-[44rem]">

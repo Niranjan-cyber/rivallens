@@ -26,7 +26,7 @@ export function ProfileSwitcher() {
       <div className="absolute right-0 mt-2 w-64 rounded-[24px] bg-white p-2 shadow-lift-2">
         <Link href="/app" className="block rounded-pill px-4 py-2 hover:bg-canvas">All businesses</Link>
         {profiles.map((p) => (
-          <Link key={p.id} href={`/app/${p.id}/dashboard`} className="block rounded-pill px-4 py-2 hover:bg-canvas">{p.name}</Link>
+          <Link key={p.id} href={`/app/${p.id}/home`} className="block rounded-pill px-4 py-2 hover:bg-canvas">{p.name}</Link>
         ))}
         <Link href="/app/new" className="block rounded-pill px-4 py-2 hover:bg-canvas">Add a business</Link>
         <button type="button" onClick={() => supabase.auth.signOut()} className="mt-1 block w-full rounded-pill px-4 py-2 text-left text-slate hover:bg-canvas">

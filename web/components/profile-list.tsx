@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SampleBadge } from "@/components/ui";
 import { api, type ProfileSummary } from "@/lib/api";
@@ -8,10 +9,12 @@ import { api, type ProfileSummary } from "@/lib/api";
 export function ProfileList() {
   const [profiles, setProfiles] = useState<ProfileSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    api<ProfileSummary[]>("/api/v1/profiles").then(setProfiles, (e: Error) => setError(e.message));
-  }, []);
+    // A new account has no business yet: onboarding is the first screen.
+    api<ProfileSummary[]>("/api/v1/profiles").then((ps) => (ps.length ? setProfiles(ps) : router.replace("/app/new")), (e: Error) => setError(e.message));
+  }, [router]);
 
   if (error) return <p className="mt-8 rounded-btn bg-lifted p-6 text-charcoal">{error}</p>;
   if (!profiles)
@@ -45,7 +48,7 @@ export function ProfileList() {
             className="absolute bottom-6 right-6 z-[1] rounded-pill px-3 py-1.5 text-[13px] text-slate hover:bg-white">
             Delete
           </button>
-          <Link href={`/app/${p.id}/dashboard`} className="block rounded-stadium bg-lifted p-7 hover:shadow-lift-2">
+          <Link href={`/app/${p.id}/home`} className="block rounded-stadium bg-lifted p-7 hover:shadow-lift-2">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[14px] text-slate">
                 {p.kind === "idea" ? "Idea" : "Business"} · {p.offering_type}

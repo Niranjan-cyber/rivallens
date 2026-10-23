@@ -1,6 +1,25 @@
 // Profile-scoped sections of the app shell (screen IDs from the user-journeys doc).
+// The four dashboards; each section below belongs to one group (home is the main dashboard).
+export const groups = [
+  { key: "home", label: "Overview" },
+  { key: "product", label: "Product" },
+  { key: "money", label: "Money" },
+  { key: "market", label: "Market" },
+  { key: "customers", label: "Customers" },
+] as const;
+
+export const groupOf: Record<string, (typeof groups)[number]["key"]> = {
+  home: "home", product: "product", simulator: "product", money: "money", customers: "customers",
+  dashboard: "market", competitors: "market", comparison: "market", alerts: "market", reports: "market", settings: "market",
+  competitor: "market", run: "market", receipt: "market", card: "home",
+};
+
 export const sections = [
-  { slug: "dashboard", label: "Dashboard", screen: "S-09", purpose: "Latest picture for this business: monitored competitors, recent changes, simulator summary and the Run monitor button." },
+  { slug: "home", label: "Overview", screen: "S-21", purpose: "What needs your attention this week across products, money, market and customers." },
+  { slug: "product", label: "Products", screen: "S-22", purpose: "Your existing and new products, each in its exact market category." },
+  { slug: "money", label: "Money", screen: "S-24", purpose: "Revenue, margins, funding, transactions and runway from your uploads and entries." },
+  { slug: "customers", label: "Customers", screen: "S-26", purpose: "What customers say and want, from reviews, comments and mentions." },
+  { slug: "dashboard", label: "Market overview", screen: "S-09", purpose: "Latest picture for this business: monitored competitors, recent changes, simulator summary and the Run monitor button." },
   { slug: "competitors", label: "Competitors", screen: "S-08", purpose: "Competitors found for you in the Indian market, split into comparable and inspiration, with the pages being watched." },
   { slug: "comparison", label: "Comparison", screen: "S-13", purpose: "Side-by-side comparison on criteria you choose. Every cell shows its source and the date it was seen." },
   { slug: "simulator", label: "Simulator", screen: "S-14", purpose: "Compare launch prices and scenarios using observed competitor data and assumptions you can edit." },
