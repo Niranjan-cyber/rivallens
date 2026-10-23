@@ -1,12 +1,23 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app import jobs
 from app.config import GIT_SHA, WEB_ORIGIN
+from app.modules.changes.router import router as changes_router
 from app.modules.demo.router import router as demo_router
 from app.modules.profiles.router import router as profiles_router
 
-app = FastAPI(title="RivalLens API")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    jobs.mark_stale()
+    yield
+
+
+app = FastAPI(title="RivalLens API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[WEB_ORIGIN],
@@ -15,6 +26,7 @@ app.add_middleware(
 )
 app.include_router(profiles_router)
 app.include_router(demo_router)
+app.include_router(changes_router)
 
 
 @app.exception_handler(HTTPException)

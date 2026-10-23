@@ -36,3 +36,27 @@ export type ProfileSummary = {
   last_run_at: string | null;
   is_demo_data: boolean;
 };
+
+export type Job = {
+  id: string;
+  kind: string;
+  status: "queued" | "running" | "done" | "failed" | "stale";
+  steps: { name: string; status: string; count: number | null; detail: string | null; at: string }[];
+  result: { run_id?: string } | null;
+  error: { code: string; message: string } | null;
+};
+
+export type Run = {
+  id: string;
+  profile_id: string;
+  status: string;
+  kind: "baseline" | "run";
+  started_at: string;
+  finished_at: string | null;
+  counts: { sources: number; diffs: number; ignored: number; meaningful: number; needs_review: number; failed: number };
+  changes: { change_event_id: string; competitor: string; change_type: string; field: string; prev: string | null; curr: string | null; delta_pct: number | null; status: string }[];
+  ledger: { source_id: string; competitor: string; section_key: string; reason: string; summary: string }[];
+  failures: { source_id: string; status: string; url: string }[];
+};
+
+export type Mock = { slug: string; name: string; version: string[]; url: string };

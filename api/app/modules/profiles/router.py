@@ -29,12 +29,13 @@ def list_profiles(user: UserDep, conn: ConnDep) -> list[ProfileSummary]:
     rows = conn.execute(
         text("""
             select p.id, p.name, p.kind, p.offering_type, coalesce(p.card->>'note', '') as note, p.is_demo_data,
-                   (select count(*) from competitors c where c.profile_id = p.id and c.selected) as competitors_monitored
+                   (select count(*) from competitors c where c.profile_id = p.id and c.selected) as competitors_monitored,
+                   (select max(r.started_at) from runs r where r.profile_id = p.id) as last_run_at
             from profiles p where p.user_id = :uid order by p.created_at
         """),
         {"uid": user.id},
     ).mappings()
-    return [ProfileSummary(**r, unread_alerts=0, last_run_at=None) for r in rows]
+    return [ProfileSummary(**r, unread_alerts=0) for r in rows]
 
 
 @router.delete("/{profile_id}", status_code=204)

@@ -45,27 +45,72 @@ def guest_clone(user: UserDep, conn: ConnDep) -> dict[str, list[ProfileSummary]]
         select m.new_id, m.profile_id, c.name, c.domain, c.relation, c.origin, c.selected, c.monitorable, c.india_signals, c.similarity, c.is_demo_data
         from competitors c join _c m on m.old_id = c.id
     """))
-    sources = conn.execute(text("select s.url, s.page_type, s.is_mock, m.new_id as competitor_id from sources s join _c m on m.old_id = s.competitor_id")).mappings().all()
+    sources = conn.execute(text("select s.id, s.url, s.page_type, s.is_mock, m.new_id as competitor_id from sources s join _c m on m.old_id = s.competitor_id")).mappings().all()
     for s in sources:
         url = s["url"]
         if s["is_mock"]:
             slug = url.rstrip("/").rsplit("/", 1)[-1]
             url = f"{MOCK_BASE_URL}/{keys[slug]}/{slug}"
-        conn.execute(text("insert into sources (competitor_id, url, page_type, is_mock) values (:c, :url, :t, :m)"),
-                     {"c": s["competitor_id"], "url": url, "t": s["page_type"], "m": s["is_mock"]})
+        new_id = conn.execute(text("insert into sources (competitor_id, url, page_type, is_mock) values (:c, :url, :t, :m) returning id"),
+                              {"c": s["competitor_id"], "url": url, "t": s["page_type"], "m": s["is_mock"]}).scalar()
+        # The seed's latest snapshot becomes this guest's baseline (same immutable storage object, specs §1 C-13).
+        conn.execute(text("""
+            with old as (select * from snapshots where source_id = :old and status = 'ok' order by observed_at desc limit 1),
+            snap as (
+                insert into snapshots (source_id, observed_at, status, http_status, storage_path, sha256, text, sections, bytes)
+                select :new, observed_at, status, http_status, storage_path, sha256, text, sections, bytes from old returning id, observed_at
+            )
+            insert into observations (snapshot_id, source_id, observed_at, fields, origin)
+            select snap.id, :new, snap.observed_at, o.fields, 'seed' from snap, old join observations o on o.snapshot_id = old.id
+        """), {"old": s["id"], "new": new_id})
     return {"profiles": list_profiles(user, conn)}
 
 
-class MockState(BaseModel):
+SCENARIOS = ("price_cut_40", "add_feature", "positioning", "cosmetic")
+MOCK_NAMES = {"nimbusdeploy": "NimbusDeploy (demo)", "kitehost": "KiteHost (demo)", "orbitly": "Orbitly Cloud (demo)"}
+
+
+class Mock(BaseModel):
+    slug: str
+    name: str
+    version: list[str]
+    url: str
+
+
+class Mocks(BaseModel):
+    mocks: list[Mock]
+
+
+class ScenarioIn(BaseModel):
+    scenario: str
+
+
+class ScenarioOut(BaseModel):
     slug: str
     version: list[str]
-    overrides: dict
 
 
-@router.get("/api/v1/mock-state/{instance_key}")
-def mock_state(instance_key: str, conn: ConnDep) -> MockState:
-    """Public, read-only: the mock site renders fictional pages from this (no user data exposed)."""
-    row = conn.execute(text("select slug, version, overrides from mock_instances where instance_key = :k"), {"k": instance_key}).mappings().first()
-    if row is None:
+@router.get("/api/v1/demo/mocks")
+def list_mocks(user: UserDep, conn: ConnDep) -> Mocks:
+    rows = conn.execute(text("select slug, instance_key, version from mock_instances where user_id = :u order by slug"), {"u": user.id}).mappings()
+    return Mocks(mocks=[Mock(slug=r["slug"], name=MOCK_NAMES.get(r["slug"], r["slug"]), version=r["version"],
+                             url=f"{MOCK_BASE_URL}/{r['instance_key']}/{r['slug']}") for r in rows])
+
+
+@router.post("/api/v1/demo/mocks/{slug}/scenario")
+def apply_scenario(slug: str, body: ScenarioIn, user: UserDep, conn: ConnDep) -> ScenarioOut:
+    if body.scenario not in SCENARIOS:
+        raise HTTPException(422, {"code": "bad_scenario", "message": f"Scenario must be one of {', '.join(SCENARIOS)}."})
+    version = conn.execute(text("""
+        update mock_instances set version = case when :sc = any(version) then version else array_append(version, :sc) end
+        where user_id = :u and slug = :s returning version
+    """), {"sc": body.scenario, "u": user.id, "s": slug}).scalar()
+    if version is None:
         raise HTTPException(404, {"code": "mock_not_found", "message": "Unknown demo page."})
-    return MockState(**row)
+    return ScenarioOut(slug=slug, version=version)
+
+
+@router.post("/api/v1/demo/mocks/reset")
+def reset_mocks(user: UserDep, conn: ConnDep) -> dict[str, int]:
+    n = conn.execute(text("update mock_instances set version = '{v1}', overrides = '{}' where user_id = :u"), {"u": user.id}).rowcount
+    return {"reset": n}
