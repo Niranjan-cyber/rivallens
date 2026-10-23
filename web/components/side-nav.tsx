@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { groupOf, groups, sections } from "@/lib/screens";
 
-const groupHome: Record<string, string> = { home: "home", product: "product", money: "money", market: "dashboard", customers: "customers" };
+const groupHome: Record<string, string> = { home: "home", product: "product", money: "finance", market: "dashboard", customers: "customers" };
 
 // Four dashboards plus the overview; the active dashboard expands to its own pages.
 export function SideNav() {

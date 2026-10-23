@@ -17,7 +17,7 @@ type Sim = {
 type Segment = { segment: string | null; why: string[]; evidence_ids: string[]; evidence: { id: string; text: string; source: string }[]; message?: string };
 
 const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
-const SOURCE = { market: "Market", money: "Money", customers: "Customers", product: "This product", profile: "Your business card" } as Record<string, string>;
+const SOURCE = { market: "Market", money: "Finance", customers: "Customers", product: "This product", profile: "Your business card" } as Record<string, string>;
 
 // S-23 decision layer (B14i): a suggested segment and a simulator whose inputs come from the other dashboards.
 export function ProductPlan({ productId, profileId, version }: { productId: string; profileId: string; version: unknown }) {

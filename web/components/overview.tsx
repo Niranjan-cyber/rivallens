@@ -56,7 +56,7 @@ export function Overview({ profileId }: { profileId: string }) {
             <p className="text-charcoal">Add what you sell or plan to sell. Each product is compared only with products in its exact category.</p>
           )}
         </Tile>
-        <Tile title="Money" href={`/app/${profileId}/money`} cta={money?.transactions_count ? "Open money" : "Upload sales or add entries"}>
+        <Tile title="Finance" href={`/app/${profileId}/finance`} cta={money?.transactions_count ? "Open finance" : "Upload sales or add entries"}>
           {money?.transactions_count ? (
             <>
               <p className="text-[28px] font-medium tracking-[-0.02em]">

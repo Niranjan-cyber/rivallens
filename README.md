@@ -17,21 +17,21 @@ Small Indian businesses make pricing and product calls blind. Page-change tools 
 
 RivalLens puts four dashboards side by side and connects them:
 - **Product:** every product in one exact Google product category, compared only with real products in that category (price position against the median, premium inspirations, each brand's range), with a suggested customer segment and a price simulator per product.
-- **Money:** revenue, margin, burn and runway from the business's own CSV or Excel exports, against Damodaran's India margins, plus competitors' revenue and funding quoted word for word from filings and news.
+- **Finance:** revenue, margin, burn and runway from the business's own CSV or Excel exports, against Damodaran's India margins, plus competitors' revenue and funding quoted word for word from filings and news.
 - **Market:** competitors' pricing pages watched over time. Real changes (a price cut, a dropped plan, a new feature, new positioning) get a **receipt**; redesign noise is listed with the rule that ignored it. Category prices now, and Indian market news.
 - **Customers:** reviews, comments and insight exports turned into sentiment and themes (requests, complaints, praise), each opening the quotes it comes from.
 
-The simulator on each product takes its inputs from the other three: the category median and the latest competitor receipt (Market), unit cost and runway (Money), and sentiment and requests (Customers). Every input links to its dashboard.
+The simulator on each product takes its inputs from the other three: the category median and the latest competitor receipt (Market), unit cost and runway (Finance), and sentiment and requests (Customers). Every input links to its dashboard.
 
 ## Golden path (about three minutes)
 
 1. Open the live app and click **Stride & Co.** on the login page (a fictional running-shoe brand, *Demo business, modelled on Campus Activewear's FY26 margins and the UCI Online Retail II order pattern*).
 2. **Overview:** 3 products, 19.4 months of runway, ₹6.00 L revenue a month, margin −23.3% against 8.3% for shoe companies in India, 5 competitors watched.
 3. **Product → Stride Runner:** running shoes only. ₹1,999 sits below the median of real running shoes read from Puma, Brooks, Campus, Nivia and Neemans product pages; premium inspirations and brand ranges. The **segment** card cites the price position and the onboarding answers; the **simulator** shows its inputs as chips.
-4. **Money:** runway, margin against the benchmark, and Campus Activewear's reported revenue and profit, each with its quote and link.
+4. **Finance:** runway, margin against the benchmark, and Campus Activewear's reported revenue and profit, each with its quote and link.
 5. **Customers:** Stride has no reviews (no licensed shoe-review dataset exists), so it says so; the bakery in step 9 has 60 real reviews analysed.
 6. **Market → Simulate a competitor move:** *Redesign only* → **Check competitors now** → **0 meaningful changes**, every ignored difference listed with its rule. Then *Cut a price 40%* → **Check competitors now** → **1 meaningful change**: Monsoon Miles (demo) Downpour ₹2,999 → ₹1,799 (−40%). **See receipt:** saved pages before and after, the price highlighted, the date seen.
-7. **Back to Product → Stride Runner:** the simulator now lists *Latest competitor price change: Monsoon Miles (demo) −40%* among its inputs, next to runway and unit cost from Money.
+7. **Back to Product → Stride Runner:** the simulator now lists *Latest competitor price change: Monsoon Miles (demo) −40%* among its inputs, next to runway and unit cost from Finance.
 8. **Reports → Generate report → Download PDF:** every claim links to its receipt with a date; AI text is labelled.
 9. Log out and open **Kesar Bakehouse**: The Bread Basket's real transactions priced from Theobroma's menu, 60 reviews with themes, brownies compared with real brownies.
 
@@ -40,8 +40,8 @@ The simulator on each product takes its inputs from the other three: the categor
 | Product: price position, segment and simulator | Market: a real change and its receipt |
 |---|---|
 | ![Product](docs/screenshots/b14k-product.png) | ![Receipt](docs/screenshots/b14k-receipt.png) |
-| **Noise ignored, each with its rule** | **Money against the India benchmark** |
-| ![Noise ledger](docs/screenshots/b14k-noise-ledger.png) | ![Money](docs/screenshots/b14k-money.png) |
+| **Noise ignored, each with its rule** | **Finance against the India benchmark** |
+| ![Noise ledger](docs/screenshots/b14k-noise-ledger.png) | ![Finance](docs/screenshots/b14k-money.png) |
 
 ## How change detection works
 
@@ -166,7 +166,7 @@ Tests cover:
 - **No scheduled monitoring yet.** Runs are on demand; the MVP adds a cron.
 - **Services don't fit the product taxonomy.** Google's taxonomy covers goods; a membership or SaaS plan gets "Software" or no category, so its simulator anchors on the monitored competitors or its own price, labelled.
 - **Web mentions only work for real brands.** The demo businesses are fictional, so their Customers dashboards use uploads only.
-- **Quick-commerce sites (Blinkit, Zepto, Instamart, BigBasket, JioMart) refuse automated fetches,** so QuickKart watches no pages; its Market and Money come from news and filings.
+- **Quick-commerce sites (Blinkit, Zepto, Instamart, BigBasket, JioMart) refuse automated fetches,** so QuickKart watches no pages; its Market and Finance come from news and filings.
 - **Shared demo sign-ins.** Anyone can change a demo business; `python -m scripts.build_demo` rebuilds it.
 - **Discovery quality varies with free models.** Every accepted competitor is verified (reachable, robots-allowed, India signals), and rejections are shown.
 

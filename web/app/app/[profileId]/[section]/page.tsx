@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AlertCenter } from "@/components/alert-center";
 import { AlertRulesForm } from "@/components/alert-rules";
@@ -22,6 +22,7 @@ import { extraScreens, sections } from "@/lib/screens";
 async function Section({ params }: { params: PageProps<"/app/[profileId]/[section]">["params"] }) {
   const { profileId, section } = await params;
   const meta = sections.find((s) => s.slug === section) ?? extraScreens[section as keyof typeof extraScreens];
+  if (section === "money") redirect(`/app/${profileId}/finance`); // old links
   if (!meta) notFound();
   if (section === "run") return <RunResult profileId={profileId} />;
   if (section === "receipt") return <ReceiptView profileId={profileId} />;
@@ -30,7 +31,7 @@ async function Section({ params }: { params: PageProps<"/app/[profileId]/[sectio
   if (section === "competitor") return <CompetitorDetail profileId={profileId} />;
   if (section === "home") return <Overview profileId={profileId} />;
   if (section === "product") return <Products profileId={profileId} />;
-  if (section === "money") return <MoneyDashboard profileId={profileId} />;
+  if (section === "finance") return <MoneyDashboard profileId={profileId} />;
   if (section === "customers") return <Customers profileId={profileId} />;
   if (section === "product-detail") return <ProductDetail />;
   if (section === "dashboard") return <Dashboard profileId={profileId} />;

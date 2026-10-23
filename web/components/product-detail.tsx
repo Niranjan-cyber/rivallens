@@ -167,7 +167,7 @@ export function ProductDetail() {
               <p className="text-[17px] font-medium">{b.brand}</p>
               <p className="text-[15px] text-charcoal">{b.products} product{b.products > 1 ? "s" : ""} in this category{b.min != null ? `, ${rupees(b.min)}${b.max !== b.min ? `–${rupees(b.max)}` : ""}` : ""}</p>
               <p className="mt-1 text-[14px]">
-                Revenue: {b.revenue ? <a className="underline" href={b.revenue.source_url} target="_blank" rel="noreferrer">{inr(b.revenue.amount_inr)}{b.revenue.period ? ` (${b.revenue.period})` : ""}</a> : <span className="text-slate">Unknown (find it on Money)</span>}
+                Revenue: {b.revenue ? <a className="underline" href={b.revenue.source_url} target="_blank" rel="noreferrer">{inr(b.revenue.amount_inr)}{b.revenue.period ? ` (${b.revenue.period})` : ""}</a> : <span className="text-slate">Unknown (find it on Finance)</span>}
               </p>
             </li>
           ))}

@@ -158,7 +158,7 @@ def add_option(profile_id: UUID, body: OptionIn, user: UserDep, conn: ConnDep) -
 
 # ---- B14i: a simulator and a suggested segment per product, fed by Market, Money and Customers ----
 
-LINKS = {"market": "dashboard", "money": "money", "customers": "customers", "product": "product-detail", "default": None}
+LINKS = {"market": "dashboard", "money": "finance", "customers": "customers", "product": "product-detail", "default": None}
 
 
 def _in(label: str, value: str, source: str, evidence_id: str | None = None) -> dict:

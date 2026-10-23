@@ -50,7 +50,7 @@ export function MoneyDashboard({ profileId }: { profileId: string }) {
 
   return (
     <section data-screen="S-24">
-      <h1 className="text-[32px] leading-tight md:text-[40px]">Money</h1>
+      <h1 className="text-[32px] leading-tight md:text-[40px]">Finance</h1>
       <p className="mt-3 max-w-[44rem] text-[17px] text-charcoal">
         From your own exports and entries. Averages use your last three months; the benchmark is Damodaran&apos;s margins by industry for listed Indian companies (Jan 2026).
       </p>

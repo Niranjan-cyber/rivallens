@@ -71,7 +71,7 @@ flowchart LR
   B --> C[Business card<br/>AI draft, you confirm]
   C --> D[Main dashboard]
   D --> P[Product]
-  D --> M[Money]
+  D --> M[Finance]
   D --> K[Market]
   D --> U[Customers]
   M -.feeds.-> P
@@ -79,14 +79,14 @@ flowchart LR
   U -.feeds.-> P
 ```
 
-Layout note: a left-to-right flow. Draw the four dashboards as four tiles, with dotted arrows from Money, Market and Customers into Product, since Product is the main layer.
+Layout note: a left-to-right flow. Draw the four dashboards as four tiles, with dotted arrows from Finance, Market and Customers into Product, since Product is the main layer.
 
 **The four dashboards** (4 tiles):
 
 | Icon | Dashboard | What it shows | Status |
 |---|---|---|---|
 | `package` | **Product** (main layer) | Existing and new products, each in an exact market category (a football is compared only with footballs). Comparisons on price, revenue, features and add-ons. Premium-market inspirations. A suggested customer segment per product. A launch simulator. | ✅ simulator and comparison per business · 🛠 per-product, category matching, segments |
-| `wallet` | **Money** | Revenue, funding, profit margin against the Indian industry benchmark, product prices, the transaction log (CSV/Excel upload or manual entry), and runway. | 🛠 |
+| `wallet` | **Finance** | Revenue, funding, profit margin against the Indian industry benchmark, product prices, the transaction log (CSV/Excel upload or manual entry), and runway. | 🛠 |
 | `trending-up` | **Market** | What direct competitors changed (price, plans, features, positioning), each with a dated receipt. Category news and funding. Category price trend. Competitor discovery in India. | ✅ monitoring, receipts, alerts, discovery, comparison, report · 🛠 news, price trend |
 | `messages-square` | **Customers** | Reviews from your own site, web mentions, YouTube comments and uploaded insight exports, with sentiment and the top things customers ask for. | 🛠 |
 
@@ -125,7 +125,7 @@ flowchart LR
   R --> REP[Report, every claim cited]
 ```
 
-Second row: the product layer. Exact category and comparison are ✅ built; Money and Customers are 🛠 in build tonight.
+Second row: the product layer. Exact category and comparison are ✅ built; Finance and Customers are 🛠 in build tonight.
 
 ```mermaid
 flowchart LR
@@ -134,7 +134,7 @@ flowchart LR
   FIND --> SAME{Same taxonomy id? ✅}
   SAME -- yes --> CMP[Compare ✅<br/>price position vs median,<br/>features, premium, brand ranges]
   SAME -- no --> DROP[Not compared<br/>says which category it is in]
-  MO[Money ✅<br/>CSV / Excel / manual] --> MM[Margin vs Damodaran India,<br/>runway ✅]
+  MO[Finance ✅<br/>CSV / Excel / manual] --> MM[Margin vs Damodaran India,<br/>runway ✅]
   CU[Customers ✅<br/>reviews, mentions, insight CSVs] --> CS[Sentiment + themes, cited ✅]
   CMP --> SEG[Customer segment + simulator 🛠]
   MM --> SEG
@@ -189,7 +189,7 @@ flowchart TB
     ON[Sign-in → onboarding → business card ✅]
     OV[Overview ✅]
     D1[Product ✅]
-    D2[Money ✅]
+    D2[Finance ✅]
     D3[Market ✅]
     D4[Customers ✅]
   end
@@ -249,7 +249,7 @@ Layout note:
 |---|---|---|
 | Overview | profiles | profiles |
 | Product ✅ | products (taxonomy, classify, market), simulator | products, market_products, simulations |
-| Money ✅ | money | transactions, money_settings |
+| Finance ✅ | money | transactions, money_settings |
 | Market ✅ | collector, extractor, changes, alerts, discovery, comparison, reports | competitors, sources, snapshots, observations, change_events, alerts, reports |
 | Customers ✅ | customers | customer_mentions, customer_insights, social_metrics |
 
@@ -315,13 +315,13 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 |---|---|
 | Email + password sign-up and sign-in, guest demo | |
 | Onboarding form → AI-drafted business card → Overview | |
-| Money: CSV/Excel upload with column check, manual entries, revenue, margin vs Damodaran India benchmark, burn, runway, transaction log | |
-| Four-dashboard navigation (Product, Money, Market, Customers) | |
+| Finance: CSV/Excel upload with column check, manual entries, revenue, margin vs Damodaran India benchmark, burn, runway, transaction log | |
+| Four-dashboard navigation (Product, Finance, Market, Customers) | |
 | Competitors' revenue and funding from filings and news, each a verbatim quote with its link (e.g. Campus Activewear Q1 FY26 revenue ₹343.3 cr from its press release) | |
 | Products (existing/new) in exact Google-taxonomy categories | |
 | Customers: review/comment/insight uploads, own-page reviews, web mentions → sentiment and themes (requests, complaints, praise), each opening its quotes | |
 | Like-for-like comparison from real brand product pages: price position vs median, features, premium inspirations, brand ranges | |
-| Per product: a suggested customer segment that must cite its evidence (price position, review themes, onboarding answers), and a price simulator whose inputs come from Market (category median, receipts), Money (unit cost from the Damodaran margin, runway) and Customers (sentiment ±20%, requests), each a chip linking to its dashboard | |
+| Per product: a suggested customer segment that must cite its evidence (price position, review themes, onboarding answers), and a price simulator whose inputs come from Market (category median, receipts), Finance (unit cost from the Damodaran margin, runway) and Customers (sentiment ±20%, requests), each a chip linking to its dashboard | |
 | Change detection + noise ledger | |
 | Market: "Simulate a competitor move" next to "Check competitors now", category prices now, Indian market news and funding with links | |
 | Receipts with frozen evidence | |
@@ -383,7 +383,7 @@ Icons: `indian-rupee`, `shield-alert`, `users`, `timer`.
 |---|---|---|
 | Competitors' public pages | Prices, plans, features, history | robots.txt respected, 1 request/s |
 | [Google product taxonomy](https://support.google.com/merchants/answer/6324436) (~5,500 categories) | Exact product category | Free to use |
-| [Damodaran, margins by industry, India](https://pages.stern.nyu.edu/~adamodar/pc/datasets/marginIndia.xls) (NYU Stern, Jan 2026) | Margin benchmarks on Money | Public academic data, with credit |
+| [Damodaran, margins by industry, India](https://pages.stern.nyu.edu/~adamodar/pc/datasets/marginIndia.xls) (NYU Stern, Jan 2026) | Margin benchmarks on Finance | Public academic data, with credit |
 | Brand stores' public product pages (schema.org Product data; e.g. Puma India, Brooks India, Campus, Nivia, Neemans) | Category prices, ratings and stated features, each with its link and date | Public pages; robots.txt respected, 1 request/s |
 | [UCI Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii) | Transaction pattern for the footwear demo business, and the sample upload file | CC BY 4.0 |
 | [The Bread Basket](https://api.openml.org/d/43422) (20,507 real bakery sales) | Transactions for the bakery demo business | CC0 |

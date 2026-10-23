@@ -46,7 +46,7 @@ const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
       await page.getByText(/^Imported \d+/).waitFor();
     }
     const setCash = async (c) => {
-      await page.goto(productUrl.replace(/product-detail.*/, "money"));
+      await page.goto(productUrl.replace(/product-detail.*/, "finance"));
       await page.getByLabel("Cash in the bank today (₹)").fill(String(c));
       await page.getByRole("button", { name: "Save" }).first().click();
       await page.waitForTimeout(2500);
