@@ -8,6 +8,7 @@ import { Competitors } from "@/components/competitors";
 import { Dashboard } from "@/components/dashboard";
 import { ReceiptView } from "@/components/receipt";
 import { RunResult } from "@/components/run-result";
+import { ReportView } from "@/components/report";
 import { Simulator } from "@/components/simulator";
 import { StubPage } from "@/components/stub-page";
 import { extraScreens, sections } from "@/lib/screens";
@@ -23,6 +24,7 @@ async function Section({ params }: { params: PageProps<"/app/[profileId]/[sectio
   if (section === "dashboard") return <Dashboard profileId={profileId} />;
   if (section === "comparison") return <ComparisonMatrix profileId={profileId} />;
   if (section === "simulator") return <Simulator profileId={profileId} />;
+  if (section === "reports") return <ReportView profileId={profileId} />;
   if (section === "alerts") return <AlertCenter profileId={profileId} />;
   if (section === "settings") return <AlertRulesForm profileId={profileId} />;
 

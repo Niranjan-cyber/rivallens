@@ -13,6 +13,7 @@ from app.modules.comparison.router import router as comparison_router
 from app.modules.demo.router import router as demo_router
 from app.modules.discovery.router import router as discovery_router
 from app.modules.profiles.router import router as profiles_router
+from app.modules.reports.router import router as reports_router
 from app.modules.simulator.router import router as simulator_router
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")  # app logs (llm cache hits, job failures) reach Render
@@ -38,6 +39,7 @@ app.include_router(alerts_router)
 app.include_router(discovery_router)
 app.include_router(comparison_router)
 app.include_router(simulator_router)
+app.include_router(reports_router)
 
 
 @app.exception_handler(HTTPException)
