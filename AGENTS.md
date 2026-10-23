@@ -23,7 +23,7 @@ Hard rules:
 - Plan: `docs/build-plan/BUILD-PLAN.md` (generated from `docs/build-plan/plan.json`; timeline in `timeline.html`).
 - Work one step at a time using `docs/build-plan/prompts/<ID>-*.md`. Read only that step's section of BUILD-PLAN.md.
 - In `plan.json`, only edit the step's `status`; don't read the whole file. Re-render after changing it.
-- **Current step: B03** (real login + Try demo account).
+- **Current step: B04** (winning feature: noise ledger on a real monitoring run). B03 done: Supabase project `isedhcbvuuglghcriicd` (Mumbai); DB via session pooler; seed/migrate with `cd api && .venv/Scripts/python -m scripts.setup_db --migrate --seed`.
 - Live: web https://rivallens-eight.vercel.app (Vercel, root `web/`, Git auto-deploy) · API https://rivallens-api.onrender.com (Render `srv-dbdk8n6i0phs73a3k6mg`, Singapore, Free, Git auto-deploy, `cd api` build/start). Smoke: `FRONTEND_URL=… BACKEND_URL=… bash scripts/smoke.sh`. Freeze at 20:15; the cut order is in BUILD-PLAN.md open questions.
 
 <!-- skill-stack-setup:start -->

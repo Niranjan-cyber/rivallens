@@ -279,7 +279,7 @@
       "id": "B03",
       "title": "Real login + Try demo account",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "A visitor can click 'Try demo account' or sign up with email and land on S-03 showing profiles stored in Supabase for their own account.",
       "why_now": "Auth touches every later endpoint (user_id scoping); JWT verification and the pooler connection are a known risk best hit early.",
@@ -1320,6 +1320,10 @@
     {
       "date": "2026-10-23",
       "change": "B02 done: API live at https://rivallens-api.onrender.com (Render srv-dbdk8n6i0phs73a3k6mg, Singapore, Free); S-03 reads profiles from it."
+    },
+    {
+      "date": "2026-10-23",
+      "change": "B03 done: Supabase (Mumbai, ap-south-1) via IPv4 session pooler; anonymous guest clone + isolation verified live. Email sign-up auto-login waits on 'Confirm email' being switched off in Supabase."
     }
   ]
 }

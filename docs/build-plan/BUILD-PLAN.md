@@ -47,7 +47,7 @@
 |---|---|---|---|---|---|---|---|---|
 | B01 | Prototype | Anyone can open the public URL and click from the S-01 landing through stub screens S-03 to S-18 labelled sample data. | UC-13, S-01, S-03, S-09, S-10, S-11, S-13, S-14, S-15, S-16, S-18 | frontend-design, vercel-react-best-practices | 0.35 h | — | — | done |
 | B02 | Prototype | S-03 Home on the public URL lists profile cards fetched from the deployed FastAPI service. | UC-13, S-03 | fastapi, render-deploy, render-debug | 0.35 h | B01 | — | done |
-| B03 | Prototype | A visitor can click 'Try demo account' or sign up with email and land on S-03 showing profiles stored in Supabase for their own account. | UC-01, UC-13, S-01, S-02, S-03 | supabase, supabase-postgres-best-practices, fastapi | 0.45 h | B02 | — | todo |
+| B03 | Prototype | A visitor can click 'Try demo account' or sign up with email and land on S-03 showing profiles stored in Supabase for their own account. | UC-01, UC-13, S-01, S-02, S-03 | supabase, supabase-postgres-best-practices, fastapi | 0.45 h | B02 | — | done |
 | B04 | Prototype | In the Demo Lab, a user applies 'cosmetic' then 'price cut' to NimbusDeploy (demo) and Run monitor on S-10 shows 0 meaningful changes the first time and the Pro price drop as meaningful the second time, with every ignored diff listed with its reason. | UC-04, UC-10, S-09, S-10, S-18, S-19 | tdd, fastapi, vercel-react-best-practices, code-review | 0.55 h | B03 | — | todo |
 | B05 | Prototype | Clicking the meaningful change on S-10 opens S-11, which shows prev → curr, delta, observed-at and the before/after snapshot text with the price highlighted. | UC-05, S-10, S-11 | supabase, frontend-design | 0.3 h | B04 | — | todo |
 | B06 | Prototype | After a price-cut run, a high-priority alert linking to the receipt appears in the bell (an email copy goes to the owner address). | UC-08, UC-12, S-11, S-16, S-17 | tdd, fastapi | 0.35 h | B05 | — | todo |
@@ -100,7 +100,7 @@
 - **Notes:** Set up the C-25 keep-warm pinger later (B14); Render may sleep during dev, which is fine.
 
 ### B03 — Real login + Try demo account
-- **Status:** todo
+- **Status:** done
 - **Goal:** A visitor can click 'Try demo account' or sign up with email and land on S-03 showing profiles stored in Supabase for their own account.
 - **Why now:** Auth touches every later endpoint (user_id scoping); JWT verification and the pooler connection are a known risk best hit early.
 - **Slice:** UC UC-01, UC-13 · Screens S-01, S-02, S-03 · Components C-01, C-03, C-13, C-15, C-17
@@ -384,3 +384,4 @@ Work one step at a time: paste the step's prompt into the coding agent, finish w
 - 2026-10-23: Source labels tell agents to read docs by section (token budget, SKILL-PLAYBOOK.md).
 - 2026-10-23: B01 done: frontend live at https://rivallens-eight.vercel.app (rivallens.vercel.app is taken by another project).
 - 2026-10-23: B02 done: API live at https://rivallens-api.onrender.com (Render srv-dbdk8n6i0phs73a3k6mg, Singapore, Free); S-03 reads profiles from it.
+- 2026-10-23: B03 done: Supabase (Mumbai, ap-south-1) via IPv4 session pooler; anonymous guest clone + isolation verified live. Email sign-up auto-login waits on 'Confirm email' being switched off in Supabase.
