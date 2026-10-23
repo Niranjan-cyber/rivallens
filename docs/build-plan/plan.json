@@ -644,7 +644,7 @@
       "id": "B08",
       "title": "Automated competitor discovery in India",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "After saving a card, S-08 lists India-verified competitors found automatically (plus the user-added NimbusDeploy (demo) URL), ready to monitor.",
       "why_now": "Your hard requirement (no manual competitor entry) and the second-riskiest unknown; needs the B07 gateway.",

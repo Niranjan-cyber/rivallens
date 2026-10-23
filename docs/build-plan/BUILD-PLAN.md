@@ -52,7 +52,7 @@
 | B05 | Prototype | Clicking the meaningful change on S-10 opens S-11, which shows prev → curr, delta, observed-at and the before/after snapshot text with the price highlighted. | UC-05, S-10, S-11 | supabase, frontend-design | 0.3 h | B04 | — | done |
 | B06 | Prototype | After a price-cut run, a high-priority alert linking to the receipt appears in the bell (an email copy goes to the owner address). | UC-08, UC-12, S-11, S-16, S-17 | tdd, fastapi | 0.35 h | B05 | — | done |
 | B07 | Prototype | A signed-in user types one line about their business on S-04 and gets a pre-filled S-05 wizard with AI-drafted badges, then saves the profile and sees its card on S-06. | UC-02, S-04, S-05, S-06 | tdd, frontend-design | 0.4 h | B03 | — | done |
-| B08 | Prototype | After saving a card, S-08 lists India-verified competitors found automatically (plus the user-added NimbusDeploy (demo) URL), ready to monitor. | UC-03, S-06, S-07, S-08, S-17 | tdd, fastapi | 0.55 h | B07, B04 | — | todo |
+| B08 | Prototype | After saving a card, S-08 lists India-verified competitors found automatically (plus the user-added NimbusDeploy (demo) URL), ready to monitor. | UC-03, S-06, S-07, S-08, S-17 | tdd, fastapi | 0.55 h | B07, B04 | — | done |
 | B09 | Prototype | S-13 ranks monitored competitors against the user's product on configurable, sourced criteria where Unknown cells never count against anyone. | UC-06, S-13, S-12 | tdd | 0.25 h | B08 | — | todo |
 | B10 | Prototype | After a competitor price-cut run, S-14 shows a re-planned launch recommendation from options A/B/C whose best/expected/worst outcomes cite editable assumptions. | UC-07, UC-14, S-09, S-11, S-14 | tdd, code-review | 0.4 h | B09, B06 | — | todo |
 | B11 | Prototype | A user downloads a PDF report from S-15 in which every claim links to a receipt with its observed date (AI suggestions labelled separately). | UC-09, S-15, S-11 | frontend-design | 0.3 h | B10 | — | todo |
@@ -189,7 +189,7 @@
 - **Notes:** Provider budget flags 1–2 (specs §4a): tests never use live keys.
 
 ### B08 — Automated competitor discovery in India
-- **Status:** todo
+- **Status:** done
 - **Goal:** After saving a card, S-08 lists India-verified competitors found automatically (plus the user-added NimbusDeploy (demo) URL), ready to monitor.
 - **Why now:** Your hard requirement (no manual competitor entry) and the second-riskiest unknown; needs the B07 gateway.
 - **Slice:** UC UC-03 · Screens S-06, S-07, S-08, S-17 · Components C-03, C-05, C-06, C-07, C-14, C-15, C-18, C-23
