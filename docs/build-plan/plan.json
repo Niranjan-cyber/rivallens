@@ -506,7 +506,7 @@
       "id": "B06",
       "title": "Prioritized alerts: bell, center, email, rules",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "After a price-cut run, a high-priority alert linking to the receipt appears in the bell (an email copy goes to the owner address).",
       "why_now": "Completes the detection → notification loop the PS demands; reuses B05 receipts.",

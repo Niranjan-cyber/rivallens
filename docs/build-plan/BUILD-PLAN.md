@@ -50,7 +50,7 @@
 | B03 | Prototype | A visitor can click 'Try demo account' or sign up with email and land on S-03 showing profiles stored in Supabase for their own account. | UC-01, UC-13, S-01, S-02, S-03 | supabase, supabase-postgres-best-practices, fastapi | 0.45 h | B02 | — | done |
 | B04 | Prototype | In the Demo Lab, a user applies 'cosmetic' then 'price cut' to NimbusDeploy (demo) and Run monitor on S-10 shows 0 meaningful changes the first time and the Pro price drop as meaningful the second time, with every ignored diff listed with its reason. | UC-04, UC-10, S-09, S-10, S-18, S-19 | tdd, fastapi, vercel-react-best-practices, code-review | 0.55 h | B03 | — | done |
 | B05 | Prototype | Clicking the meaningful change on S-10 opens S-11, which shows prev → curr, delta, observed-at and the before/after snapshot text with the price highlighted. | UC-05, S-10, S-11 | supabase, frontend-design | 0.3 h | B04 | — | done |
-| B06 | Prototype | After a price-cut run, a high-priority alert linking to the receipt appears in the bell (an email copy goes to the owner address). | UC-08, UC-12, S-11, S-16, S-17 | tdd, fastapi | 0.35 h | B05 | — | todo |
+| B06 | Prototype | After a price-cut run, a high-priority alert linking to the receipt appears in the bell (an email copy goes to the owner address). | UC-08, UC-12, S-11, S-16, S-17 | tdd, fastapi | 0.35 h | B05 | — | done |
 | B07 | Prototype | A signed-in user types one line about their business on S-04 and gets a pre-filled S-05 wizard with AI-drafted badges, then saves the profile and sees its card on S-06. | UC-02, S-04, S-05, S-06 | tdd, frontend-design | 0.4 h | B03 | — | todo |
 | B08 | Prototype | After saving a card, S-08 lists India-verified competitors found automatically (plus the user-added NimbusDeploy (demo) URL), ready to monitor. | UC-03, S-06, S-07, S-08, S-17 | tdd, fastapi | 0.55 h | B07, B04 | — | todo |
 | B09 | Prototype | S-13 ranks monitored competitors against the user's product on configurable, sourced criteria where Unknown cells never count against anyone. | UC-06, S-13, S-12 | tdd | 0.25 h | B08 | — | todo |
@@ -153,7 +153,7 @@
 - **Notes:** Never inject scraped HTML into the app DOM.
 
 ### B06 — Prioritized alerts: bell, center, email, rules
-- **Status:** todo
+- **Status:** done
 - **Goal:** After a price-cut run, a high-priority alert linking to the receipt appears in the bell (an email copy goes to the owner address).
 - **Why now:** Completes the detection → notification loop the PS demands; reuses B05 receipts.
 - **Slice:** UC UC-08, UC-12 · Screens S-11, S-16, S-17 · Components C-01, C-03, C-09, C-15, C-21
