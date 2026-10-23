@@ -1,0 +1,73 @@
+const { chromium } = require(process.argv[2]);
+const OUT = process.argv[3], BASE = "https://rivallens-eight.vercel.app";
+const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
+(async () => {
+  const email = `b14b-test-${Date.now()}@example.com`, password = "Test-pass-1234";
+  const admin = { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, "Content-Type": "application/json" };
+  const u = await (await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, { method: "POST", headers: admin, body: JSON.stringify({ email, password, email_confirm: true }) })).json();
+  console.log("test user", u.id ? "created" : JSON.stringify(u));
+  const browser = await chromium.launch({ executablePath: process.argv[4] });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  page.setDefaultTimeout(90000);
+  try {
+    await page.goto(`${BASE}/login`);
+    console.log("google button:", await page.getByRole("button", { name: /Continue with Google/ }).count());
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password").fill(password);
+    await page.locator("form").getByRole("button", { name: "Log in" }).click();
+    await page.locator("[data-screen=S-20]").waitFor();
+    console.log("1. new account lands on onboarding:", page.url());
+    await page.screenshot({ path: `${OUT}/b14b-onboarding.png`, fullPage: true });
+    await page.getByLabel("Business name").fill("Stride & Co.");
+    await page.getByLabel("What kind of business is it?").selectOption("D2C brand");
+    await page.getByLabel("City").fill("Pune");
+    await page.getByLabel("What you do, in one line").fill("Running shoes for Indian roads, sold online");
+    await page.getByLabel("Your main products (comma-separated)").fill("Stride Runner, Stride Trail, running socks");
+    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByLabel("Funding stage (optional)").selectOption("Bootstrapped");
+    await page.getByLabel(/Who are your customers/).fill("Recreational runners aged 22-40 in Indian metros");
+    await page.getByRole("button", { name: "Draft my business card" }).click();
+    await page.locator("[data-screen=S-05]").waitFor();
+    console.log("2. card check, name =", await page.getByLabel(/^Name/).inputValue());
+    for (let i = 0; i < 2; i++) await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Finish" }).click();
+    await page.locator("[data-screen=S-21]").waitFor();
+    await page.getByText("3 products").waitFor();
+    console.log("3. overview:", (await page.locator("[data-screen=S-21]").innerText()).replace(/\s+/g, " ").slice(0, 400));
+    console.log("   nav:", (await page.locator("nav[aria-label=Dashboards]").innerText()).replace(/\s+/g, " | "));
+    await page.screenshot({ path: `${OUT}/b14b-overview.png`, fullPage: true });
+    await page.getByRole("link", { name: "Product" }).first().click();
+    await page.locator("li", { hasText: "Stride Runner" }).getByText("Google product taxonomy").waitFor({ timeout: 120000 });
+    await page.getByRole("link", { name: "Money" }).first().click();
+    await page.locator("[data-screen=S-24]").waitFor();
+    const FIX = "C:/Career/Hackathons/Pulzion HackNova/fixtures/demo/stride/";
+    for (const f of ["orders-oct2025-sep2026.xlsx", "bank-statement-oct2025-sep2026.csv"]) {
+      await page.getByLabel("File").setInputFiles(FIX + f);
+      await page.getByRole("button", { name: /^Import \d+ rows/ }).waitFor();
+      console.log("5. preview", f, ":", (await page.locator("form", { hasText: "We matched these columns" }).innerText()).replace(/\s+/g, " ").slice(0, 420));
+      await page.getByRole("button", { name: /^Import \d+ rows/ }).click();
+      await page.getByText(/^Imported \d+/).waitFor();
+      console.log("6.", await page.getByText(/^Imported \d+/).innerText());
+    }
+    await page.getByLabel("Cash in the bank today (₹)").fill("2716169");
+    await page.getByRole("button", { name: "Save" }).first().click();
+    await page.getByText(/months$/).first().waitFor();
+    const stats = async () => (await page.locator("[data-screen=S-24] .grid").first().innerText()).replace(/\s+/g, " ");
+    console.log("7. stats:", await stats());
+    console.log("   industry:", await page.getByLabel("Industry for the benchmark").inputValue());
+    await page.screenshot({ path: `${OUT}/b14e-money.png`, fullPage: true });
+    await page.getByLabel("Type").selectOption("expense");
+    await page.getByLabel("Amount (₹)").fill("300000");
+    await page.getByLabel("Description").fill("Trade show stall, Mumbai");
+    await page.getByRole("button", { name: "Add entry" }).click();
+    await page.getByText("Added.").waitFor();
+    await page.waitForTimeout(1500);
+    console.log("8. after manual expense:", await stats());
+  } catch (e) {
+    console.log("FAIL", e.message.split("\n")[0]);
+    await page.screenshot({ path: `${OUT}/b14b-fail.png`, fullPage: true });
+  }
+  await browser.close();
+  await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${u.id}`, { method: "DELETE", headers: admin });
+  console.log("test user deleted");
+})();
