@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SampleBadge } from "@/components/ui";
 import { api, type Evidence, type EvidenceSide, type Receipt } from "@/lib/api";
 import { CHANGES, fieldLabel } from "@/lib/labels";
@@ -12,6 +12,13 @@ const fmt = (ts: string) => new Date(ts).toLocaleString("en-IN", { dateStyle: "m
 function Pane({ label, side, sha }: { label: string; side: EvidenceSide | null; sha: string | null }) {
   const [html, setHtml] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const box = useRef<HTMLParagraphElement>(null);
+  const mark = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    // Open each pane on its highlight, not on the top of the page.
+    if (box.current && mark.current) box.current.scrollTop = mark.current.offsetTop - box.current.offsetTop - box.current.clientHeight / 3;
+  }, [side]);
 
   async function viewOriginal() {
     if (!side) return;
@@ -34,11 +41,11 @@ function Pane({ label, side, sha }: { label: string; side: EvidenceSide | null; 
         <span className="text-[18px] font-medium">{label}</span>
         <span className="text-[14px] text-slate">seen {fmt(side.observed_at)}</span>
       </figcaption>
-      <p className="mt-4 max-h-80 overflow-y-auto whitespace-pre-wrap break-words rounded-[12px] bg-white p-4 text-[14px] leading-relaxed text-charcoal">
+      <p ref={box} className="mt-4 max-h-80 overflow-y-auto whitespace-pre-wrap break-words rounded-[12px] bg-white p-4 text-[14px] leading-relaxed text-charcoal">
         {h ? (
           <>
             {t.slice(0, h.start)}
-            <mark className="rounded-[4px] bg-signal-light/30 px-0.5 font-medium text-ink">{t.slice(h.start, h.end)}</mark>
+            <mark ref={mark} className="rounded-[4px] bg-signal-light/30 px-0.5 font-medium text-ink">{t.slice(h.start, h.end)}</mark>
             {t.slice(h.end)}
           </>
         ) : t}
