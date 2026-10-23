@@ -14,7 +14,8 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const auth: Record<string, string> = data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {};
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { ...init, headers: { "Content-Type": "application/json", ...auth, ...init?.headers } });
+    const json: Record<string, string> = init?.body instanceof FormData ? {} : { "Content-Type": "application/json" }; // the browser sets the multipart boundary
+    res = await fetch(`${API_BASE}${path}`, { ...init, headers: { ...json, ...auth, ...init?.headers } });
   } catch {
     throw new ApiError(0, "network", "The server didn't respond. It may be waking up; try again in a minute.");
   }

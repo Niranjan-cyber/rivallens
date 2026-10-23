@@ -1,0 +1,97 @@
+industry,firms,gross_margin,net_margin,operating_margin,ebitda_margin
+Advertising,24,0.4076,0.0807,0.144,0.171
+Aerospace/Defense,23,0.4826,0.2168,0.2072,0.2291
+Air Transport,5,0.3568,0.0443,0.134,0.1482
+Apparel,386,0.1096,0.021,0.0225,0.0279
+Auto & Truck,19,0.3802,0.1457,0.0969,0.1353
+Auto Parts,120,0.3865,0.0532,0.0691,0.1025
+Bank (Money Center),35,0.9998,0.2684,0.0,0.0
+Banks (Regional),6,1.0,0.1907,0.0,0.0
+Beverage (Alcoholic),22,0.4139,0.0814,0.1103,0.126
+Beverage (Soft),5,0.5527,0.1392,0.1978,0.2348
+Broadcasting,19,0.4283,0.0327,0.0974,0.1249
+Brokerage & Investment Banking,186,0.3632,0.1124,0.006,0.0076
+Building Materials,67,0.3577,0.0415,0.0719,0.1048
+Business & Consumer Services,75,0.2665,0.0593,0.0805,0.0885
+Cable TV,8,0.3995,-0.0607,-0.0133,0.1481
+Chemical (Basic),152,0.3597,0.0686,0.0947,0.1279
+Chemical (Diversified),8,0.3831,0.0789,0.1117,0.1353
+Chemical (Specialty),202,0.3442,0.0714,0.0983,0.1217
+Coal & Related Energy,5,0.8526,0.2413,0.2552,0.372
+Computer Services,196,0.3018,0.1328,0.1674,0.1838
+Computers/Peripherals,12,0.2622,0.0807,0.1147,0.1255
+Construction Supplies,109,0.5248,0.0643,0.1283,0.1577
+Diversified,13,0.346,0.1581,0.1283,0.1445
+Drugs (Biotechnology),9,0.5942,0.0312,0.0976,0.1882
+Drugs (Pharmaceutical),188,0.6359,0.1437,0.1887,0.2254
+Education,40,0.4393,0.018,0.0469,0.0975
+Electrical Equipment,139,0.3012,0.0819,0.0982,0.1039
+Electronics (Consumer & Office),9,0.0777,0.0291,0.0314,0.0318
+Electronics (General),37,0.3068,0.0826,0.1062,0.1025
+Engineering/Construction,219,0.3116,0.0801,0.1027,0.1234
+Entertainment,66,0.5977,0.0124,0.0823,0.104
+Environmental & Waste Services,20,0.314,0.0698,0.0907,0.1144
+Farming/Agriculture,75,0.2816,0.0834,0.0777,0.095
+Financial Svcs. (Non-bank & Insurance),291,0.7393,0.2908,0.112,0.1064
+Food Processing,220,0.2499,0.0477,0.0726,0.0908
+Food Wholesalers,41,0.0965,0.0194,0.0236,0.026
+Furn/Home Furnishings,52,0.325,0.0491,0.0656,0.0929
+Green & Renewable Energy,18,0.8469,0.1912,0.4735,0.6058
+Healthcare Products,19,0.5326,0.1019,0.1138,0.1232
+Healthcare Support Services,45,0.3733,0.0849,0.1101,0.1336
+Heathcare Information and Technology,25,0.6106,0.1478,0.1839,0.2251
+Homebuilding,1,0.022,0.0529,-0.0044,0.0
+Hospitals/Healthcare Facilities,42,0.481,0.1044,0.1516,0.1797
+Hotel/Gaming,80,0.5495,0.1233,0.1923,0.2268
+Household Products,43,0.5258,0.1577,0.1959,0.2217
+Information Services,26,0.4331,0.0268,0.1409,0.1533
+Insurance (General),2,0.6367,0.0801,0.0284,0.0119
+Insurance (Life),9,0.1198,0.048,0.0625,0.0625
+Insurance (Prop/Cas.),3,0.1647,0.0541,0.0659,0.065
+Investments & Asset Management,115,0.6062,0.35,0.3465,0.348
+Machinery,187,0.4451,0.1424,0.1188,0.1445
+Metals & Mining,51,0.415,0.0986,0.1704,0.2172
+Office Equipment & Services,20,0.3996,0.0888,0.1129,0.1351
+Oil/Gas (Integrated),1,0.1921,0.0558,0.0954,0.1358
+Oil/Gas (Production and Exploration),7,0.762,0.1507,0.2327,0.3645
+Oil/Gas Distribution,12,0.2386,0.1042,0.1162,0.1709
+Oilfield Svcs/Equip.,30,0.214,0.0523,0.0763,0.0912
+Packaging & Container,101,0.3767,0.0507,0.0832,0.1165
+Paper/Forest Products,55,0.3615,0.0266,0.0488,0.1066
+Power,33,0.3939,0.12,0.1877,0.2815
+Precious Metals,1,0.1485,-64.4554,-98.4158,-72.9703
+Publishing & Newspapers,25,0.5058,0.0949,0.0966,0.1317
+R.E.I.T.,5,0.9037,0.1933,0.5789,0.8365
+Real Estate (Development),156,0.4057,0.1003,0.1696,0.1838
+Real Estate (General/Diversified),16,0.5112,0.2774,0.2534,0.295
+Real Estate (Operations & Services),42,0.8011,0.0581,0.2185,0.2952
+Recreation,15,0.6534,0.1232,0.1281,0.2601
+Reinsurance,1,0.2164,0.1855,0.2101,0.1845
+Restaurant/Dining,19,0.4812,-0.044,-0.0419,0.0055
+Retail (Automotive),10,0.1606,0.0144,0.026,0.0392
+Retail (Building Supply),3,0.2054,0.1807,-0.127,-0.1913
+Retail (Distributors),276,0.3577,0.0739,0.0787,0.1166
+Retail (General),11,0.4073,-0.0469,-0.0007,0.0316
+Retail (Grocery and Food),13,0.146,0.0419,0.058,0.0688
+Retail (REITs),1,0.8327,0.1943,0.4498,0.6794
+Retail (Special Lines),61,0.3433,0.0365,0.0597,0.0694
+Rubber& Tires,18,0.3863,0.0505,0.0824,0.1312
+Semiconductor,18,0.3314,0.1447,0.1929,0.1684
+Semiconductor Equip,2,0.4412,-0.1146,0.0569,0.0408
+Shipbuilding & Marine,28,0.5673,0.2722,0.3615,0.4504
+Shoe,13,0.5197,0.0529,0.0825,0.1217
+Software (Entertainment),4,0.5084,0.3759,0.2511,0.2672
+Software (Internet),6,0.1694,0.0505,0.0219,0.1364
+Software (System & Application),82,0.3733,0.1461,0.1673,0.1773
+Steel,185,0.4322,0.0504,0.0918,0.1252
+Telecom (Wireless),4,0.6225,0.0162,0.235,0.416
+Telecom. Equipment,22,0.2703,-0.0031,0.0222,0.115
+Telecom. Services,11,0.4024,0.0813,0.2437,0.3738
+Tobacco,7,0.5414,0.4224,0.3007,0.3291
+Transportation,59,0.2687,0.042,0.0381,0.0518
+Transportation (Railroads),3,0.2513,0.1412,0.1487,0.1995
+Trucking,24,0.2164,0.049,0.0874,0.1076
+Utility (General),0,,,,
+Utility (Water),1,0.1487,0.0907,0.1244,0.1251
+Total Market,5170,0.3886,0.1011,0.0998,0.126
+Total Market (without financials),4523,0.3396,0.082,0.112,0.1445

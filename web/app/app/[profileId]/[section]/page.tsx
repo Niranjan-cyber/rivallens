@@ -7,6 +7,7 @@ import { ComparisonMatrix } from "@/components/comparison";
 import { CompetitorDetail } from "@/components/competitor-detail";
 import { Competitors } from "@/components/competitors";
 import { Dashboard } from "@/components/dashboard";
+import { MoneyDashboard } from "@/components/money";
 import { Overview } from "@/components/overview";
 import { ProductDetail } from "@/components/product-detail";
 import { Products } from "@/components/products";
@@ -28,6 +29,7 @@ async function Section({ params }: { params: PageProps<"/app/[profileId]/[sectio
   if (section === "competitor") return <CompetitorDetail profileId={profileId} />;
   if (section === "home") return <Overview profileId={profileId} />;
   if (section === "product") return <Products profileId={profileId} />;
+  if (section === "money") return <MoneyDashboard profileId={profileId} />;
   if (section === "product-detail") return <ProductDetail />;
   if (section === "dashboard") return <Dashboard profileId={profileId} />;
   if (section === "comparison") return <ComparisonMatrix profileId={profileId} />;

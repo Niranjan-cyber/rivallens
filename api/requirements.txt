@@ -7,3 +7,5 @@ pyjwt[crypto]==2.15.1
 httpx==0.28.1
 python-dotenv==1.2.4
 selectolax==1.0.2
+openpyxl==3.1.5
+python-multipart==0.0.20
