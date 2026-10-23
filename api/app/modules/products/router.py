@@ -253,6 +253,8 @@ def product_comparison(product_id: UUID, user: UserDep, conn: ConnDep) -> dict:
     """), {"t": p["taxonomy_id"], "own": p["url"]}).mappings()]
     leaf = (p["category_path"] or "").split(" > ")[-1]
     for r in rows:
+        r["price"] = float(r["price"]) if r["price"] is not None else None  # numeric, not Decimal strings, in JSON
+        r["rating"] = float(r["rating"]) if r["rating"] is not None else None
         r["same_niche"] = niche_overlap(p["niche"], f"{r['niche']} {r['name']}", leaf)
     niche_rows = [r for r in rows if r["same_niche"]]
     basis = niche_rows if sum(r["price"] is not None for r in niche_rows) >= 3 else rows
