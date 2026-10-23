@@ -77,3 +77,4 @@ Each decision is tagged with one of: **Product**, **Scope**, **UX**, **Architect
 | L-06 | 23 Oct 17:00 | Next.js 16 with `cacheComponents` refuses to prerender a client component using `usePathname()` outside `<Suspense>` | Wrap URL-dependent UI in Suspense with a static fallback |
 | L-12 | 23 Oct 18:05 | selectolax 1.0 removed the Modest backend (`selectolax.parser` raises ImportError) | Use `selectolax.lexbor` |
 | L-13 | 23 Oct 18:05 | Re-wrapping a streamed httpx body in `httpx.Response(headers=r.headers)` decodes gzip twice (zlib "incorrect header check") | Return decoded text and size, not a rebuilt Response |
+| L-14 | 23 Oct 18:50 | The first S-11 screenshot showed the highlighted price scrolled out of view inside its evidence pane; build, lint and API checks all passed | Evidence panes scroll to their highlight on load; keep screenshot review in UI done-checks (L-08) |

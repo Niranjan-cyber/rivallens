@@ -443,7 +443,7 @@
       "id": "B05",
       "title": "Change Receipt with frozen evidence",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "Clicking the meaningful change on S-10 opens S-11, which shows prev → curr, delta, observed-at and the before/after snapshot text with the price highlighted.",
       "why_now": "Second half of the winning moment; scores evidence accuracy and historical reliability.",
