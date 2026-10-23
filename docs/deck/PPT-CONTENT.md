@@ -125,17 +125,20 @@ flowchart LR
   R --> REP[Report, every claim cited]
 ```
 
-Second row (🛠 planned), drawn as inputs into the Product layer:
+Second row: the product layer. Exact category and comparison are ✅ built; Money and Customers are 🛠 in build tonight.
 
 ```mermaid
 flowchart LR
-  MO[Money: CSV / Excel / manual<br/>transactions, funding] --> MM[Margin, runway<br/>vs Indian industry benchmark]
-  CU[Customers: own-site reviews, mentions,<br/>YouTube, insight CSVs] --> CS[Sentiment + top requests<br/>AI, cached, cited]
-  PR[Product name + description] --> CAT[Exact category<br/>Google product taxonomy]
-  CAT --> CMP[Compare within category]
-  MM --> SEG[Customer segment + simulator]
+  PR[Product: name, description<br/>or its page link ✅] --> CAT[Exact category ✅<br/>Google taxonomy shortlist<br/>→ AI picks one id + niche]
+  CAT --> FIND[Find comparables ✅<br/>competitors' + searched brand stores<br/>schema.org product data, robots.txt]
+  FIND --> SAME{Same taxonomy id? ✅}
+  SAME -- yes --> CMP[Compare ✅<br/>price position vs median,<br/>features, premium, brand ranges]
+  SAME -- no --> DROP[Not compared<br/>says which category it is in]
+  MO[Money 🛠<br/>CSV / Excel / manual] --> MM[Margin vs Damodaran India,<br/>runway 🛠]
+  CU[Customers 🛠<br/>reviews, mentions, insight CSVs] --> CS[Sentiment + top requests 🛠]
+  CMP --> SEG[Customer segment + simulator 🛠]
+  MM --> SEG
   CS --> SEG
-  CMP --> SEG
 ```
 
 **Key logic** (bullets beside the diagram):
@@ -158,6 +161,10 @@ flowchart LR
   - Options are 0.85M, M, 1.15M and your own price.
   - Conversion is `c0·(p/M)^−e`, with break-even checked within 36 months.
   - It picks the best expected revenue among the options that still break even in the worst case.
+- **Exact category (✅ built):**
+  - The Google product taxonomy (about 5,600 paths) is shortlisted by keywords, with Indian English handled: "football" means a soccer ball.
+  - The AI must pick one id from that shortlist, plus a niche such as "Running shoes".
+  - Live results: football → Soccer Balls; office chair → Office Chairs.
 - **AI, free tier:**
   - Gemini first, Groq as fallback.
   - Every answer is cached in Postgres, and tests replay recorded answers.
@@ -171,32 +178,84 @@ Icons: `globe`, `scissors`, `table`, `filter`, `receipt`, `gauge`, `bell`, `calc
 
 ## Slide 5: System architecture
 
+**Headline:** One web app, one API, one database, all on free tiers. Every number has a source.
+
 ```mermaid
-flowchart LR
-  U[Browser] --> W[Next.js 16 web app<br/>Vercel]
-  W -- JWT --> API[FastAPI modular monolith<br/>Render, Singapore]
-  W -- sign-in --> AUTH[Supabase Auth<br/>email, Google, guest]
-  API --> DB[(Supabase Postgres<br/>Mumbai)]
-  API --> ST[(Supabase Storage<br/>gzipped page snapshots)]
-  API --> LLM[Gemini → Groq<br/>free tiers, cached]
-  API --> TV[Tavily search<br/>discovery, news]
-  API --> YT[YouTube Data API 🛠]
-  API --> MAIL[Resend email]
-  API --> SITES[Competitor public pages<br/>robots.txt respected]
-  W --> MOCK[/mock pages<br/>fictional demo competitors/]
-  GH[GitHub Actions<br/>keep-warm ping] --> API
+flowchart TB
+  subgraph Users
+    U[Founder / shop owner<br/>browser or phone]
+  end
+  subgraph Web["Next.js 16 on Vercel"]
+    ON[Sign-in → onboarding → business card ✅]
+    OV[Overview ✅]
+    D1[Product ✅]
+    D2[Money 🛠]
+    D3[Market ✅]
+    D4[Customers 🛠]
+  end
+  subgraph API["FastAPI modular monolith on Render (Singapore)"]
+    PRD[products ✅<br/>taxonomy · classify · market comparables]
+    MKT[collector · extractor · changes · alerts ·<br/>discovery · comparison · reports ✅]
+    SIM[simulator ✅<br/>re-plans on receipts]
+    MON[money 🛠]
+    CUS[customers 🛠]
+    JOB[jobs table + background work ✅]
+    GW[LLM gateway ✅<br/>cache · fallback · replay]
+  end
+  subgraph Data["Supabase (Mumbai)"]
+    AUTH[Auth ✅<br/>email + Google, guest]
+    DB[(Postgres ✅<br/>profiles · products · market_products ·<br/>snapshots · receipts · alerts · simulations)]
+    ST[(Storage ✅<br/>gzipped page snapshots)]
+  end
+  subgraph Outside["Free external sources"]
+    PAGES[Public pages ✅<br/>competitor pricing + brand product pages<br/>robots.txt, 1 req/s]
+    TAV[Tavily search ✅]
+    LLMs[Gemini → Groq ✅]
+    MAIL[Resend email ✅]
+    REF[Reference data<br/>Google taxonomy ✅ · Damodaran India 🛠]
+  end
+  U --> Web
+  Web -- JWT --> API
+  ON -- sign-in --> AUTH
+  API --> DB
+  MKT --> ST
+  PRD --> PAGES
+  MKT --> PAGES
+  PRD --> TAV
+  MKT --> TAV
+  GW --> LLMs
+  MKT --> MAIL
+  PRD --> REF
+  MON --> SIM
+  CUS --> SIM
+  PRD --> SIM
+  GH[GitHub Actions keep-warm] --> API
 ```
 
-**Inside the API** (draw as a box of modules): collector · extractor · changes · alerts · discovery · comparison · simulator · reports · demo · profiles, plus 🛠 products · money · market-news · customers.
+Layout note:
+- Draw five horizontal bands, top to bottom: Users → Web (the four dashboards as four tiles under Overview) → API (modules grouped by dashboard) → Data → Outside sources.
+- Mark ✅ built and 🛠 in build with two colours.
+- Arrows into **simulator** from products, money and customers show the "every dashboard feeds the product decision" idea.
 
-**Data flow, in 3 numbered callouts:**
-1. The browser signs in with Supabase and sends its JWT to the API.
-2. The API fetches public pages, stores each one as an unchangeable snapshot and writes observations and receipts to Postgres.
-3. The web app reads only the API's JSON. Scraped HTML is never rendered in the app: "View original" opens in a sandboxed iframe through a 5-minute signed link.
+**Data flow, in 4 numbered callouts:**
+1. **Sign in.** The browser signs in with Supabase (verified email or Google) and sends its JWT to the API on every call. The service key never leaves the server.
+2. **Product.** A product is classified into an exact Google taxonomy id. The API then reads public product pages (schema.org data) and keeps only those in the same id. Each value stores its link and the date it was seen.
+3. **Market.** Competitor pages are fetched, saved as unchangeable snapshots, split into sections and diffed. Noise goes to the ledger; real changes become receipts, alerts and simulator re-plans.
+4. **Display.** The web app only renders the API's JSON. Scraped HTML never runs in the app; "View original" opens a sandboxed iframe through a 5-minute signed link.
 
-Icons: `monitor`, `server`, `database`, `hard-drive`, `sparkles`, `search`, `mail`, `shield-check`.
+**Module map** (for a small table or legend):
 
-**Speaker notes (25 s):** "One API, one database, all on free tiers. Jobs are a table plus background tasks, so a restart marks unfinished jobs as stale instead of losing them."
+| Dashboard | API modules | Main tables |
+|---|---|---|
+| Overview | profiles | profiles |
+| Product ✅ | products (taxonomy, classify, market), simulator | products, market_products, simulations |
+| Money 🛠 | money | transactions, money_facts |
+| Market ✅ | collector, extractor, changes, alerts, discovery, comparison, reports | competitors, sources, snapshots, observations, change_events, alerts, reports |
+| Customers 🛠 | customers | customer_mentions |
+
+Icons: `monitor`, `layout-dashboard`, `server`, `database`, `hard-drive`, `sparkles`, `search`, `mail`, `shield-check`, `globe`.
+
+**Speaker notes (30 s):** "One API, one database, all on free tiers. The product layer sits on top of the market engine. Exact categories mean a football is only compared with footballs, and every price on screen links to the page it came from. Jobs are a table plus background work, so a restart marks unfinished work as stale instead of losing it."
 
 ---
 
@@ -211,14 +270,15 @@ Icons: `monitor`, `server`, `database`, `hard-drive`, `sparkles`, `search`, `mai
 | Search | Tavily (free 1,000 credits a month) | Competitor discovery, category news and funding |
 | Email | Resend | Alert emails |
 | Sign-in | Supabase Auth: verified email (sent through Gmail SMTP, free) and Google sign-in (🛠) | Real accounts at no cost |
-| Datasets (🛠) | Google product taxonomy, Damodaran India margins, Flipkart products (CC BY-SA), UCI Online Retail II (CC BY), The Bread Basket (CC0) | Exact categories, margin benchmarks, category prices, demo businesses' transactions |
+| Reference data | Google product taxonomy ✅ (exact categories); Damodaran India margins, UCI Online Retail II (CC BY), The Bread Basket (CC0) 🛠 | Exact categories, margin benchmarks, demo businesses' transactions |
+| Product data | Brand stores' public product pages (schema.org JSON-LD) ✅ | Real, dated category prices and features |
 
-**Database design** (small ER strip): profiles → competitors → sources → snapshots → observations → change_events (receipts) → alerts; simulations (versioned); reports; plus 🛠 products, transactions, customer_mentions.
+**Database design** (small ER strip): profiles → competitors → sources → snapshots → observations → change_events (receipts) → alerts; simulations (versioned); reports; profiles → products ✅ ↔ market_products ✅ (joined by taxonomy id); plus 🛠 transactions, customer_mentions.
 
 **Testing, security and deployment** (3 columns):
 
 - **Testing**
-  - 33 automated tests, run with recorded AI answers (`LLM_MODE=replay`), never live keys.
+  - 44 automated tests, run with recorded AI answers (`LLM_MODE=replay`), never live keys. They cover the noise rules, priority, simulator, taxonomy matching, product-page parsing and price position.
   - A smoke script runs against the live URLs.
   - The golden path is walked in a browser before every checkpoint.
 - **Security**
@@ -253,17 +313,22 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 
 | ✅ Built and live | 🛠 Planned (in build) |
 |---|---|
-| Email sign-up, guest demo | Verified email + Google sign-in |
-| Business card drafted by AI | Onboarding form → card → main dashboard |
-| Change detection + noise ledger | Four dashboards: Product, Money, Market, Customers |
-| Receipts with frozen evidence | Products in exact Google-taxonomy categories, compared like for like, with premium inspirations |
-| Alerts (bell + email), alert rules | Money: CSV/Excel/manual transactions, margin vs Damodaran India benchmark, runway |
-| Competitor discovery in India | Competitors' revenue and funding from filings and news, cited |
-| Sourced comparison matrix | Customers: uploads, own-site reviews, web mentions → sentiment and top requests |
-| Launch simulator that re-plans on a receipt | Customer segment per product; simulator fed by Money, Market and Customers |
-| Evidence-linked report + PDF | "Simulate a competitor move" inside Market (replaces the Demo Lab page) |
-| Competitor history timeline | Four demo businesses (footwear D2C, bakery, SaaS, quick commerce) built from real datasets |
+| Email sign-up with confirmation link, Google button, guest demo | Google sign-in switched on (provider setup) |
+| Onboarding form → AI-drafted business card → Overview | Money: CSV/Excel/manual transactions, margin vs Damodaran India benchmark, runway |
+| Four-dashboard navigation (Product, Money, Market, Customers) | Competitors' revenue and funding from filings and news, cited |
+| Products (existing/new) in exact Google-taxonomy categories | Customers: uploads, own-site reviews, web mentions → sentiment and top requests |
+| Like-for-like comparison from real brand product pages: price position vs median, features, premium inspirations, brand ranges | Customer segment per product; simulator fed by Money, Market and Customers |
+| Change detection + noise ledger | "Simulate a competitor move" inside Market (replaces the Demo Lab page) |
+| Receipts with frozen evidence | Four demo businesses (footwear D2C, bakery, SaaS, quick commerce) built from real datasets |
+| Alerts (bell + email), alert rules | |
+| Competitor discovery in India | |
+| Sourced comparison matrix | |
+| Launch simulator that re-plans on a receipt | |
+| Evidence-linked report + PDF | |
+| Competitor history timeline | |
 | Simulated price/feature change (Demo Lab) | |
+
+**Screenshot to add:** the product comparison (Stride Runner ₹1,999 vs 8 real running shoes from Puma and Brooks India, "56% below the median ₹4,499"). Take it from the live app, or use `docs/screenshots/s23-product-compare.png`.
 
 > If the deck can be resubmitted at 08:00, move the items finished overnight into the left column and replace one screenshot with the Product dashboard.
 
@@ -313,7 +378,7 @@ Icons: `indian-rupee`, `shield-alert`, `users`, `timer`.
 | Competitors' public pages | Prices, plans, features, history | robots.txt respected, 1 request/s |
 | [Google product taxonomy](https://support.google.com/merchants/answer/6324436) (~5,500 categories) | Exact product category | Free to use |
 | [Damodaran, margins by industry, India](https://pages.stern.nyu.edu/~adamodar/pc/datasets/marginIndia.xls) (NYU Stern, Jan 2026) | Margin benchmarks on Money | Public academic data, with credit |
-| [Flipkart products, Kaggle](https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-products/data) | Starting category price benchmarks (dated) | CC BY-SA 4.0 |
+| Brand stores' public product pages (schema.org Product data; e.g. Puma India, Brooks India, Campus, Nivia, Neemans) | Category prices, ratings and stated features, each with its link and date | Public pages; robots.txt respected, 1 request/s |
 | [UCI Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii) | Transaction pattern for the footwear demo business, and the sample upload file | CC BY 4.0 |
 | [The Bread Basket](https://api.openml.org/d/43422) (20,507 real bakery sales) | Transactions for the bakery demo business | CC0 |
 | Listed companies' results (e.g. [Campus Activewear FY26](https://apparelresources.com/business-news/retail/campus-activewear-q4-pat-rises-us-5-2-million-ebitda-fy-26-reaches-us-37-million/): ASP ₹683, gross margin 53.5%) | Competitor revenue and margins; unit economics for the footwear demo business | Public filings and press coverage, cited |
