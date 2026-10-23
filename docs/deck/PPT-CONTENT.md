@@ -26,7 +26,7 @@ Placeholders to fill in: `[PRODUCT NAME]` (RivalLens is a working name; a live p
 | Project / Solution Title | **[PRODUCT NAME]: evidence-backed business intelligence for Indian startups and small businesses** |
 | Problem Statement Title | `[PS TITLE]` (official title: Competitor Intelligence & Market Monitoring Agent; confirm the exact wording) |
 | GitHub Repository Link | https://github.com/Niranjan-cyber/rivallens (**make it public before submitting**) |
-| Live Prototype / Demo Link | https://rivallens-eight.vercel.app (click **Try demo account**, no sign-up) |
+| Live Prototype / Demo Link | https://rivallens-eight.vercel.app (click **Try demo account**, no sign-up; demo business sign-ins are listed in the README once B14j ships) |
 | Figma / Design Link | Delete the row (there's no Figma file; the design system is `web/DESIGN.md` in the repo) |
 | Team Name / Leader / Members | `[TEAM]` |
 
@@ -89,6 +89,11 @@ Layout note: a left-to-right flow. Draw the four dashboards as four tiles, with 
 | `wallet` | **Money** | Revenue, funding, profit margin against the Indian industry benchmark, product prices, the transaction log (CSV/Excel upload or manual entry), and runway. | 🛠 |
 | `trending-up` | **Market** | What direct competitors changed (price, plans, features, positioning), each with a dated receipt. Category news and funding. Category price trend. Competitor discovery in India. | ✅ monitoring, receipts, alerts, discovery, comparison, report · 🛠 news, price trend |
 | `messages-square` | **Customers** | Reviews from your own site, web mentions, YouTube comments and uploaded insight exports, with sentiment and the top things customers ask for. | 🛠 |
+
+**Real data, never made up** (one line under the tiles):
+- Every number is either **entered or uploaded by the business** or **taken from a public source with a link and date**: competitor pages, company filings, news, the Google product taxonomy, Damodaran's India industry margins.
+- Anything else shows as *Unknown*.
+- Demo businesses are built by running the same pipeline on licensed datasets, and are labelled *Demo business, modelled on …*.
 
 **What makes it different** (4 short points with icons):
 - `list-filter` **Noise ledger:** it lists every ignored difference and the rule that ignored it. Nobody else shows this.
@@ -205,7 +210,8 @@ Icons: `monitor`, `server`, `database`, `hard-drive`, `sparkles`, `search`, `mai
 | AI | Gemini `flash-lite` → Groq `gpt-oss-120b` | Free, with fallback; answers cached and checked against a JSON schema |
 | Search | Tavily (free 1,000 credits a month) | Competitor discovery, category news and funding |
 | Email | Resend | Alert emails |
-| Datasets (🛠) | Google product taxonomy, Damodaran India margins, Flipkart products (CC BY-SA), UCI Online Retail II (CC BY) | Exact categories, margin benchmarks, category prices, sample transactions |
+| Sign-in | Supabase Auth: verified email (sent through Gmail SMTP, free) and Google sign-in (🛠) | Real accounts at no cost |
+| Datasets (🛠) | Google product taxonomy, Damodaran India margins, Flipkart products (CC BY-SA), UCI Online Retail II (CC BY), The Bread Basket (CC0) | Exact categories, margin benchmarks, category prices, demo businesses' transactions |
 
 **Database design** (small ER strip): profiles → competitors → sources → snapshots → observations → change_events (receipts) → alerts; simulations (versioned); reports; plus 🛠 products, transactions, customer_mentions.
 
@@ -245,19 +251,19 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 
 **Built vs planned** (two columns):
 
-| ✅ Built and live | 🛠 Planned |
+| ✅ Built and live | 🛠 Planned (in build) |
 |---|---|
-| Guest demo, email sign-up | Verified email + Google sign-in |
+| Email sign-up, guest demo | Verified email + Google sign-in |
 | Business card drafted by AI | Onboarding form → card → main dashboard |
-| Change detection + noise ledger | Four dashboards (Product, Money, Market, Customers) |
-| Receipts with frozen evidence | Products in exact categories, compared like for like |
-| Alerts (bell + email), alert rules | Money: CSV/Excel/manual transactions, margins vs India benchmark, runway |
-| Competitor discovery in India | Customers: own-site reviews, mentions, YouTube, sentiment and requests |
-| Sourced comparison matrix | Customer segment suggested per product |
-| Launch simulator that re-plans | Simulator fed by Money + Customers |
-| Evidence-linked report + PDF | Category news, funding and price trend |
-| Competitor history timeline | |
-| Demo Lab (simulated price/feature change) | |
+| Change detection + noise ledger | Four dashboards: Product, Money, Market, Customers |
+| Receipts with frozen evidence | Products in exact Google-taxonomy categories, compared like for like, with premium inspirations |
+| Alerts (bell + email), alert rules | Money: CSV/Excel/manual transactions, margin vs Damodaran India benchmark, runway |
+| Competitor discovery in India | Competitors' revenue and funding from filings and news, cited |
+| Sourced comparison matrix | Customers: uploads, own-site reviews, web mentions → sentiment and top requests |
+| Launch simulator that re-plans on a receipt | Customer segment per product; simulator fed by Money, Market and Customers |
+| Evidence-linked report + PDF | "Simulate a competitor move" inside Market (replaces the Demo Lab page) |
+| Competitor history timeline | Four demo businesses (footwear D2C, bakery, SaaS, quick commerce) built from real datasets |
+| Simulated price/feature change (Demo Lab) | |
 
 > If the deck can be resubmitted at 08:00, move the items finished overnight into the left column and replace one screenshot with the Product dashboard.
 
@@ -308,7 +314,9 @@ Icons: `indian-rupee`, `shield-alert`, `users`, `timer`.
 | [Google product taxonomy](https://support.google.com/merchants/answer/6324436) (~5,500 categories) | Exact product category | Free to use |
 | [Damodaran, margins by industry, India](https://pages.stern.nyu.edu/~adamodar/pc/datasets/marginIndia.xls) (NYU Stern, Jan 2026) | Margin benchmarks on Money | Public academic data, with credit |
 | [Flipkart products, Kaggle](https://www.kaggle.com/datasets/PromptCloudHQ/flipkart-products/data) | Starting category price benchmarks (dated) | CC BY-SA 4.0 |
-| [UCI Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii) | Sample transaction file for Money | CC BY 4.0 |
+| [UCI Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii) | Transaction pattern for the footwear demo business, and the sample upload file | CC BY 4.0 |
+| [The Bread Basket](https://api.openml.org/d/43422) (20,507 real bakery sales) | Transactions for the bakery demo business | CC0 |
+| Listed companies' results (e.g. [Campus Activewear FY26](https://apparelresources.com/business-news/retail/campus-activewear-q4-pat-rises-us-5-2-million-ebitda-fy-26-reaches-us-37-million/): ASP ₹683, gross margin 53.5%) | Competitor revenue and margins; unit economics for the footwear demo business | Public filings and press coverage, cited |
 | Tavily search | Discovery, category news, funding (each with a link) | Free tier |
 | YouTube Data API | Comments on the company's videos | Free quota |
 | The company's own exports (bank, Razorpay, Shopify, Meta Business Suite, LinkedIn) | Transactions, social metrics | The company's own data |
