@@ -223,6 +223,15 @@ def _receipt_row(conn, receipt_id: UUID, user_id: UUID):
     return row
 
 
+def _impact(conn, receipt_id: UUID) -> dict | None:
+    row = conn.execute(text("""
+        select s.version, s.recommended_price_inr as after, p.recommended_price_inr as before, s.replan_summary as summary
+        from simulations s left join simulations p on p.profile_id = s.profile_id and p.version = s.replanned_from_version
+        where s.trigger_change_event_id = :id order by s.version desc limit 1
+    """), {"id": receipt_id}).mappings().first()
+    return dict(row) if row else None
+
+
 @router.get("/receipts/{receipt_id}")
 def get_receipt(receipt_id: UUID, user: UserDep, conn: ConnDep) -> Receipt:
     e = _receipt_row(conn, receipt_id, user.id)
@@ -236,7 +245,7 @@ def get_receipt(receipt_id: UUID, user: UserDep, conn: ConnDep) -> Receipt:
         prev_value=e["prev_value"], curr_value=e["curr_value"], prev_display=show(e["prev_value"]), curr_display=show(e["curr_value"]),
         delta_pct=e["delta_pct"], status=e["status"], observed_at=e["observed_at"], prev_observed_at=e["prev_observed_at"],
         published_at=e["published_at"], wayback_url=e["wayback_url"], is_demo_data=e["is_demo_data"], muted=muted,
-        priority=e["priority"], priority_breakdown=e["priority_breakdown"], simulation_impact=None,
+        priority=e["priority"], priority_breakdown=e["priority_breakdown"], simulation_impact=_impact(conn, receipt_id),
     )
 
 

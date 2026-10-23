@@ -80,6 +80,7 @@ export type Receipt = {
   muted: boolean;
   priority: number | null;
   priority_breakdown: { m: number; r: number; s: number; undercut: boolean } | null;
+  simulation_impact: { version: number; before: string; after: string; summary: string } | null;
 };
 
 export type EvidenceSide = { snapshot_id: string; observed_at: string; text_window: string; highlight: { start: number; end: number } | null };

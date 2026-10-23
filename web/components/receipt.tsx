@@ -149,6 +149,16 @@ export function ReceiptView({ profileId }: { profileId: string }) {
             </dd>
           </div>
         )}
+        {receipt.simulation_impact && (
+          <div className="sm:col-span-2">
+            <dt className="text-[14px] text-slate">Launch simulation</dt>
+            <dd className="text-[17px]">
+              <Link href={`/app/${profileId}/simulator`} className="text-link underline">
+                Re-planned: recommended ₹{Number(receipt.simulation_impact.before).toLocaleString("en-IN")} → ₹{Number(receipt.simulation_impact.after).toLocaleString("en-IN")}
+              </Link>
+            </dd>
+          </div>
+        )}
         {receipt.wayback_url && (
           <div>
             <dt className="text-[14px] text-slate">Independent copy</dt>

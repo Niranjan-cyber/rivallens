@@ -64,7 +64,7 @@ def monitor(job: Job, profile_id: UUID, run_id: UUID) -> dict:
         profile = conn.execute(text("select user_id, card from profiles where id = :p"), {"p": profile_id}).one()
         planned = (profile.card or {}).get("price") or {}
         planned = planned.get("value", planned) if isinstance(planned, dict) else {}  # card leaves may be {value, origin}
-        ctx = {"profile_id": profile_id, "user_id": profile.user_id, "rules": rules_for(conn, profile_id),
+        ctx = {"profile_id": profile_id, "user_id": profile.user_id, "rules": rules_for(conn, profile_id), "triggers": [],
                "planned_price": planned.get("amount") if isinstance(planned, dict) else None}
     counts["sources"] = len(sources)
     job.step("fetch", "running", len(sources), "Fetching pricing pages")
@@ -73,6 +73,11 @@ def monitor(job: Job, profile_id: UUID, run_id: UUID) -> dict:
         for src in sources:
             _check_source(src, run_id, counts, ctx)
             job.step("source", "done", counts["meaningful"], src["url"])
+        if ctx["triggers"]:  # re-plan the launch simulation on the biggest comparable move (specs §1 C-11)
+            from app.modules.simulator.router import replan
+            trigger = max(ctx["triggers"], key=lambda t: abs(t[3] or 0))
+            with engine.begin() as conn:
+                replan(conn, profile_id, *trigger)
         status = "done"
     finally:
         with engine.begin() as conn:
@@ -131,6 +136,8 @@ def _check_source(src, run_id: UUID, counts: dict, ctx: dict) -> None:
                    "b": prev["id"], "a": snap_id, "o": observed_at, "po": prev["observed_at"], "fp": fingerprint, "demo": src["is_demo_data"],
                    "ex": json.dumps({"before": _excerpt(prev["text"], c["prev"]), "after": _excerpt(snap_text, c["curr"])})}).scalar()
             raise_alert(conn, ctx, src, event_id, c, fingerprint, show(c["prev"]), show(c["curr"]), observed_at)
+            if src["relation"] == "comparable" and c["status"] == "confirmed" and c["change_type"].split("_")[0] in ("price", "plan", "feature"):
+                ctx["triggers"].append((event_id, src["name"], c["field_path"], c["delta_pct"]))
         counts["diffs"] += len(ledger) + len(changes)
         counts["ignored"] += len(ledger)
         counts["meaningful"] += sum(c["status"] == "confirmed" for c in changes)

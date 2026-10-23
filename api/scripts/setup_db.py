@@ -22,14 +22,28 @@ MOCKS = [("NimbusDeploy (demo)", "nimbusdeploy"), ("KiteHost (demo)", "kitehost"
 PROFILES = [
     {"name": "StackNest", "kind": "business", "offering_type": "service",
      "card": {"note": "Cloud deployment, Pune", "category": "Managed app deployment", "india_markets": ["Pune", "Bengaluru"],
-              "price": {"amount": 999, "currency": "INR", "period": "month"}},
+              "price": {"amount": 999, "currency": "INR", "period": "month"},
+              "attributes": ["Autoscaling", "Preview environments", "Free SSL", "Email support", "Mumbai region"],
+              # Labelled "your assumption" on S-14: a Pune deployment startup's own numbers, not defaults
+              "sim_assumptions": {"segment_size": 20000, "upfront_cost": 300000, "monthly_cost": 100000}},
      "competitors": [*[(n, f"{s}.demo", "inspiration" if s == "orbitly" else "comparable", True) for n, s in MOCKS],
                      ("Render", "render.com", "inspiration", False), ("Railway", "railway.com", "inspiration", False),
                      ("E2E Networks", "e2enetworks.com", "comparable", False)]},
     {"name": "QuickKart", "kind": "business", "offering_type": "service", "card": {"note": "Quick commerce, Bengaluru"}, "competitors": []},
     {"name": "Stride & Co.", "kind": "business", "offering_type": "product", "card": {"note": "Running shoes, D2C"}, "competitors": []},
-    {"name": "Qubit Labs", "kind": "idea", "offering_type": "service", "card": {"note": "Quantum computing access"}, "competitors": []},
+    {"name": "Qubit Labs", "kind": "idea", "offering_type": "service",
+     "card": {"note": "Quantum computing access", "category": "Quantum computing access",
+              "price": {"amount": 50000, "currency": "INR", "period": "month"},
+              "planned_features": ["Hosted quantum processor time", "Simulator access", "Research support"],
+              "sim_assumptions": {"segment_size": 60, "upfront_cost": 50000000, "monthly_cost": 2500000}},
+     "competitors": []},
 ]
+
+
+# What india_signals() finds on these pages (mock pages: ₹ prices, "Servers in India", GST; E2E fixture: see test_discovery).
+_MOCK_SIGNALS = {"score": 4, "hits": ["₹ / INR / Rs.", "India or an Indian city", "GST / GSTIN"]}
+INDIA_SIGNALS = {"nimbusdeploy": _MOCK_SIGNALS, "kitehost": _MOCK_SIGNALS, "orbitly": _MOCK_SIGNALS,
+                 "e2enetworks.com": {"score": 4, "hits": ["India or an Indian city", "+91 phone number", "GST / GSTIN", "India region"]}}
 
 
 def migrate() -> None:
@@ -107,10 +121,11 @@ def seed() -> None:
                 values (:u, :name, :kind, :ot, cast(:card as jsonb), true) returning id
             """), {"u": uid, "name": p["name"], "kind": p["kind"], "ot": p["offering_type"], "card": json.dumps(p["card"])}).scalar()
             for name, domain, relation, is_mock in p["competitors"]:
+                signals = INDIA_SIGNALS.get(domain.removesuffix(".demo") if is_mock else domain, {})
                 cid = conn.execute(text("""
-                    insert into competitors (profile_id, name, domain, relation, origin, is_demo_data)
-                    values (:p, :n, :d, :r, 'seed', true) returning id
-                """), {"p": pid, "n": name, "d": domain, "r": relation}).scalar()
+                    insert into competitors (profile_id, name, domain, relation, origin, is_demo_data, india_signals)
+                    values (:p, :n, :d, :r, 'seed', true, cast(:i as jsonb)) returning id
+                """), {"p": pid, "n": name, "d": domain, "r": relation, "i": json.dumps(signals)}).scalar()
                 url = f"{MOCK_BASE_URL}/seed-{domain.removesuffix('.demo')}/{domain.removesuffix('.demo')}" if is_mock else f"https://{'www.' if domain == 'e2enetworks.com' else ''}{domain}/pricing"
                 conn.execute(text("insert into sources (competitor_id, url, page_type, is_mock) values (:c, :url, 'pricing', :m)"),
                              {"c": cid, "url": url, "m": is_mock})
