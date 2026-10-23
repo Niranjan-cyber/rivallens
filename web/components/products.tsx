@@ -16,12 +16,13 @@ export function Products({ profileId }: { profileId: string }) {
   const [tab, setTab] = useState<"existing" | "new">("existing");
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [polling, setPolling] = useState(true);
   const load = useCallback(() => api<Product[]>(`/api/v1/profiles/${profileId}/products`).then(setProducts, (e: Error) => setError(e.message)), [profileId]);
 
   useEffect(() => {
     load();
     const t = setInterval(load, 4000); // products listed at onboarding are classified in the background
-    const stop = setTimeout(() => clearInterval(t), 40000);
+    const stop = setTimeout(() => (clearInterval(t), setPolling(false)), 120000);
     return () => (clearInterval(t), clearTimeout(stop));
   }, [load]);
 
@@ -52,7 +53,7 @@ export function Products({ profileId }: { profileId: string }) {
         <div className="mt-6 h-40 rounded-stadium bg-lifted" aria-busy="true" />
       ) : shown.length === 0 ? (
         <p className="mt-6 rounded-stadium bg-lifted p-7 text-charcoal">
-          {tab === "existing" ? "No products yet. Add what you sell, by name or by pasting its product page." : "No new products yet. Add something you plan to launch to compare it before you price it."}
+          {polling && tab === "existing" ? "Adding the products from your onboarding and finding their categories…" : tab === "existing" ? "No products yet. Add what you sell, by name or by pasting its product page." : "No new products yet. Add something you plan to launch to compare it before you price it."}
         </p>
       ) : (
         <ul className="mt-6 grid gap-4 md:grid-cols-2">

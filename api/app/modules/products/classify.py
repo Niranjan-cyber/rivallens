@@ -38,3 +38,35 @@ def classify(name: str, description: str = "", business: str = "") -> dict:
     except LLMUnavailable:
         pass
     return {"taxonomy_id": shortlist[0]["id"], "path": shortlist[0]["path"], "niche": None, "source": "top_match"}
+
+
+class Pick(BaseModel):
+    index: int
+    taxonomy_id: int
+    niche: str
+
+
+class Picks(BaseModel):
+    items: list[Pick]
+
+
+def classify_many(names: list[str], business: str = "") -> list[dict]:
+    """One LLM call for several products (onboarding lists 3-10); same output per product as classify()."""
+    shortlists = [candidates(f"{n} {business}", 15) or candidates(business, 15) for n in names]
+    top = [{"taxonomy_id": s[0]["id"], "path": s[0]["path"], "niche": None, "source": "top_match"} if s else
+           {"taxonomy_id": None, "path": None, "niche": None, "source": "none"} for s in shortlists]
+    try:
+        out = complete_json("classify_products", Picks, {
+            "instructions": INSTRUCTIONS + " Answer one item per numbered product, using that product's own candidate list.",
+            "business": business,
+            "products": "\n\n".join(f"Product {i}: {n}\nCandidates:\n" + "\n".join(f"{c['id']}: {c['path']}" for c in s)
+                                    for i, (n, s) in enumerate(zip(names, shortlists))),
+        }, PROMPT_VERSION)
+    except LLMUnavailable:
+        return top
+    for p in out.items:
+        if 0 <= p.index < len(names):
+            pick = next((c for c in shortlists[p.index] if c["id"] == p.taxonomy_id), None)
+            if pick:
+                top[p.index] = {"taxonomy_id": pick["id"], "path": pick["path"], "niche": p.niche[:60], "source": "ai"}
+    return top

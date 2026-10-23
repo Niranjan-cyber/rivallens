@@ -14,7 +14,7 @@ from sqlalchemy import Connection, text
 from app.auth import UserDep
 from app.db import ConnDep
 from app.modules.collector.service import fetch
-from app.modules.products.classify import classify
+from app.modules.products.classify import classify, classify_many
 from app.modules.products.pages import product_from_html
 from app.modules.products.taxonomy import candidates, path_of
 
@@ -84,7 +84,7 @@ def _business(profile: dict) -> str:
     return " ".join(str(x) for x in (v("business_type"), v("industry"), v("category"), v("description")) if x)
 
 
-def insert_product(conn: Connection, profile_id, profile: dict, body: ProductIn, is_demo: bool = False) -> dict:
+def insert_product(conn: Connection, profile_id, profile: dict, body: ProductIn, is_demo: bool = False, cat: dict | None = None) -> dict:
     """Shared by the endpoint, onboarding and the demo builder: read the page if given, classify, insert."""
     name, description, price, source = body.name, body.description, body.price, None
     if body.url:
@@ -100,7 +100,7 @@ def insert_product(conn: Connection, profile_id, profile: dict, body: ProductIn,
                       "rating": found["rating"], "review_count": found["review_count"], "currency": found["currency"]}
     if not name:
         raise HTTPException(422, {"code": "no_name", "message": "We couldn't find a product on that page. Add the name by hand."})
-    cat = classify(name, description or "", _business(profile))
+    cat = cat or classify(name, description or "", _business(profile))
     return dict(conn.execute(text(f"""
         insert into products (profile_id, name, stage, description, url, taxonomy_id, category_path, niche, category_source,
                               price, unit, features, add_ons, source, is_demo_data)
@@ -187,12 +187,13 @@ def _add_from_onboarding(profile_id) -> None:
             if conn.execute(text("select 1 from profiles where id = :p"), {"p": profile_id}).first():
                 break
         time.sleep(0.5)
-    with engine.begin() as conn:
+    with engine.connect() as conn:
         profile = dict(conn.execute(text("select name, kind, card from profiles where id = :p"), {"p": profile_id}).mappings().one())
-        names = (profile["card"].get("main_products") or {}).get("value") or []
-        stage = "new" if profile["kind"] == "idea" else "existing"
-        for name in names[:10]:
-            try:
-                insert_product(conn, profile_id, profile, ProductIn(name=str(name)[:160], stage=stage))
-            except Exception:
-                log.exception("onboarding product %r failed", name)
+    names = [str(n)[:160] for n in ((profile["card"].get("main_products") or {}).get("value") or [])][:10]
+    stage = "new" if profile["kind"] == "idea" else "existing"
+    for name, cat in zip(names, classify_many(names, _business(profile))):
+        try:
+            with engine.begin() as conn:  # one commit per product, so the page fills in as they land
+                insert_product(conn, profile_id, profile, ProductIn(name=name, stage=stage), cat=cat)
+        except Exception:
+            log.exception("onboarding product %r failed", name)
