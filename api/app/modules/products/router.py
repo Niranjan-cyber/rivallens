@@ -19,6 +19,7 @@ from app.modules.collector.service import fetch
 from app.modules.products.classify import classify, classify_many
 from app.modules.discovery.service import registrable_domain
 from app.modules.products.market import find_comparables, niche_overlap, price_position
+from app.modules.products.news import fetch_news, queries_for
 from app.modules.products.pages import product_from_html
 from app.modules.products.taxonomy import candidates, path_of
 
@@ -279,3 +280,34 @@ def product_comparison(product_id: UUID, user: UserDep, conn: ConnDep) -> dict:
     rows.sort(key=lambda r: (not r["same_niche"], r["price"] is None, r["price"] or 0))
     return {"product": Product(**p).model_dump(mode="json"), "basis": "niche" if basis is niche_rows else "category",
             "position": pos, "rows": rows, "premium": premium, "brands": sorted(brands.values(), key=lambda b: -b["products"])}
+
+
+# ---- B14h: market news and funding, and category prices now ----
+
+@router.get("/profiles/{profile_id}/market")
+def market_overview(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict:
+    _own(conn, profile_id, user.id)
+    news = conn.execute(text("select items, queries, fetched_at from market_news where profile_id = :p"), {"p": profile_id}).mappings().first()
+    cats = [dict(r) for r in conn.execute(text("""
+        select pr.category_path, pr.niche, pr.name as product, pr.id as product_id, count(mp.id) as n,
+               percentile_cont(0.5) within group (order by mp.price)::float as median, min(mp.price)::float as min, max(mp.price)::float as max,
+               max(mp.observed_at) as seen
+        from products pr left join market_products mp on mp.taxonomy_id = pr.taxonomy_id and mp.price is not null
+        where pr.profile_id = :p group by pr.id order by pr.created_at"""), {"p": profile_id}).mappings()]
+    for c in cats:
+        c["seen"] = c["seen"].isoformat() if c["seen"] else None
+    return {"news": news["items"] if news else [], "queries": news["queries"] if news else [],
+            "news_fetched_at": news["fetched_at"].isoformat() if news else None, "categories": cats}
+
+
+@router.post("/profiles/{profile_id}/market/news")
+def refresh_news(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict:
+    profile = _own(conn, profile_id, user.id)
+    queries = queries_for(conn, profile_id, profile["card"] or {})
+    if not queries:
+        raise HTTPException(409, {"code": "no_market", "message": "Add a product first, so we know which market to follow."})
+    items = fetch_news(queries)
+    conn.execute(text("""insert into market_news (profile_id, queries, items) values (:p, cast(:q as jsonb), cast(:i as jsonb))
+        on conflict (profile_id) do update set queries = excluded.queries, items = excluded.items, fetched_at = now()"""),
+                 {"p": profile_id, "q": json.dumps(queries), "i": json.dumps(items)})
+    return {"items": len(items)}

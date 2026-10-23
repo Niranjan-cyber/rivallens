@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { AlertBell } from "@/components/alert-bell";
 import { AuthGate } from "@/components/auth-gate";
@@ -16,9 +15,6 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
             <Suspense>
               <ProfileSwitcher />
             </Suspense>
-            <Link href="/app/demo-lab" className="rounded-pill px-4 py-2 text-[15px] font-medium hover:bg-canvas">
-              Demo Lab
-            </Link>
             <Suspense fallback={<div className="size-11 rounded-full border border-ink" />}>
               <AlertBell />
             </Suspense>

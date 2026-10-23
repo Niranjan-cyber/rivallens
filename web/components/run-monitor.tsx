@@ -35,7 +35,7 @@ export function RunMonitorButton({ profileId }: { profileId: string }) {
     <div className="flex flex-wrap items-center gap-4">
       <button type="button" onClick={start} disabled={progress !== null}
         className="inline-flex min-h-11 items-center justify-center rounded-btn border-[1.5px] border-ink bg-ink px-6 text-[16px] font-medium tracking-[-0.02em] text-canvas active:translate-y-px disabled:opacity-60">
-        {progress ? "Checking pages…" : "Run monitor"}
+        {progress ? "Checking pages…" : "Check competitors now"}
       </button>
       <p aria-live="polite" className="text-[15px] text-slate">{error ?? progress}</p>
     </div>

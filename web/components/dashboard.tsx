@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { MarketPulse, SimulateMove } from "@/components/market-extras";
 import { RunMonitorButton } from "@/components/run-monitor";
-import { ButtonLink, SampleBadge } from "@/components/ui";
+import { SampleBadge } from "@/components/ui";
 import { api, type ProfileSummary } from "@/lib/api";
 import type { Simulation } from "@/components/simulator";
 
@@ -28,10 +29,11 @@ export function Dashboard({ profileId }: { profileId: string }) {
   return (
     <section data-screen="S-09">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-[32px] leading-tight md:text-[40px]">{profile?.name ?? "Dashboard"}</h1>
+        <h1 className="text-[32px] leading-tight md:text-[40px]">{profile ? `Market: ${profile.name}` : "Market"}</h1>
         {profile?.is_demo_data && <SampleBadge label="Demo data" />}
       </div>
       <p className="mt-2 text-[17px] text-charcoal">{profile?.note}</p>
+      <SimulateMove />
       <div className="mt-6"><RunMonitorButton profileId={profileId} /></div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -75,7 +77,7 @@ export function Dashboard({ profileId }: { profileId: string }) {
           ))}
         </ul>
       )}
-      <div className="mt-6"><ButtonLink href="/app/demo-lab" variant="secondary">Open Demo Lab</ButtonLink></div>
+      <MarketPulse profileId={profileId} />
     </section>
   );
 }
