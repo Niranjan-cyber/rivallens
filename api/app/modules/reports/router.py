@@ -81,7 +81,8 @@ def build(conn: Connection, profile_id: UUID, user: User, start: date, end: date
     try:
         sim = _load(conn, profile_id) or save_version(conn, profile_id, {}, None)
         replan = sim.get("replanned")
-        line = f"Recommended launch price {inr(sim['recommended_price_inr'])}/month (simulator version {sim['version']}, a scenario model, not a forecast)"
+        unit = sim.get("price_unit", "/month")  # "" for products sold per unit
+        line = f"Recommended launch price {inr(sim['recommended_price_inr'])}{unit} (simulator version {sim['version']}, a scenario model, not a forecast)"
         if replan:
             ev = conn.execute(text("select e.observed_at, s.url from change_events e join sources s on s.id = e.source_id where e.id = :id"),
                               {"id": replan["trigger_change_event_id"]}).first()
@@ -92,7 +93,7 @@ def build(conn: Connection, profile_id: UUID, user: User, start: date, end: date
         else:
             ev = next((e for e in sim["market"]["evidence"] if e.get("evidence_id")), None)
             if ev:
-                _claim(claims, sim_section, f"{line}, anchored on a market median of {inr(sim['market']['median_price_inr'])}/month.",
+                _claim(claims, sim_section, f"{line}, anchored on a market median of {inr(sim['market']['median_price_inr'])}{unit}.",
                        "receipt", ev["evidence_id"], ev["observed_at"], ev["source_url"])
             else:
                 limitations.append(f"{line}; it rests on observed prices without a change receipt, so it is not cited as a claim.")
