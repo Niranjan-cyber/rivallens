@@ -55,3 +55,6 @@ Keep Demo Lab reachable by URL.
 3. Commit as `B14h: Market dashboard: news, funding and a simulated competitor move`.
 4. Report what changed and the done-check result, then stop. Don't start the next step without being asked.
 
+## Notes
+ Category price trend over time cut (needs repeat observations); the page shows each category's prices now with the date seen.
+

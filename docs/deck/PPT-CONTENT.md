@@ -321,7 +321,8 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 | Products (existing/new) in exact Google-taxonomy categories | |
 | Customers: review/comment/insight uploads, own-page reviews, web mentions → sentiment and themes (requests, complaints, praise), each opening its quotes | |
 | Like-for-like comparison from real brand product pages: price position vs median, features, premium inspirations, brand ranges | Customer segment per product; simulator fed by Money, Market and Customers |
-| Change detection + noise ledger | "Simulate a competitor move" inside Market (replaces the Demo Lab page) |
+| Change detection + noise ledger | |
+| Market: "Simulate a competitor move" next to "Check competitors now", category prices now, Indian market news and funding with links | |
 | Receipts with frozen evidence | Four demo businesses (footwear D2C, bakery, SaaS, quick commerce) built from real datasets |
 | Alerts (bell + email), alert rules | |
 | Competitor discovery in India | |
@@ -329,7 +330,7 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 | Launch simulator that re-plans on a receipt | |
 | Evidence-linked report + PDF | |
 | Competitor history timeline | |
-| Simulated price/feature change (Demo Lab) | |
+
 
 **Screenshots to add:** the Money dashboard (`docs/screenshots/s24-money.png`: runway 19.4 months, margin −23% vs 8.3% for Shoe in India) and the product comparison (Stride Runner ₹1,999 vs 8 real running shoes from Puma and Brooks India, "56% below the median ₹4,499"). Take it from the live app, or use `docs/screenshots/s23-product-compare.png`.
 

@@ -1577,7 +1577,7 @@
       "id": "B14h",
       "title": "Market dashboard: news, funding and a simulated competitor move",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "Market shows competitor changes, category news and funding with links, the category price trend, and a 'Simulate a competitor move' control that replaces Demo Lab.",
       "why_now": "Keeps the required simulated-change demo inside a clean product.",
@@ -1630,7 +1630,8 @@
       "depends_on": [
         "B14b"
       ],
-      "fallback": "Keep Demo Lab reachable by URL."
+      "fallback": "Keep Demo Lab reachable by URL.",
+      "notes": " Category price trend over time cut (needs repeat observations); the page shows each category's prices now with the date seen."
     },
     {
       "id": "B14i",

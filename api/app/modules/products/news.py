@@ -29,6 +29,11 @@ def _news(query: str) -> list[dict]:
         return []
 
 
+def _clean(text: str) -> str:
+    """Drop markdown link clutter that news snippets carry ('+ [](https://…)')."""
+    return re.sub(r"\s+", " ", re.sub(r"\+?\s*!?\[[^\]]*\]\([^)]*\)|#+\s", " ", text)).strip()
+
+
 def _iso(v: str | None) -> str:
     try:
         return parsedate_to_datetime(v).date().isoformat() if v else ""
@@ -53,9 +58,10 @@ def fetch_news(queries: list[str]) -> list[dict]:
                 continue
             seen.add(url)
             body = f"{r.get('title', '')} {r.get('content', '')}"
-            if not (tokens(q) - GENERIC) & tokens(body):  # must be about this market, not startup news in general
+            words = tokens(q) - GENERIC
+            if len(words & tokens(body)) < min(2, len(words)):  # about this market (both "running" and "shoe"), not startup news in general
                 continue
             items.append({"title": r.get("title") or url, "url": url, "source": urlsplit(url).hostname.removeprefix("www.") if urlsplit(url).hostname else url,
-                          "published": _iso(r.get("published_date")), "snippet": (r.get("content") or "")[:280],
+                          "published": _iso(r.get("published_date")), "snippet": _clean(r.get("content") or "")[:280],
                           "funding": bool(FUNDING.search(body)), "query": q})
     return sorted(items, key=lambda i: i["published"], reverse=True)[:15]
