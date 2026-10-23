@@ -19,7 +19,7 @@ from app.modules.discovery.service import blocked, india_signals, registrable_do
 
 log = logging.getLogger("discovery")
 TAVILY_KEY = os.getenv("TAVILY_API_KEY", "").strip()
-MIN_SIMILARITY = 0.03  # spec says 0.08; real Indian hosts score 0.03-0.06 against a one-line card (D-59, L-17)
+MIN_SIMILARITY = 0.05  # spec says 0.08 (E2E Networks scores 0.059); 0.03 let in unrelated SaaS (D-59, L-17)
 
 
 class Candidate(BaseModel):
