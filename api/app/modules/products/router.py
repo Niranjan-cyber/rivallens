@@ -7,14 +7,17 @@ from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import Connection, text
 
+from app import jobs
 from app.auth import UserDep
 from app.db import ConnDep
 from app.modules.collector.service import fetch
 from app.modules.products.classify import classify, classify_many
+from app.modules.discovery.service import registrable_domain
+from app.modules.products.market import find_comparables, niche_overlap, price_position
 from app.modules.products.pages import product_from_html
 from app.modules.products.taxonomy import candidates, path_of
 
@@ -197,3 +200,72 @@ def _add_from_onboarding(profile_id) -> None:
                 insert_product(conn, profile_id, profile, ProductIn(name=name, stage=stage), cat=cat)
         except Exception:
             log.exception("onboarding product %r failed", name)
+
+
+# ---- B14d: like-for-like comparison inside the product's exact category (S-23) ----
+
+@router.post("/products/{product_id}/comparables/find", status_code=202)
+def find_comparable_products(product_id: UUID, user: UserDep, conn: ConnDep, background: BackgroundTasks) -> dict:
+    p = _owned_product(conn, product_id, user.id)
+    if not p["taxonomy_id"]:
+        raise HTTPException(409, {"code": "no_category", "message": "Set the product's category first."})
+    job_id = jobs.create(user.id, p["profile_id"], "comparables")
+    background.add_task(jobs.run, job_id, lambda job: find_comparables(job, product_id))  # own connections; never touches this request's rows
+    return {"job_id": job_id, "status": "queued"}
+
+
+class ComparableIn(BaseModel):
+    url: str = Field(max_length=500)
+
+
+@router.post("/products/{product_id}/comparables", status_code=201)
+def add_comparable(product_id: UUID, body: ComparableIn, user: UserDep, conn: ConnDep) -> dict:
+    """A founder pastes a rival's product page: read its JSON-LD; it joins the comparison only if it's in the same category."""
+    p = _owned_product(conn, product_id, user.id)
+    page = fetch(body.url)
+    if page["status"] == "blocked_robots":
+        raise HTTPException(422, {"code": "blocked_robots", "message": "That site's robots.txt doesn't allow reading this page."})
+    found = product_from_html(page["html"]) if page["status"] == "ok" else None
+    if not found or not found["name"]:
+        raise HTTPException(422, {"code": "no_product", "message": "We couldn't find product details on that page (it may need JavaScript)."})
+    cat = classify(found["name"], (found["description"] or "")[:150])
+    conn.execute(text("""
+        insert into market_products (url, domain, taxonomy_id, category_path, niche, name, brand, description, price, currency, rating, review_count, observed_at)
+        values (:url, :d, :t, :path, :niche, :name, :brand, :desc, :price, :cur, :rating, :rc, now())
+        on conflict (url) do update set taxonomy_id = excluded.taxonomy_id, category_path = excluded.category_path, niche = excluded.niche,
+          name = excluded.name, price = excluded.price, rating = excluded.rating, review_count = excluded.review_count, observed_at = now()
+    """), {"url": body.url, "d": registrable_domain(body.url), "t": cat["taxonomy_id"], "path": cat["path"], "niche": cat["niche"],
+           "name": found["name"][:200], "brand": found["brand"], "desc": (found["description"] or "")[:600],
+           "price": found["price"] if found["currency"] in (None, "INR") else None, "cur": found["currency"],
+           "rating": found["rating"], "rc": found["review_count"]})
+    same = cat["taxonomy_id"] == p["taxonomy_id"]
+    return {"name": found["name"], "category_path": cat["path"], "same_category": same,
+            "message": "Added to the comparison." if same else f"Not compared: it's in {cat['path']}, not {p['category_path']}."}
+
+
+@router.get("/products/{product_id}/comparison")
+def product_comparison(product_id: UUID, user: UserDep, conn: ConnDep) -> dict:
+    p = _owned_product(conn, product_id, user.id)
+    rows = [dict(r) for r in conn.execute(text("""
+        select distinct on (domain, lower(name)) url, domain, name, brand, niche, price, currency, rating, review_count, features, observed_at
+        from market_products where taxonomy_id = :t and url is distinct from :own
+        order by domain, lower(name), observed_at desc
+    """), {"t": p["taxonomy_id"], "own": p["url"]}).mappings()]
+    leaf = (p["category_path"] or "").split(" > ")[-1]
+    for r in rows:
+        r["same_niche"] = niche_overlap(p["niche"], f"{r['niche']} {r['name']}", leaf)
+    niche_rows = [r for r in rows if r["same_niche"]]
+    basis = niche_rows if sum(r["price"] is not None for r in niche_rows) >= 3 else rows
+    prices = [float(r["price"]) for r in basis if r["price"] is not None]
+    pos = price_position(float(p["price"]) if p["price"] is not None else None, prices)
+    premium = sorted((r for r in basis if r["price"] is not None and pos["q75"] and r["price"] >= pos["q75"]), key=lambda r: -r["price"])[:5]
+    brands: dict[str, dict] = {}
+    for r in rows:  # each brand's range in this category: its "additional products"
+        b = brands.setdefault(r["brand"] or r["domain"], {"brand": r["brand"] or r["domain"], "products": 0, "min": None, "max": None})
+        b["products"] += 1
+        if r["price"] is not None:
+            b["min"] = min(x for x in (b["min"], float(r["price"])) if x is not None)
+            b["max"] = max(x for x in (b["max"], float(r["price"])) if x is not None)
+    rows.sort(key=lambda r: (not r["same_niche"], r["price"] is None, r["price"] or 0))
+    return {"product": Product(**p).model_dump(mode="json"), "basis": "niche" if basis is niche_rows else "category",
+            "position": pos, "rows": rows, "premium": premium, "brands": sorted(brands.values(), key=lambda b: -b["products"])}
