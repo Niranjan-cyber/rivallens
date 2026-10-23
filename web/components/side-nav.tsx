@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SAMPLE_PROFILE, groupOf, groups, sections } from "@/lib/screens";
+import { groupOf, groups, sections } from "@/lib/screens";
 
 const groupHome: Record<string, string> = { home: "home", product: "product", money: "money", market: "dashboard", customers: "customers" };
 
 // Four dashboards plus the overview; the active dashboard expands to its own pages.
 export function SideNav() {
   const parts = usePathname().split("/");
-  const profileId = parts[2] && !["new", "demo-lab"].includes(parts[2]) ? parts[2] : SAMPLE_PROFILE;
+  const profileId = parts[2] && !["new", "demo-lab"].includes(parts[2]) ? parts[2] : null;
   const active = parts[3];
+  if (!profileId) return null; // onboarding and the business list have no dashboards yet
   const activeGroup = groupOf[active];
   const pill = (on: boolean) => `shrink-0 rounded-pill px-5 py-2.5 text-[15px] font-medium tracking-[-0.02em] ${on ? "bg-ink text-canvas" : "hover:bg-white"}`;
 
