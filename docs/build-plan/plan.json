@@ -718,7 +718,7 @@
       "id": "B09",
       "title": "Sourced comparison matrix",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "S-13 ranks monitored competitors against the user's product on configurable, sourced criteria where Unknown cells never count against anyone.",
       "why_now": "PS core requirement (configurable comparison); all its data exists after B08.",
