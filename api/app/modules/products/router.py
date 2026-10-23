@@ -18,7 +18,7 @@ from app.db import ConnDep
 from app.modules.collector.service import fetch
 from app.modules.products.classify import classify, classify_many
 from app.modules.discovery.service import registrable_domain
-from app.modules.products.market import find_comparables, niche_overlap, price_position
+from app.modules.products.market import find_comparables, hint, in_category, niche_overlap, price_position
 from app.modules.products.news import fetch_news, queries_for
 from app.modules.products.pages import product_from_html
 from app.modules.products.taxonomy import candidates, path_of
@@ -156,6 +156,8 @@ def update_product(product_id: UUID, body: ProductPatch, user: UserDep, conn: Co
         if changes["taxonomy_id"] is not None and not path:
             raise HTTPException(422, {"code": "bad_category", "message": "Unknown category."})
         changes |= {"category_path": path, "category_source": "user"}
+        if path is None:
+            changes.setdefault("niche", None)  # the niche named a type inside the old category
     for k in ("features", "add_ons"):
         if k in changes:
             changes[k] = json.dumps(changes[k])
@@ -230,7 +232,7 @@ def add_comparable(product_id: UUID, body: ComparableIn, user: UserDep, conn: Co
     found = product_from_html(page["html"]) if page["status"] == "ok" else None
     if not found or not found["name"]:
         raise HTTPException(422, {"code": "no_product", "message": "We couldn't find product details on that page (it may need JavaScript)."})
-    cat = classify(found["name"], (found["description"] or "")[:150])
+    cat = classify(found["name"], (found["description"] or "")[:150], hint(p))
     conn.execute(text("""
         insert into market_products (url, domain, taxonomy_id, category_path, niche, name, brand, description, price, currency, rating, review_count, observed_at)
         values (:url, :d, :t, :path, :niche, :name, :brand, :desc, :price, :cur, :rating, :rc, now())
@@ -240,7 +242,7 @@ def add_comparable(product_id: UUID, body: ComparableIn, user: UserDep, conn: Co
            "name": found["name"][:200], "brand": found["brand"], "desc": (found["description"] or "")[:600],
            "price": found["price"] if found["currency"] in (None, "INR") else None, "cur": found["currency"],
            "rating": found["rating"], "rc": found["review_count"]})
-    same = cat["taxonomy_id"] == p["taxonomy_id"]
+    same = in_category(cat["path"], p["category_path"])
     return {"name": found["name"], "category_path": cat["path"], "same_category": same,
             "message": "Added to the comparison." if same else f"Not compared: it's in {cat['path']}, not {p['category_path']}."}
 
@@ -254,9 +256,9 @@ def comparison_data(conn: Connection, p: dict) -> dict:
     """Shared with the product simulator (B14i)."""
     rows = [dict(r) for r in conn.execute(text("""
         select distinct on (domain, lower(name)) url, domain, name, brand, niche, price, currency, rating, review_count, features, observed_at
-        from market_products where taxonomy_id = :t and url is distinct from :own
+        from market_products where (taxonomy_id = :t or category_path like :sub) and url is distinct from :own
         order by domain, lower(name), observed_at desc
-    """), {"t": p["taxonomy_id"], "own": p["url"]}).mappings()]
+    """), {"t": p["taxonomy_id"], "sub": f"{p['category_path']} > %", "own": p["url"]}).mappings()]
     leaf = (p["category_path"] or "").split(" > ")[-1]
     for r in rows:
         r["price"] = float(r["price"]) if r["price"] is not None else None  # numeric, not Decimal strings, in JSON
@@ -296,7 +298,8 @@ def market_overview(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict:
         select pr.category_path, pr.niche, pr.name as product, pr.id as product_id, count(mp.id) as n,
                percentile_cont(0.5) within group (order by mp.price)::float as median, min(mp.price)::float as min, max(mp.price)::float as max,
                max(mp.observed_at) as seen
-        from products pr left join market_products mp on mp.taxonomy_id = pr.taxonomy_id and mp.price is not null
+        from products pr left join market_products mp on (mp.taxonomy_id = pr.taxonomy_id or mp.category_path like pr.category_path || ' > %')
+          and mp.price is not null
         where pr.profile_id = :p group by pr.id order by pr.created_at"""), {"p": profile_id}).mappings()]
     for c in cats:
         c["seen"] = c["seen"].isoformat() if c["seen"] else None

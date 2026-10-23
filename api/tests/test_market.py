@@ -24,3 +24,13 @@ def test_product_links_prefer_the_niche_and_stay_on_the_site():
 def test_niche_overlap_ignores_the_category_word_itself():
     assert niche_overlap("Running shoes", "Men's running shoe", leaf="Shoes") is True
     assert niche_overlap("Running shoes", "Women's sneakers", leaf="Shoes") is False
+
+
+def test_in_category_counts_sub_categories_only():
+    from app.modules.products.market import in_category
+    bakery = "Food, Beverages & Tobacco > Food Items > Bakery"
+    assert in_category(bakery, bakery)
+    assert in_category(bakery + " > Pastries & Scones", bakery)
+    assert not in_category("Food, Beverages & Tobacco > Food Items > Bakery Mixes", bakery)  # a prefix, not a child
+    assert not in_category("Food, Beverages & Tobacco > Food Items", bakery)  # the parent is broader
+    assert not in_category(None, bakery)

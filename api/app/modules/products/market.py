@@ -40,6 +40,16 @@ def price_position(yours: float | None, prices: list[float]) -> dict:
             "rank": sum(p < yours for p in s) + 1 if yours else None}
 
 
+def in_category(path: str | None, parent: str | None) -> bool:
+    """Same category, or a sub-category of it: 'Bakery > Pastries & Scones' counts as 'Bakery'."""
+    return bool(path and parent and (path == parent or path.startswith(parent + " > ")))
+
+
+def hint(p: dict) -> str:
+    """Context for classifying a rival's page: what it's being compared with."""
+    return f"Compared with {p['niche'] or p['name']} ({p['category_path']})"
+
+
 def niche_overlap(a: str | None, b: str | None, leaf: str = "") -> bool:
     generic = tokens(leaf)
     return bool((tokens(a or "") - generic) & (tokens(b or "") - generic))
@@ -118,8 +128,8 @@ def find_comparables(job: Job, product_id) -> dict:
         if item and item["name"]:
             found.append(item | {"url": url})
     job.step("classify", "running", len(found), "Checking which are in the same category…")
-    cats = classify_many([f"{f['name']}. {(f['description'] or '')[:150]}" for f in found]) if found else []
-    same = [f | {"cat": c} for f, c in zip(found, cats) if c["taxonomy_id"] == p["taxonomy_id"]]
+    cats = classify_many([f"{f['name']}. {(f['description'] or '')[:150]}" for f in found], hint(p)) if found else []
+    same = [f | {"cat": c} for f, c in zip(found, cats) if in_category(c["path"], p["category_path"])]
     for f, feats in zip(same, _features(same) if same else []):
         f["features"] = feats
 
