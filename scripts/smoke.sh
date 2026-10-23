@@ -10,11 +10,12 @@ check() { # url, expected text
 }
 
 check "$FRONTEND_URL/" "RivalLens"
-check "$FRONTEND_URL/app" "Your businesses"
-check "$FRONTEND_URL/app/stacknest-demo/dashboard" "Sample data"
-check "$FRONTEND_URL/app/demo-lab" "Demo Lab"
+check "$FRONTEND_URL/login" "Try demo account"
+check "$FRONTEND_URL/app" "Demo Lab"
 
 if [[ -n "${BACKEND_URL:-}" ]]; then
   check "$BACKEND_URL/healthz" '"ok"'
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$BACKEND_URL/api/v1/profiles")
+  [[ "$code" == 401 ]] && echo "ok   $BACKEND_URL/api/v1/profiles (401 without token)" || { echo "FAIL profiles without token returned $code"; exit 1; }
 fi
 echo "smoke passed"

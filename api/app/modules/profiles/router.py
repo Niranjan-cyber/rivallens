@@ -1,14 +1,19 @@
 from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import text
+
+from app.auth import UserDep
+from app.db import ConnDep
 
 router = APIRouter(prefix="/api/v1/profiles", tags=["profiles"])
 
 
 class ProfileSummary(BaseModel):
-    id: str
+    id: UUID
     name: str
     kind: Literal["business", "idea"]
     offering_type: Literal["product", "service"]
@@ -19,15 +24,21 @@ class ProfileSummary(BaseModel):
     is_demo_data: bool
 
 
-# Fixture until B03 moves profiles into Supabase (specs §2 ProfileSummary shape).
-SEED_PROFILES = [
-    ProfileSummary(id="stacknest-demo", name="StackNest", kind="business", offering_type="service", note="Cloud deployment, Pune", competitors_monitored=6, unread_alerts=0, last_run_at=None, is_demo_data=True),
-    ProfileSummary(id="quickkart-demo", name="QuickKart", kind="business", offering_type="service", note="Quick commerce, Bengaluru", competitors_monitored=5, unread_alerts=0, last_run_at=None, is_demo_data=True),
-    ProfileSummary(id="stride-demo", name="Stride & Co.", kind="business", offering_type="product", note="Running shoes, D2C", competitors_monitored=5, unread_alerts=0, last_run_at=None, is_demo_data=True),
-    ProfileSummary(id="qubit-demo", name="Qubit Labs", kind="idea", offering_type="service", note="Quantum computing access", competitors_monitored=4, unread_alerts=0, last_run_at=None, is_demo_data=True),
-]
-
-
 @router.get("")
-def list_profiles() -> list[ProfileSummary]:
-    return SEED_PROFILES
+def list_profiles(user: UserDep, conn: ConnDep) -> list[ProfileSummary]:
+    rows = conn.execute(
+        text("""
+            select p.id, p.name, p.kind, p.offering_type, coalesce(p.card->>'note', '') as note, p.is_demo_data,
+                   (select count(*) from competitors c where c.profile_id = p.id and c.selected) as competitors_monitored
+            from profiles p where p.user_id = :uid order by p.created_at
+        """),
+        {"uid": user.id},
+    ).mappings()
+    return [ProfileSummary(**r, unread_alerts=0, last_run_at=None) for r in rows]
+
+
+@router.delete("/{profile_id}", status_code=204)
+def delete_profile(profile_id: UUID, user: UserDep, conn: ConnDep) -> None:
+    # Ownership in the WHERE clause: someone else's id looks exactly like a missing one (404, not 403).
+    if not conn.execute(text("delete from profiles where id = :id and user_id = :uid"), {"id": profile_id, "uid": user.id}).rowcount:
+        raise HTTPException(404, {"code": "not_found", "message": "Profile not found."})

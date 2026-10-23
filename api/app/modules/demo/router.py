@@ -1,0 +1,71 @@
+import secrets
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import Connection, text
+
+from app.auth import UserDep
+from app.config import MOCK_BASE_URL, SEED_USER_EMAIL
+from app.db import ConnDep
+from app.modules.profiles.router import ProfileSummary, list_profiles
+
+router = APIRouter(tags=["demo"])
+
+MOCK_SLUGS = ("nimbusdeploy", "kitehost", "orbitly")
+
+
+def _seed_user_id(conn: Connection):
+    uid = conn.execute(text("select id from auth.users where email = :e"), {"e": SEED_USER_EMAIL}).scalar()
+    if uid is None:
+        raise HTTPException(500, {"code": "seed_missing", "message": "Demo data isn't loaded yet."})
+    return uid
+
+
+@router.post("/api/v1/demo/guest-clone", status_code=201)
+def guest_clone(user: UserDep, conn: ConnDep) -> dict[str, list[ProfileSummary]]:
+    if not user.is_anonymous:
+        raise HTTPException(403, {"code": "not_anonymous", "message": "Only demo accounts can load the demo data."})
+    if conn.execute(text("select 1 from profiles where user_id = :u limit 1"), {"u": user.id}).first():
+        raise HTTPException(409, {"code": "already_cloned", "message": "Demo data is already loaded."})
+
+    seed = _seed_user_id(conn)
+    keys = {slug: secrets.token_urlsafe(8) for slug in MOCK_SLUGS}
+    for slug, key in keys.items():
+        conn.execute(text("insert into mock_instances (user_id, instance_key, slug) values (:u, :k, :s)"), {"u": user.id, "k": key, "s": slug})
+
+    # Deep-copy profiles → competitors → sources with fresh ids; mock source URLs point at this guest's own instances.
+    conn.execute(text("create temp table _p on commit drop as select id as old_id, gen_random_uuid() as new_id from profiles where user_id = :seed"), {"seed": seed})
+    conn.execute(text("""
+        insert into profiles (id, user_id, name, kind, offering_type, card, is_demo_data, created_at)
+        select m.new_id, :u, p.name, p.kind, p.offering_type, p.card, p.is_demo_data, p.created_at from profiles p join _p m on m.old_id = p.id
+    """), {"u": user.id})
+    conn.execute(text("create temp table _c on commit drop as select c.id as old_id, gen_random_uuid() as new_id, m.new_id as profile_id from competitors c join _p m on m.old_id = c.profile_id"))
+    conn.execute(text("""
+        insert into competitors (id, profile_id, name, domain, relation, origin, selected, monitorable, india_signals, similarity, is_demo_data)
+        select m.new_id, m.profile_id, c.name, c.domain, c.relation, c.origin, c.selected, c.monitorable, c.india_signals, c.similarity, c.is_demo_data
+        from competitors c join _c m on m.old_id = c.id
+    """))
+    sources = conn.execute(text("select s.url, s.page_type, s.is_mock, m.new_id as competitor_id from sources s join _c m on m.old_id = s.competitor_id")).mappings().all()
+    for s in sources:
+        url = s["url"]
+        if s["is_mock"]:
+            slug = url.rstrip("/").rsplit("/", 1)[-1]
+            url = f"{MOCK_BASE_URL}/{keys[slug]}/{slug}"
+        conn.execute(text("insert into sources (competitor_id, url, page_type, is_mock) values (:c, :url, :t, :m)"),
+                     {"c": s["competitor_id"], "url": url, "t": s["page_type"], "m": s["is_mock"]})
+    return {"profiles": list_profiles(user, conn)}
+
+
+class MockState(BaseModel):
+    slug: str
+    version: list[str]
+    overrides: dict
+
+
+@router.get("/api/v1/mock-state/{instance_key}")
+def mock_state(instance_key: str, conn: ConnDep) -> MockState:
+    """Public, read-only: the mock site renders fictional pages from this (no user data exposed)."""
+    row = conn.execute(text("select slug, version, overrides from mock_instances where instance_key = :k"), {"k": instance_key}).mappings().first()
+    if row is None:
+        raise HTTPException(404, {"code": "mock_not_found", "message": "Unknown demo page."})
+    return MockState(**row)

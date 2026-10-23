@@ -21,10 +21,30 @@ export function ProfileList() {
       </ul>
     );
 
+  async function remove(p: ProfileSummary) {
+    if (!confirm(`Delete ${p.name} and everything watched for it?`)) return;
+    await api(`/api/v1/profiles/${p.id}`, { method: "DELETE" }).then(
+      () => setProfiles((all) => all?.filter((x) => x.id !== p.id) ?? null),
+      (e: Error) => setError(e.message),
+    );
+  }
+
+  if (profiles.length === 0)
+    return (
+      <div className="mt-8 rounded-stadium bg-lifted p-8">
+        <p className="text-[24px] font-medium tracking-[-0.02em]">Create your first profile</p>
+        <p className="mt-2 text-charcoal">Describe your business or idea in one line and we&apos;ll find the competitors to watch.</p>
+      </div>
+    );
+
   return (
     <ul className="mt-8 grid gap-4 sm:grid-cols-2">
       {profiles.map((p) => (
-        <li key={p.id}>
+        <li key={p.id} className="relative">
+          <button type="button" onClick={() => remove(p)} aria-label={`Delete ${p.name}`}
+            className="absolute bottom-6 right-6 z-[1] rounded-pill px-3 py-1.5 text-[13px] text-slate hover:bg-white">
+            Delete
+          </button>
           <Link href={`/app/${p.id}/dashboard`} className="block rounded-stadium bg-lifted p-7 hover:shadow-lift-2">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[14px] text-slate">

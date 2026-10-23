@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { AuthGate } from "@/components/auth-gate";
+import { ProfileSwitcher } from "@/components/profile-switcher";
 import { SideNav } from "@/components/side-nav";
 import { Logo } from "@/components/ui";
 
@@ -10,9 +12,9 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
         <div className="flex items-center justify-between gap-3 rounded-pill bg-white px-5 py-2.5 shadow-lift-1 sm:px-8">
           <Logo />
           <div className="flex items-center gap-2">
-            <Link href="/app" className="hidden rounded-pill border border-ink/20 px-4 py-2 text-[15px] sm:block">
-              StackNest (demo) ▾
-            </Link>
+            <Suspense>
+              <ProfileSwitcher />
+            </Suspense>
             <Link href="/app/demo-lab" className="rounded-pill px-4 py-2 text-[15px] font-medium hover:bg-canvas">
               Demo Lab
             </Link>
@@ -31,7 +33,9 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
             <SideNav />
           </Suspense>
         </aside>
-        <main className="min-w-0">{children}</main>
+        <main className="min-w-0">
+          <AuthGate>{children}</AuthGate>
+        </main>
       </div>
     </div>
   );

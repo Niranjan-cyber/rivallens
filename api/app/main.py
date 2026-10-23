@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import GIT_SHA, WEB_ORIGIN
+from app.modules.demo.router import router as demo_router
 from app.modules.profiles.router import router as profiles_router
 
 app = FastAPI(title="RivalLens API")
@@ -12,6 +14,14 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 app.include_router(profiles_router)
+app.include_router(demo_router)
+
+
+@app.exception_handler(HTTPException)
+def error_shape(_: Request, exc: HTTPException) -> JSONResponse:
+    # Specs §2 error shape: {"error": {"code", "message"}}
+    detail = exc.detail if isinstance(exc.detail, dict) else {"code": "http_error", "message": str(exc.detail)}
+    return JSONResponse({"error": detail}, status_code=exc.status_code, headers=exc.headers)
 
 
 @app.get("/healthz")
