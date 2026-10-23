@@ -13,44 +13,28 @@ export default function Login() {
   const [mode, setMode] = useState<Mode>("login");
   const [busy, setBusy] = useState<"form" | "demo" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [unconfirmed, setUnconfirmed] = useState<string | null>(null);
-  const callback = () => `${window.location.origin}/auth/callback`;
 
+  // Email and password only, no confirmation email (D-83): the API creates the account, then we sign in with it.
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    const email = String(f.get("email"));
+    const email = String(f.get("email")).trim();
     const password = String(f.get("password"));
     setBusy("form");
     setMessage(null);
-    setUnconfirmed(null);
-    const { data, error } =
-      mode === "login"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: callback(), data: { name: String(f.get("name") ?? "") } } });
+    if (mode === "signup") {
+      try {
+        await api("/api/v1/accounts", { method: "POST", body: JSON.stringify({ email, password, name: String(f.get("name") ?? "") }) });
+      } catch (err) {
+        setBusy(null);
+        if ((err as Error).message.includes("already has an account")) setMode("login");
+        return setMessage((err as Error).message);
+      }
+    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(null);
-    if (error) {
-      if (error.message.includes("already registered")) {
-        setMode("login");
-        return setMessage("That email already has an account. Log in instead.");
-      }
-      if (error.code === "email_not_confirmed") {
-        setUnconfirmed(email);
-        return setMessage("Confirm your email first. The link is in your inbox (check spam too).");
-      }
-      return setMessage(error.message);
-    }
-    if (!data.session) {
-      setUnconfirmed(email);
-      return setMessage(`We sent a confirmation link to ${email}. Open it to finish creating your account.`);
-    }
+    if (error) return setMessage(error.message === "Invalid login credentials" ? "Wrong email or password." : error.message);
     router.push("/app");
-  }
-
-  async function resend() {
-    if (!unconfirmed) return;
-    const { error } = await supabase.auth.resend({ type: "signup", email: unconfirmed, options: { emailRedirectTo: callback() } });
-    setMessage(error ? error.message : `Sent again to ${unconfirmed}.`);
   }
 
   async function tryDemo() {
@@ -103,7 +87,6 @@ export default function Login() {
         {message && (
           <p role="alert" className="mt-4 rounded-btn bg-canvas p-4 text-[14px]">
             {message}
-            {unconfirmed && <> <button type="button" onClick={resend} className="font-medium underline">Resend the email</button></>}
           </p>
         )}
         <div className="mt-6 border-t border-ink/10 pt-6">

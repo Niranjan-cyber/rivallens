@@ -15,6 +15,7 @@ from app.modules.discovery.router import router as discovery_router
 from app.modules.customers.router import router as customers_router
 from app.modules.money.router import router as money_router
 from app.modules.products.router import router as products_router
+from app.modules.profiles.accounts import router as accounts_router
 from app.modules.profiles.router import router as profiles_router
 from app.modules.reports.router import router as reports_router
 from app.modules.simulator.router import router as simulator_router
@@ -35,6 +36,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["Authorization", "Content-Type"],
 )
+app.include_router(accounts_router)
 app.include_router(profiles_router)
 app.include_router(products_router)
 app.include_router(money_router)

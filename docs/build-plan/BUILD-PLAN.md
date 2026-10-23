@@ -18,7 +18,7 @@
 - S-14 simulator shows options A/B/C with cited assumptions and a Re-planned banner after the price-cut receipt; the quantum profile shows viability flags (UC-07, UC-14)
 - S-15 report cites a receipt for every claim and prints to PDF (UC-09)
 - README, PPT and repo link ready; the public URL is warm (keep-warm pinger on)
-- A new user signs up with email and password, confirms the email, completes onboarding and confirms a business card (UC-21)
+- A new user signs up with email and password, completes onboarding and confirms a business card (UC-21)
 - The main dashboard shows Product, Money, Market and Customers; Product lists existing and new products in exact Google-taxonomy categories (UC-16)
 - A product is compared only with its category on price, features, add-ons and cited revenue, with premium inspirations (UC-20)
 - Money shows revenue, margin vs the Damodaran India benchmark, transactions and runway from an upload or manual entry (UC-17)
@@ -67,7 +67,7 @@
 | B12 | Prototype | S-12 shows a competitor's dated history: current fields, a timeline of runs, receipts or failures, plus a price chart. | UC-11, S-12, S-08, S-13 | vercel-react-best-practices | 0.2 h | B08 | — | done |
 | B13 | Prototype | A demo guest sees the quick-commerce, Stride & Co. and quantum-idea profiles fully populated with competitors, history, comparison and simulator data, all labelled demo data. | UC-13, UC-14, S-03, S-09, S-13, S-14 | diagnosing-bugs | 0.3 h | B10, B11, B12 | — | done |
 | B14 | Prototype | A judge walks the full journeys §9 golden path on the public URL twice in a row without errors, with README + PPT ready to submit. | UC-01, UC-02, UC-03, UC-04, UC-05, UC-06, UC-07, UC-08, UC-09, UC-10, UC-11, UC-12, UC-13, UC-14, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-09, S-10, S-11, S-13, S-14, S-15, S-16, S-18 | diagnosing-bugs, render-debug, hackathon-demo-submission, pptx | 0.75 h | B13 | — | done |
-| B14a | Prototype | A new user signs up with email and password, confirms it from a real verification email, and lands signed in; each demo business has its own sign-in. | UC-21, UC-01, UC-13, S-02 | supabase, vercel-react-best-practices, frontend-design | 0.75 h | B14 | — | in-progress |
+| B14a | Prototype | A new user creates an account with email and password and is signed in straight away; each demo business has its own sign-in. | UC-21, UC-01, UC-13, S-02 | vercel-react-best-practices, frontend-design, supabase | 0.75 h | B14 | — | in-progress |
 | B14b | Prototype | After sign-up, a user fills a short onboarding form, confirms the drafted business card, and lands on a main dashboard with four dashboards: Product, Money, Market and Customers. | UC-21, UC-02, S-20, S-21, S-06 | frontend-design, fastapi | 1 h | B14a | — | done |
 | B14c | Prototype | On Product, a user sees Existing and New products, adds one, and gets its exact category from the Google product taxonomy (a football lands in Soccer Balls, a chair in Chairs). | UC-16, S-22 | supabase-postgres-best-practices, tdd, fastapi, frontend-design | 1 h | B14b | — | done |
 | B14d | Prototype | Opening a product shows it against products in the same category on price, features and add-ons, each value with its source and date, plus premium inspirations from the top of the category. | UC-20, UC-06, S-23 | tdd, fastapi, frontend-design | 1 h | B14c | — | done |
@@ -324,20 +324,21 @@
 - **Prompt:** `prompts/B14-prototype-exit-golden-path-on-the.md`
 - **Notes:** Submission-time unknown: confirm with organizers and shift the freeze if earlier.
 
-### B14a — Real accounts: email and password with a verified email
+### B14a — Real accounts: email and password
 - **Status:** in-progress
-- **Goal:** A new user signs up with email and password, confirms it from a real verification email, and lands signed in; each demo business has its own sign-in.
+- **Goal:** A new user creates an account with email and password and is signed in straight away; each demo business has its own sign-in.
 - **Why now:** Everything after this belongs to a real account; the user asked for real sign-up first.
 - **Slice:** UC UC-21, UC-01, UC-13 · Screens S-02 · Components C-01, C-02
-- **In scope:** Supabase Auth: email confirmation on, custom SMTP = Gmail app password (free, ~500/day); Redirect URLs for Vercel; Sign-in page: email and password; 'Try demo account' guest stays
-- **Out of scope:** Phone OTP (paid, future scope); Verified sending domain (future scope); Google sign-in (dropped by the owner, D-82)
-- **Skills (in order):** `supabase` — SMTP, OAuth provider, redirect URLs, confirm-email flow; `vercel-react-best-practices` — auth callback route + session refresh; `frontend-design` — sign-in and check-your-inbox screens
+- **In scope:** POST /api/v1/accounts creates the Supabase user already confirmed with the server key (no confirmation email); Sign-in page: email and password; 'Try demo account' guest stays
+- **Out of scope:** Email confirmation, Gmail SMTP (dropped, D-83); Google sign-in (dropped, D-82); Phone OTP (paid, future scope)
+- **Skills (in order):** `vercel-react-best-practices` — auth callback route + session refresh; `frontend-design` — sign-in and check-your-inbox screens; `supabase` — admin user creation with the server key
 - **Done when (on the public URL):**
-  1. On <FRONTEND_URL>, sign up with a fresh email → the verification email arrives from the Gmail sender → link signs you in
-  2. Sign out, sign back in: still your account
-- **Fallback:** If Gmail SMTP is rejected, keep confirmation off for the demo and say so in the README.
+  1. On <FRONTEND_URL> Create account with a new email and password → signed in and on onboarding at once
+  2. Log out, log in with the same email and password → back to the business
+  3. Same email again → 'already has an account'
+- **Fallback:** Supabase dashboard: turn off 'Confirm email' and use the normal sign-up call.
 - **Deploys:** frontend, infra · **After:** B14 · **Est.:** 0.75 h
-- **Prompt:** `prompts/B14a-real-accounts-email-and-password-with-a.md`
+- **Prompt:** `prompts/B14a-real-accounts-email-and-password.md`
 
 ### B14b — Onboarding, business card and the main dashboard
 - **Status:** done
@@ -541,7 +542,7 @@
 - Timeline: PPT content v2 by 23:10 (not a build step), B14a–B14j 23:10–07:00 (≈ 9.25 h estimated against ≈ 7.8 h), B14k 07:00–08:00. Cut order if behind: (1) YouTube in B14g, (2) category price trend in B14h, (3) QuickKart depth in B14j, (4) bakery competitors in B14j, (5) web mentions in B14g. Stride & Co. and StackNest stay complete; the B14 golden path is never broken.
 - Free sources only. Future scope (paid or needs approval): X API (pay-per-use), Instagram/Facebook Graph API (app review), Razorpay/Shopify/Tally sync, phone OTP, verified email domain, always-on hosting, licensed marketplace data, Crunchbase/Tracxn.
 - Licences to confirm while building: Amazon Reviews 2023 (else reviews come from CSV only), a grocery basket dataset for QuickKart, a public SaaS benchmark report for StackNest.
-- Owner actions: Gmail app password (B14a), optional YouTube key (B14g), make the repo public (B14k).
+- Owner actions: make the repo public (B14k).
 
 ## Sources
 
@@ -569,3 +570,4 @@ Work one step at a time: paste the step's prompt into the coding agent, finish w
 - 2026-10-23: 21:55 re-plan: B14 done; deadline 08:00 24 Oct; added B14a–B14f (four dashboards, products, economics, customers, per-product simulator and comparison); B14f is the new prototype exit; B16 superseded by B14c.
 - 2026-10-23: 22:45 re-plan v2: B14a–B14k replace the first draft. Real accounts → onboarding + main dashboard → products in exact categories → comparison → Money → cited competitor money → Customers → Market + simulated move → segment + simulator → demo businesses built from real datasets → exit.
 - 2026-10-24: 00:20 B14a: Google sign-in dropped; email and password with a verified email only (D-82).
+- 2026-10-24: 00:35 B14a: no confirmation email or Gmail; the API creates confirmed accounts (D-83).

@@ -83,7 +83,7 @@
       "S-14 simulator shows options A/B/C with cited assumptions and a Re-planned banner after the price-cut receipt; the quantum profile shows viability flags (UC-07, UC-14)",
       "S-15 report cites a receipt for every claim and prints to PDF (UC-09)",
       "README, PPT and repo link ready; the public URL is warm (keep-warm pinger on)",
-      "A new user signs up with email and password, confirms the email, completes onboarding and confirms a business card (UC-21)",
+      "A new user signs up with email and password, completes onboarding and confirms a business card (UC-21)",
       "The main dashboard shows Product, Money, Market and Customers; Product lists existing and new products in exact Google-taxonomy categories (UC-16)",
       "A product is compared only with its category on price, features, add-ons and cited revenue, with premium inspirations (UC-20)",
       "Money shows revenue, margin vs the Damodaran India benchmark, transactions and runway from an upload or manual entry (UC-17)",
@@ -1136,11 +1136,11 @@
     },
     {
       "id": "B14a",
-      "title": "Real accounts: email and password with a verified email",
+      "title": "Real accounts: email and password",
       "phase": "prototype",
       "status": "in-progress",
       "milestone": null,
-      "goal": "A new user signs up with email and password, confirms it from a real verification email, and lands signed in; each demo business has its own sign-in.",
+      "goal": "A new user creates an account with email and password and is signed in straight away; each demo business has its own sign-in.",
       "why_now": "Everything after this belongs to a real account; the user asked for real sign-up first.",
       "use_cases": [
         "UC-21",
@@ -1155,25 +1155,19 @@
         "C-02"
       ],
       "scope_in": [
-        "Supabase Auth: email confirmation on, custom SMTP = Gmail app password (free, ~500/day)",
-        "Redirect URLs for Vercel",
+        "POST /api/v1/accounts creates the Supabase user already confirmed with the server key (no confirmation email)",
         "Sign-in page: email and password; 'Try demo account' guest stays"
       ],
       "scope_out": [
-        "Phone OTP (paid, future scope)",
-        "Verified sending domain (future scope)",
-        "Google sign-in (dropped by the owner, D-82)"
+        "Email confirmation, Gmail SMTP (dropped, D-83)",
+        "Google sign-in (dropped, D-82)",
+        "Phone OTP (paid, future scope)"
       ],
       "tasks": [
-        "User: create a Gmail app password, paste it into Supabase SMTP",
-        "Auth callback route",
-        "Error and 'check your inbox' states"
+        "accounts endpoint",
+        "login page signs in after creating the account"
       ],
       "skills": [
-        {
-          "name": "supabase",
-          "use": "SMTP, OAuth provider, redirect URLs, confirm-email flow"
-        },
         {
           "name": "vercel-react-best-practices",
           "use": "auth callback route + session refresh"
@@ -1181,11 +1175,16 @@
         {
           "name": "frontend-design",
           "use": "sign-in and check-your-inbox screens"
+        },
+        {
+          "name": "supabase",
+          "use": "admin user creation with the server key"
         }
       ],
       "done_check": [
-        "On <FRONTEND_URL>, sign up with a fresh email → the verification email arrives from the Gmail sender → link signs you in",
-        "Sign out, sign back in: still your account"
+        "On <FRONTEND_URL> Create account with a new email and password → signed in and on onboarding at once",
+        "Log out, log in with the same email and password → back to the business",
+        "Same email again → 'already has an account'"
       ],
       "deploys": [
         "frontend",
@@ -1195,7 +1194,7 @@
       "depends_on": [
         "B14"
       ],
-      "fallback": "If Gmail SMTP is rejected, keep confirmation off for the demo and say so in the README."
+      "fallback": "Supabase dashboard: turn off 'Confirm email' and use the normal sign-up call."
     },
     {
       "id": "B14b",
@@ -2029,7 +2028,7 @@
     "Timeline: PPT content v2 by 23:10 (not a build step), B14a–B14j 23:10–07:00 (≈ 9.25 h estimated against ≈ 7.8 h), B14k 07:00–08:00. Cut order if behind: (1) YouTube in B14g, (2) category price trend in B14h, (3) QuickKart depth in B14j, (4) bakery competitors in B14j, (5) web mentions in B14g. Stride & Co. and StackNest stay complete; the B14 golden path is never broken.",
     "Free sources only. Future scope (paid or needs approval): X API (pay-per-use), Instagram/Facebook Graph API (app review), Razorpay/Shopify/Tally sync, phone OTP, verified email domain, always-on hosting, licensed marketplace data, Crunchbase/Tracxn.",
     "Licences to confirm while building: Amazon Reviews 2023 (else reviews come from CSV only), a grocery basket dataset for QuickKart, a public SaaS benchmark report for StackNest.",
-    "Owner actions: Gmail app password (B14a), optional YouTube key (B14g), make the repo public (B14k)."
+    "Owner actions: make the repo public (B14k)."
   ],
   "changelog": [
     {
@@ -2063,6 +2062,10 @@
     {
       "date": "2026-10-24",
       "change": "00:20 B14a: Google sign-in dropped; email and password with a verified email only (D-82)."
+    },
+    {
+      "date": "2026-10-24",
+      "change": "00:35 B14a: no confirmation email or Gmail; the API creates confirmed accounts (D-83)."
     }
   ]
 }
