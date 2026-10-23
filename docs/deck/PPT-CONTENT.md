@@ -316,7 +316,8 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 | Email sign-up with confirmation link, Google button, guest demo | Google sign-in switched on (provider setup) |
 | Onboarding form → AI-drafted business card → Overview | |
 | Money: CSV/Excel upload with column check, manual entries, revenue, margin vs Damodaran India benchmark, burn, runway, transaction log | |
-| Four-dashboard navigation (Product, Money, Market, Customers) | Competitors' revenue and funding from filings and news, cited |
+| Four-dashboard navigation (Product, Money, Market, Customers) | |
+| Competitors' revenue and funding from filings and news, each a verbatim quote with its link (e.g. Campus Activewear Q1 FY26 revenue ₹343.3 cr from its press release) | |
 | Products (existing/new) in exact Google-taxonomy categories | Customers: uploads, own-site reviews, web mentions → sentiment and top requests |
 | Like-for-like comparison from real brand product pages: price position vs median, features, premium inspirations, brand ranges | Customer segment per product; simulator fed by Money, Market and Customers |
 | Change detection + noise ledger | "Simulate a competitor move" inside Market (replaces the Demo Lab page) |

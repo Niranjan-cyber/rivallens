@@ -1456,7 +1456,7 @@
       "id": "B14f",
       "title": "Competitors' revenue and funding, cited",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "Money and the product comparison show competitors' reported revenue, margin and funding, each with a source link and date, or Unknown.",
       "why_now": "Revenue comparison was asked for and must be real; listed companies publish it.",
