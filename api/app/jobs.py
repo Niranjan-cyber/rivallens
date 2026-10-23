@@ -44,7 +44,7 @@ def run(job_id: UUID, fn: Callable[[Job], dict]) -> None:
         job.finish(fn(job))
     except Exception as e:  # a job must never stay 'running' because of an exception
         log.exception("job %s failed", job_id)
-        job.fail("job_failed", str(e)[:300])
+        job.fail(getattr(e, "code", "job_failed"), str(e)[:300])
 
 
 def mark_stale() -> None:

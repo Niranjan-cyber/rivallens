@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AlertCenter } from "@/components/alert-center";
 import { AlertRulesForm } from "@/components/alert-rules";
+import { CardView } from "@/components/card-view";
 import { ReceiptView } from "@/components/receipt";
 import { RunMonitorButton } from "@/components/run-monitor";
 import { RunResult } from "@/components/run-result";
@@ -15,6 +16,7 @@ async function Section({ params }: { params: PageProps<"/app/[profileId]/[sectio
   if (!meta) notFound();
   if (section === "run") return <RunResult profileId={profileId} />;
   if (section === "receipt") return <ReceiptView profileId={profileId} />;
+  if (section === "card") return <CardView profileId={profileId} />;
   if (section === "alerts") return <AlertCenter profileId={profileId} />;
   if (section === "settings") return <AlertRulesForm profileId={profileId} />;
 
@@ -24,6 +26,7 @@ async function Section({ params }: { params: PageProps<"/app/[profileId]/[sectio
         <>
           <RunMonitorButton profileId={profileId} />
           <ButtonLink href={`/app/${profileId}/run`} variant="secondary">Last run</ButtonLink>
+          <ButtonLink href={`/app/${profileId}/card`} variant="secondary">Profile card</ButtonLink>
         </>
       )}
     </StubPage>

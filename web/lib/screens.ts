@@ -10,6 +10,7 @@ export const sections = [
 ] as const;
 
 export const extraScreens = {
+  card: { label: "Profile card", screen: "S-06", purpose: "The card that drives discovery and comparison." },
   run: { label: "Monitoring run", screen: "S-10", purpose: "What changed since the last check, what was ignored, and why." },
   receipt: { label: "Change receipt", screen: "S-11", purpose: "Proof of one change: before and after, the date it was seen, and the saved page." },
 } as const;
