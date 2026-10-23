@@ -838,7 +838,7 @@
       "id": "B11",
       "title": "Evidence-linked report + PDF",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "A user downloads a PDF report from S-15 in which every claim links to a receipt with its observed date (AI suggestions labelled separately).",
       "why_now": "PS deliverable ('sourced comparison report showing the change'); all evidence exists by now.",

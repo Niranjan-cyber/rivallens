@@ -55,7 +55,7 @@
 | B08 | Prototype | After saving a card, S-08 lists India-verified competitors found automatically (plus the user-added NimbusDeploy (demo) URL), ready to monitor. | UC-03, S-06, S-07, S-08, S-17 | tdd, fastapi | 0.55 h | B07, B04 | — | done |
 | B09 | Prototype | S-13 ranks monitored competitors against the user's product on configurable, sourced criteria where Unknown cells never count against anyone. | UC-06, S-13, S-12 | tdd | 0.25 h | B08 | — | done |
 | B10 | Prototype | After a competitor price-cut run, S-14 shows a re-planned launch recommendation from options A/B/C whose best/expected/worst outcomes cite editable assumptions. | UC-07, UC-14, S-09, S-11, S-14 | tdd, code-review | 0.4 h | B09, B06 | — | done |
-| B11 | Prototype | A user downloads a PDF report from S-15 in which every claim links to a receipt with its observed date (AI suggestions labelled separately). | UC-09, S-15, S-11 | frontend-design | 0.3 h | B10 | — | todo |
+| B11 | Prototype | A user downloads a PDF report from S-15 in which every claim links to a receipt with its observed date (AI suggestions labelled separately). | UC-09, S-15, S-11 | frontend-design | 0.3 h | B10 | — | done |
 | B12 | Prototype | S-12 shows a competitor's dated history: current fields, a timeline of runs, receipts or failures, plus a price chart. | UC-11, S-12, S-08, S-13 | vercel-react-best-practices | 0.2 h | B08 | — | todo |
 | B13 | Prototype | A demo guest sees the quick-commerce, Stride & Co. and quantum-idea profiles fully populated with competitors, history, comparison and simulator data, all labelled demo data. | UC-13, UC-14, S-03, S-09, S-13, S-14 | diagnosing-bugs | 0.3 h | B10, B11, B12 | — | todo |
 | B14 🏁 | Prototype | A judge walks the full journeys §9 golden path on the public URL twice in a row without errors, with README + PPT ready to submit. | UC-01, UC-02, UC-03, UC-04, UC-05, UC-06, UC-07, UC-08, UC-09, UC-10, UC-11, UC-12, UC-13, UC-14, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-09, S-10, S-11, S-13, S-14, S-15, S-16, S-18 | diagnosing-bugs, render-debug, hackathon-demo-submission, pptx | 0.75 h | B13 | — | todo |
@@ -241,7 +241,7 @@
 - **Notes:** Cut order item 4: viability flags (keep simulator).
 
 ### B11 — Evidence-linked report + PDF
-- **Status:** todo
+- **Status:** done
 - **Goal:** A user downloads a PDF report from S-15 in which every claim links to a receipt with its observed date (AI suggestions labelled separately).
 - **Why now:** PS deliverable ('sourced comparison report showing the change'); all evidence exists by now.
 - **Slice:** UC UC-09 · Screens S-15, S-11 · Components C-03, C-12, C-14, C-15
