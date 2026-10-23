@@ -34,7 +34,7 @@ export function Overview({ profileId }: { profileId: string }) {
     <section data-screen="S-21">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-[32px] leading-tight md:text-[40px]">{profile?.name ?? "Your business"}</h1>
-        {profile?.is_demo_data && <SampleBadge label="Demo business" />}
+        {profile?.is_demo_data && <SampleBadge label={val("demo_basis") ? `Demo business, modelled on ${val("demo_basis")}` : "Demo business"} />}
       </div>
       <p className="mt-2 text-[17px] text-charcoal">
         {meta ? `${meta}. ` : ""}
