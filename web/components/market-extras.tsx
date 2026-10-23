@@ -7,8 +7,8 @@ import { api, type Mock } from "@/lib/api";
 
 const MOVES = [
   { id: "cosmetic", label: "Redesign only", hint: "Menu, banner, styling and a clock change. Should be ignored." },
-  { id: "price_cut_40", label: "Cut Pro price 40%", hint: "One real price change." },
-  { id: "add_feature", label: "Add a feature", hint: "“Mumbai region” on the middle plan." },
+  { id: "price_cut_40", label: "Cut a price 40%", hint: "The middle plan or shoe drops 40%: one real price change." },
+  { id: "add_feature", label: "Add a feature", hint: "A new feature on the middle plan or shoe." },
   { id: "positioning", label: "New headline", hint: "A different pitch." },
 ] as const;
 

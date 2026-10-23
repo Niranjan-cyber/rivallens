@@ -8,6 +8,7 @@ from app.auth import UserDep
 from app.config import MOCK_BASE_URL, SEED_USER_EMAIL
 from app.db import ConnDep
 from app.modules.demo.history import DEMO_HISTORY, seed_history
+from app.modules.discovery.router import MOCK_NAMES
 from app.modules.profiles.router import ProfileSummary, list_profiles
 
 router = APIRouter(tags=["demo"])
@@ -73,7 +74,6 @@ def guest_clone(user: UserDep, conn: ConnDep) -> dict[str, list[ProfileSummary]]
 
 
 SCENARIOS = ("price_cut_40", "add_feature", "positioning", "cosmetic")
-MOCK_NAMES = {"nimbusdeploy": "NimbusDeploy (demo)", "kitehost": "KiteHost (demo)", "orbitly": "Orbitly Cloud (demo)"}
 
 
 class Mock(BaseModel):

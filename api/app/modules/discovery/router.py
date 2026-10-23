@@ -17,7 +17,8 @@ from app.modules.discovery.service import india_signals, registrable_domain, sim
 
 router = APIRouter(prefix="/api/v1", tags=["discovery"])
 GUEST_PER_DAY, GLOBAL_PER_DAY = 2, 20
-MOCK_NAMES = {"nimbusdeploy": "NimbusDeploy (demo)", "kitehost": "KiteHost (demo)", "orbitly": "Orbitly Cloud (demo)"}
+MOCK_NAMES = {"nimbusdeploy": "NimbusDeploy (demo)", "kitehost": "KiteHost (demo)", "orbitly": "Orbitly Cloud (demo)",
+              "zephyrpace": "ZephyrPace (demo)", "monsoonmiles": "Monsoon Miles (demo)"}
 
 
 class CandidateOut(BaseModel):
