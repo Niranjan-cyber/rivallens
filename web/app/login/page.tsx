@@ -52,9 +52,10 @@ export default function Login() {
     setBusy("demo");
     setMessage(null);
     const { error } = await supabase.auth.signInWithPassword({ email, password: DEMO_PASSWORD });
+    if (error) return (setBusy(null), setMessage(`Demo unavailable: ${error.message}. You can still create an account.`));
+    const [first] = await api<{ id: string }[]>("/api/v1/profiles").catch(() => []);
     setBusy(null);
-    if (error) return setMessage(`Demo unavailable: ${error.message}. You can still create an account.`);
-    router.push("/app");
+    router.push(first ? `/app/${first.id}/home` : "/app");
   }
 
   const field = "mt-1 w-full rounded-pill border border-ink/30 bg-white px-5 py-3 text-[16px] outline-none focus:border-ink";

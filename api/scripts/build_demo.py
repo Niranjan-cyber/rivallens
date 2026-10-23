@@ -68,6 +68,14 @@ BUSINESSES = {
         "competitors": ["https://theobroma.in/"],
         "mocks": [],
         "comparables": ["Choco chip brownie", "Chocolate cake slice"],
+        # Search didn't reach Theobroma's product pages, so they're pasted, as a user would ("Or paste a rival's product page")
+        "comparable_urls": {name: [f"https://theobroma.in/products/{s}" for s in slugs] for name, slugs in {
+            "Choco chip brownie": ["choco-chip-brownie-1-piece", "walnut-brownie-1-piece", "outrageous-chocolate-brownie-1-piece",
+                                   "overload-brownie-1-piece", "mocha-coffee-brownie-1-piece", "biscoff-brownie-1-piece"],
+            "Chocolate cake slice": ["rich-chocolate-pastry-1-piece", "dutch-truffle-pastry-1-piece", "chocoholic-pastry-1-piece",
+                                     "hazelnut-praline-mousse-pastry-1-piece", "choco-butterscotch-pastry-1-piece"],
+            "Cappuccino": ["cappuccino-250ml", "latte-250ml", "flat-white-250ml", "spanish-latte-250ml"],
+        }.items()},
     },
     "quickkart": {
         "email": "quickkart@rivallens.demo",
@@ -78,8 +86,9 @@ BUSINESSES = {
         "basis": "Eternal (Blinkit) and Swiggy (Instamart) public filings",
         "prices": {"QuickKart Pass": 129},
         "units": {"QuickKart Pass": "month"},
+        "no_category": ["QuickKart Pass"],  # a membership is a service: Google's product taxonomy has no category for it
         "rivals": ["Eternal", "Swiggy"],
-        "competitors": [],
+        "competitors": [],  # Blinkit, Zepto, Instamart, BigBasket and JioMart all refuse automated fetches
         "mocks": [],
         "comparables": [],
     },
@@ -151,6 +160,8 @@ def products(c: httpx.Client, pid: str, b: dict) -> dict:
     for p in items:
         if p["name"] in b["prices"]:
             body = {"price": b["prices"][p["name"]], "unit": b.get("units", {}).get(p["name"], "one_time")}
+            if p["name"] in b.get("no_category", []):
+                body["taxonomy_id"] = None
             c.patch(f"/api/v1/products/{p['id']}", json=body).raise_for_status()
         out[p["name"]] = p["id"]
         log(f"  product {p['name']}: {p['category_path']} / {p['niche']}")
@@ -200,6 +211,10 @@ def build(key: str) -> None:
     competitors(c, pid, user_id, b)
     for name in b["comparables"]:
         wait(c, c.post(f"/api/v1/products/{ids[name]}/comparables/find").raise_for_status().json()["job_id"], f"comparables for {name}")
+    for name, urls in b.get("comparable_urls", {}).items():
+        for url in urls:
+            r = c.post(f"/api/v1/products/{ids[name]}/comparables", json={"url": url})
+            log(f"  pasted for {name}: {url.rsplit('/', 1)[-1]}:", r.json().get("message") if r.is_success else r.text[:160])
     if b["rivals"]:
         wait(c, c.post(f"/api/v1/profiles/{pid}/money/rivals/find", json={"companies": b["rivals"]}).raise_for_status().json()["job_id"], "competitor money")
     if b.get("collect"):  # off for demo businesses: they are fictional, so any web mention is about someone else

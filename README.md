@@ -6,7 +6,7 @@ Built solo for HackNova'26 (Pulzion). RivalLens is a working name.
 
 | | |
 |---|---|
-| Live app | https://rivallens-eight.vercel.app (click **Try demo account**, no sign-up) |
+| Live app | https://rivallens-eight.vercel.app (click a demo business on the login page, no sign-up) |
 | API | https://rivallens-api.onrender.com/healthz |
 | Architecture | [`hacknova26-competitor-intel-architecture.md`](hacknova26-competitor-intel-architecture.md) · [interactive diagram](hacknova26-competitor-intel-architecture.html) |
 | Every decision and why | [`LEARNINGS-AND-DECISIONS.md`](LEARNINGS-AND-DECISIONS.md) |
@@ -76,9 +76,22 @@ Detection is rules-first, so the core demo never depends on an LLM.
 - Snapshots are immutable. Scraped HTML is **never rendered in the app**: "View original" downloads the gzipped snapshot through a 5-minute signed URL and shows it in an `<iframe sandbox="">`.
 - Reports contain only claims with an evidence id. Everything else goes to *Data limitations*. The LLM summary may only cite claim ids.
 
+## Demo businesses (sign-ins)
+
+Four fictional businesses, each its own account. The login page has a button for each, or sign in with the email and the shared password **`RivalLens-demo-2026`**. They're shared with other visitors, so anything you change is visible to the next person; `cd api && .venv/Scripts/python -m scripts.build_demo` rebuilds them.
+
+| Sign-in | Business | Built from |
+|---|---|---|
+| `stride@rivallens.demo` | **Stride & Co.**, running shoes D2C, Pune | UCI Online Retail II order rhythm (CC BY 4.0) and Campus Activewear's FY26 margins; real Nivia, Neemans and Campus pages; brand product pages for comparison |
+| `bakery@rivallens.demo` | **Kesar Bakehouse**, bakery café, Pune | The Bread Basket transactions (CC0) priced from Theobroma's public menu; Amazon Fine Food reviews (CC0) |
+| `stacknest@rivallens.demo` | **StackNest**, app hosting SaaS, Pune | Real E2E Networks, Render and Railway pricing pages |
+| `quickkart@rivallens.demo` | **QuickKart**, quick commerce, Bengaluru | Eternal (Blinkit) and Swiggy (Instamart) figures from filings and news |
+
+**Nothing intelligent is hand-written (D-75).** `api/scripts/build_demo.py` signs in as each business and calls the same API endpoints the browser does: onboarding, products, uploads, competitors, comparables, competitor money and news. Every number on the dashboards is either from those files or from a public page with its link and date; anything else shows as *Unknown*. Sources and licences: [`fixtures/demo/ATTRIBUTION.md`](fixtures/demo/ATTRIBUTION.md).
+
 ## Demo data, labelled
 
-- **Fictional companies:** NimbusDeploy, KiteHost, Orbitly Cloud, ZipBasket, DashMart, Minute Pantry, PaceRun, Trailhawk, Urban Sole, QCloud Access and Qubitly. All carry the *(demo)* suffix, and every mock page shows a *"Demo data: fictional company"* ribbon.
+- **Fictional companies:** NimbusDeploy, KiteHost, Orbitly Cloud, ZephyrPace and Monsoon Miles. All carry the *(demo)* suffix, and every mock page shows a *"Demo data: fictional company"* ribbon. Each demo business shows *"Demo business, modelled on …"* on its overview.
 - **Demo Lab mock pages** are served by this app at `/mock/{instance}/{slug}`. Each guest gets private instances, so judges never collide.
 - **Real companies** (Render, Railway, E2E Networks) appear only with values read from pages saved on 23 Oct 2026 (`fixtures/pricing-pages/`), dated with that capture time. Prices are never invented for a real company; where a page states none, the cell says *Unknown*.
 - **Discovery** of real competitors (e.g. ESDS, Yotta, Tata Communications, E2E Networks, CtrlS for a Pune deployment startup) is live. Each candidate shows its India signals and why it passed or failed.
