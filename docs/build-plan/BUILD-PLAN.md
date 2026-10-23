@@ -67,8 +67,8 @@
 | B12 | Prototype | S-12 shows a competitor's dated history: current fields, a timeline of runs, receipts or failures, plus a price chart. | UC-11, S-12, S-08, S-13 | vercel-react-best-practices | 0.2 h | B08 | — | done |
 | B13 | Prototype | A demo guest sees the quick-commerce, Stride & Co. and quantum-idea profiles fully populated with competitors, history, comparison and simulator data, all labelled demo data. | UC-13, UC-14, S-03, S-09, S-13, S-14 | diagnosing-bugs | 0.3 h | B10, B11, B12 | — | done |
 | B14 | Prototype | A judge walks the full journeys §9 golden path on the public URL twice in a row without errors, with README + PPT ready to submit. | UC-01, UC-02, UC-03, UC-04, UC-05, UC-06, UC-07, UC-08, UC-09, UC-10, UC-11, UC-12, UC-13, UC-14, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-09, S-10, S-11, S-13, S-14, S-15, S-16, S-18 | diagnosing-bugs, render-debug, hackathon-demo-submission, pptx | 0.75 h | B13 | — | done |
-| B14a | Prototype | A new user signs up with email, confirms it from a real verification email (or uses Google), and lands signed in; each demo business has its own sign-in. | UC-21, UC-01, UC-13, S-02 | supabase, vercel-react-best-practices, frontend-design | 0.75 h | B14 | — | todo |
-| B14b | Prototype | After sign-up, a user fills a short onboarding form, confirms the drafted business card, and lands on a main dashboard with four dashboards: Product, Money, Market and Customers. | UC-21, UC-02, S-20, S-21, S-06 | frontend-design, fastapi | 1 h | B14a | — | todo |
+| B14a | Prototype | A new user signs up with email, confirms it from a real verification email (or uses Google), and lands signed in; each demo business has its own sign-in. | UC-21, UC-01, UC-13, S-02 | supabase, vercel-react-best-practices, frontend-design | 0.75 h | B14 | — | in-progress |
+| B14b | Prototype | After sign-up, a user fills a short onboarding form, confirms the drafted business card, and lands on a main dashboard with four dashboards: Product, Money, Market and Customers. | UC-21, UC-02, S-20, S-21, S-06 | frontend-design, fastapi | 1 h | B14a | — | done |
 | B14c | Prototype | On Product, a user sees Existing and New products, adds one, and gets its exact category from the Google product taxonomy (a football lands in Soccer Balls, a chair in Chairs). | UC-16, S-22 | supabase-postgres-best-practices, tdd, fastapi, frontend-design | 1 h | B14b | — | todo |
 | B14d | Prototype | Opening a product shows it against products in the same category on price, features and add-ons, each value with its source and date, plus premium inspirations from the top of the category. | UC-20, UC-06, S-23 | tdd, fastapi, frontend-design | 1 h | B14c | — | todo |
 | B14e | Prototype | On Money, a user uploads a CSV or Excel export (or adds entries by hand) and sees revenue, profit margin against the Indian industry benchmark, product prices, the transaction log and runway. | UC-17, S-24 | tdd, fastapi, frontend-design | 1.25 h | B14b | — | todo |
@@ -325,7 +325,7 @@
 - **Notes:** Submission-time unknown: confirm with organizers and shift the freeze if earlier.
 
 ### B14a — Real accounts: verified email and Google sign-in
-- **Status:** todo
+- **Status:** in-progress
 - **Goal:** A new user signs up with email, confirms it from a real verification email (or uses Google), and lands signed in; each demo business has its own sign-in.
 - **Why now:** Everything after this belongs to a real account; the user asked for real sign-up first.
 - **Slice:** UC UC-21, UC-01, UC-13 · Screens S-02 · Components C-01, C-02
@@ -341,7 +341,7 @@
 - **Prompt:** `prompts/B14a-real-accounts-verified-email-and-google.md`
 
 ### B14b — Onboarding, business card and the main dashboard
-- **Status:** todo
+- **Status:** done
 - **Goal:** After sign-up, a user fills a short onboarding form, confirms the drafted business card, and lands on a main dashboard with four dashboards: Product, Money, Market and Customers.
 - **Why now:** This is the product's front door; every later step fills one of these four dashboards.
 - **Slice:** UC UC-21, UC-02 · Screens S-20, S-21, S-06 · Components C-28
