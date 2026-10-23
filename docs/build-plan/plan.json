@@ -18,7 +18,7 @@
     "integrations": "Tavily search, Resend email, Internet Archive CDX"
   },
   "urls": {
-    "frontend": "<FRONTEND_URL> (e.g. https://rivallens.vercel.app)",
+    "frontend": "https://rivallens-eight.vercel.app",
     "backend": "<BACKEND_URL> (e.g. https://rivallens-api.onrender.com)"
   },
   "modifiers": [
@@ -141,7 +141,7 @@
       "id": "B01",
       "title": "Frontend shell live on Vercel",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "Anyone can open the public URL and click from the S-01 landing through stub screens S-03 to S-18 labelled sample data.",
       "why_now": "Forces the GitHub → Vercel deploy path to exist first and gives every later step a place to show its result.",
@@ -1312,6 +1312,10 @@
     {
       "date": "2026-10-23",
       "change": "Source labels tell agents to read docs by section (token budget, SKILL-PLAYBOOK.md)."
+    },
+    {
+      "date": "2026-10-23",
+      "change": "B01 done: frontend live at https://rivallens-eight.vercel.app (rivallens.vercel.app is taken by another project)."
     }
   ]
 }

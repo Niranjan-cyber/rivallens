@@ -23,7 +23,7 @@ Hard rules:
 - Plan: `docs/build-plan/BUILD-PLAN.md` (generated from `docs/build-plan/plan.json`; timeline in `timeline.html`).
 - Work one step at a time using `docs/build-plan/prompts/<ID>-*.md`. Read only that step's section of BUILD-PLAN.md.
 - In `plan.json`, only edit the step's `status`; don't read the whole file. Re-render after changing it.
-- **Current step: B01** (frontend shell live on Vercel). Freeze at 20:15; the cut order is in BUILD-PLAN.md open questions.
+- **Current step: B02** (walking skeleton: web ↔ deployed API). B01 done: https://rivallens-eight.vercel.app (Git auto-deploy from `main`, Vercel root `web/`). Freeze at 20:15; the cut order is in BUILD-PLAN.md open questions.
 
 <!-- skill-stack-setup:start -->
 ## Agent skills
