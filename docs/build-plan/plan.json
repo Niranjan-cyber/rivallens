@@ -772,7 +772,7 @@
       "id": "B10",
       "title": "Launch simulator that re-plans on receipts",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "After a competitor price-cut run, S-14 shows a re-planned launch recommendation from options A/B/C whose best/expected/worst outcomes cite editable assumptions.",
       "why_now": "Completes the winning feature (change → decision) and your launch-simulator requirement.",

@@ -6,6 +6,15 @@ DEFAULTS = {"segment_size": 4000, "base_conversion": 0.03, "elasticity_best": 0.
 SCENARIOS = ("best", "expected", "worst")
 
 
+def inr(n: float) -> str:
+    """Indian digit grouping: 3358585 → ₹33,58,585."""
+    s = str(int(round(n)))
+    head, tail = s[:-3], s[-3:]
+    while len(head) > 2:
+        tail, head = f"{head[-2:]},{tail}", head[:-2]
+    return f"₹{head},{tail}" if head else f"₹{tail}"
+
+
 def round_99(x: float) -> int:
     return max(99, int((x + 1) / 100 + 0.5) * 100 - 1)
 
@@ -56,7 +65,7 @@ def simulate(m: float, f: float, a: dict, planned: float | None = None, extra: f
     rec, warning = recommend(options)
     chosen = next(o for o in options if o["id"] == rec)
     exp = chosen["scenarios"]["expected"]
-    reason = (f"Highest expected 12-month revenue (₹{exp['revenue_12m_inr']:,}) "
+    reason = (f"Highest expected 12-month revenue ({inr(exp['revenue_12m_inr'])}) "
               + ("among options that break even even in the worst case." if not warning else
                  "but no option breaks even in the worst case under these assumptions."))
     return {"market_median_inr": m, "feature_coverage": round(f, 2), "options": options, "recommended_option": rec,
@@ -80,8 +89,8 @@ def viability_flags(sim: dict, comparables: list[dict], inspiration: list[dict])
     monthly_m12 = chosen["price_inr"] * chosen["scenarios"]["expected"]["customers_m12"]
     if sim["assumptions"]["upfront_cost"] > 12 * monthly_m12:
         flags.append({"code": "capital_intensive", "severity": "high", "evidence_ids": [], "assumption_keys": ["upfront_cost"],
-                      "text": f"Upfront cost (₹{sim['assumptions']['upfront_cost']:,.0f}) is more than a year of expected revenue at month 12 "
-                              f"(₹{monthly_m12:,.0f} a month)."})
+                      "text": f"Upfront cost ({inr(sim['assumptions']['upfront_cost'])}) is more than a year of expected revenue at month 12 "
+                              f"({inr(monthly_m12)} a month)."})
     big = [c for c in inspiration if re.search(r"large|incumbent|enterprise|leader|giant", c.get("reason") or "", re.I)]
     if len(big) >= 3:
         flags.append({"code": "incumbent_heavy", "severity": "medium", "assumption_keys": [], "evidence_ids": [c["evidence_id"] for c in big],

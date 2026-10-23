@@ -41,3 +41,8 @@ def test_flags_fire_for_an_unfundable_idea():
 
 def test_zero_ramp_is_treated_as_immediate():
     assert break_even_month(1000, 0.1, {**DEFAULTS, "segment_size": 100, "ramp_months": 0, "upfront_cost": 5000, "monthly_cost": 0}) == 1
+
+
+def test_indian_digit_grouping():
+    from app.modules.simulator.service import inr
+    assert (inr(999), inr(1499), inr(3358585), inr(50000000)) == ("₹999", "₹1,499", "₹33,58,585", "₹5,00,00,000")

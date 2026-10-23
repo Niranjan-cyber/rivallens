@@ -10,7 +10,7 @@ from app.auth import UserDep
 from app.db import ConnDep
 from app.modules.comparison.router import competitor_cells
 from app.modules.discovery.pipeline import card_value
-from app.modules.simulator.service import DEFAULTS, simulate, viability_flags
+from app.modules.simulator.service import DEFAULTS, inr, simulate, viability_flags
 
 router = APIRouter(prefix="/api/v1", tags=["simulator"])
 UNITS = {"segment_size": "accounts", "base_conversion": "share", "elasticity_best": "", "elasticity_expected": "", "elasticity_worst": "",
@@ -117,7 +117,7 @@ def replan(conn: Connection, profile_id: UUID, trigger_id: UUID, competitor: str
         return  # not enough price data to simulate yet
     plan = field.split(".")[1] if field.startswith("plans.") else field
     change = f"{plan} {'+' if (delta_pct or 0) > 0 else '−'}{abs(delta_pct):g}%" if delta_pct else plan
-    summary = f"Recommended ₹{before['recommended_price_inr']:,.0f} → ₹{after['recommended_price_inr']:,.0f} because {competitor} {change}"
+    summary = f"Recommended {inr(before['recommended_price_inr'])} → {inr(after['recommended_price_inr'])} because {competitor} {change}"
     save_version(conn, profile_id, before["_overrides"], before["_extra"], trigger_id, summary)
 
 

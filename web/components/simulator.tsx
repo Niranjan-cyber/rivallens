@@ -92,7 +92,7 @@ export function Simulator({ profileId }: { profileId: string }) {
           <thead>
             <tr className="border-b border-dust bg-lifted">
               <th className="p-3 font-medium">Option</th>
-              {(["best", "expected", "worst"] as const).map((s) => <th key={s} className="p-3 font-medium capitalize">{s} case: 12-month revenue · break-even</th>)}
+              {(["Best", "Expected", "Worst"] as const).map((s) => <th key={s} className="p-3 font-medium">{s} case: 12-month revenue, break-even</th>)}
             </tr>
           </thead>
           <tbody>
