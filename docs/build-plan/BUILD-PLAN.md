@@ -73,7 +73,7 @@
 | B14d | Prototype | Opening a product shows it against products in the same category on price, features and add-ons, each value with its source and date, plus premium inspirations from the top of the category. | UC-20, UC-06, S-23 | tdd, fastapi, frontend-design | 1 h | B14c | — | done |
 | B14e | Prototype | On Money, a user uploads a CSV or Excel export (or adds entries by hand) and sees revenue, profit margin against the Indian industry benchmark, product prices, the transaction log and runway. | UC-17, S-24 | tdd, fastapi, frontend-design | 1.25 h | B14b | — | done |
 | B14f | Prototype | Money and the product comparison show competitors' reported revenue, margin and funding, each with a source link and date, or Unknown. | UC-17, UC-20, S-24, S-23 | tdd, fastapi | 0.75 h | B14e, B14d | — | done |
-| B14g | Prototype | On Customers, a user sees reviews and comments from uploads, their own product pages and web mentions, with sentiment and the top requests, each linked to its source. | UC-18, UC-15, S-26 | tdd, fastapi, frontend-design | 1 h | B14b | — | todo |
+| B14g | Prototype | On Customers, a user sees reviews and comments from uploads, their own product pages and web mentions, with sentiment and the top requests, each linked to its source. | UC-18, UC-15, S-26 | tdd, fastapi, frontend-design | 1 h | B14b | — | done |
 | B14h | Prototype | Market shows competitor changes, category news and funding with links, the category price trend, and a 'Simulate a competitor move' control that replaces Demo Lab. | UC-04, UC-10, UC-11, S-25, S-10 | frontend-design, fastapi | 0.75 h | B14b | — | todo |
 | B14i | Prototype | Each product shows a suggested customer segment and a simulator whose inputs come from Market (category prices, receipts), Money (cost, margin, runway) and Customers (sentiment, requests), each input linked to its dashboard. | UC-19, UC-22, UC-07, S-23, S-14 | tdd, fastapi, frontend-design | 1 h | B14d, B14e, B14g | — | todo |
 | B14j | Prototype | Four demo sign-ins (Stride & Co. footwear, a Pune bakery, StackNest SaaS, QuickKart quick commerce) each open with every dashboard filled by running the pipeline on licensed datasets and real public pages. | UC-21, UC-16, UC-17, UC-18, UC-19, S-21, S-22, S-24, S-25, S-26 | fastapi, supabase | 1 h | B14i, B14f, B14h | — | todo |
@@ -420,7 +420,7 @@
 - **Prompt:** `prompts/B14f-competitors-revenue-and-funding-cited.md`
 
 ### B14g — Customers dashboard: what customers actually want
-- **Status:** todo
+- **Status:** done
 - **Goal:** On Customers, a user sees reviews and comments from uploads, their own product pages and web mentions, with sentiment and the top requests, each linked to its source.
 - **Why now:** The third input to the product decisions; replaces MVP B16.
 - **Slice:** UC UC-18, UC-15 · Screens S-26 · Components C-31

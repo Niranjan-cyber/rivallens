@@ -1515,7 +1515,7 @@
       "id": "B14g",
       "title": "Customers dashboard: what customers actually want",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "On Customers, a user sees reviews and comments from uploads, their own product pages and web mentions, with sentiment and the top requests, each linked to its source.",
       "why_now": "The third input to the product decisions; replaces MVP B16.",

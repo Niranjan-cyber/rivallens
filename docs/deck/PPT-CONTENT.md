@@ -135,7 +135,7 @@ flowchart LR
   SAME -- yes --> CMP[Compare ✅<br/>price position vs median,<br/>features, premium, brand ranges]
   SAME -- no --> DROP[Not compared<br/>says which category it is in]
   MO[Money ✅<br/>CSV / Excel / manual] --> MM[Margin vs Damodaran India,<br/>runway ✅]
-  CU[Customers 🛠<br/>reviews, mentions, insight CSVs] --> CS[Sentiment + top requests 🛠]
+  CU[Customers ✅<br/>reviews, mentions, insight CSVs] --> CS[Sentiment + themes, cited ✅]
   CMP --> SEG[Customer segment + simulator 🛠]
   MM --> SEG
   CS --> SEG
@@ -191,14 +191,14 @@ flowchart TB
     D1[Product ✅]
     D2[Money ✅]
     D3[Market ✅]
-    D4[Customers 🛠]
+    D4[Customers ✅]
   end
   subgraph API["FastAPI modular monolith on Render (Singapore)"]
     PRD[products ✅<br/>taxonomy · classify · market comparables]
     MKT[collector · extractor · changes · alerts ·<br/>discovery · comparison · reports ✅]
     SIM[simulator ✅<br/>re-plans on receipts]
     MON[money ✅]
-    CUS[customers 🛠]
+    CUS[customers ✅]
     JOB[jobs table + background work ✅]
     GW[LLM gateway ✅<br/>cache · fallback · replay]
   end
@@ -251,7 +251,7 @@ Layout note:
 | Product ✅ | products (taxonomy, classify, market), simulator | products, market_products, simulations |
 | Money ✅ | money | transactions, money_settings |
 | Market ✅ | collector, extractor, changes, alerts, discovery, comparison, reports | competitors, sources, snapshots, observations, change_events, alerts, reports |
-| Customers 🛠 | customers | customer_mentions |
+| Customers ✅ | customers | customer_mentions, customer_insights, social_metrics |
 
 Icons: `monitor`, `layout-dashboard`, `server`, `database`, `hard-drive`, `sparkles`, `search`, `mail`, `shield-check`, `globe`.
 
@@ -318,7 +318,8 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 | Money: CSV/Excel upload with column check, manual entries, revenue, margin vs Damodaran India benchmark, burn, runway, transaction log | |
 | Four-dashboard navigation (Product, Money, Market, Customers) | |
 | Competitors' revenue and funding from filings and news, each a verbatim quote with its link (e.g. Campus Activewear Q1 FY26 revenue ₹343.3 cr from its press release) | |
-| Products (existing/new) in exact Google-taxonomy categories | Customers: uploads, own-site reviews, web mentions → sentiment and top requests |
+| Products (existing/new) in exact Google-taxonomy categories | |
+| Customers: review/comment/insight uploads, own-page reviews, web mentions → sentiment and themes (requests, complaints, praise), each opening its quotes | |
 | Like-for-like comparison from real brand product pages: price position vs median, features, premium inspirations, brand ranges | Customer segment per product; simulator fed by Money, Market and Customers |
 | Change detection + noise ledger | "Simulate a competitor move" inside Market (replaces the Demo Lab page) |
 | Receipts with frozen evidence | Four demo businesses (footwear D2C, bakery, SaaS, quick commerce) built from real datasets |
