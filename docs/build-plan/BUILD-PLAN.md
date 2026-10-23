@@ -70,7 +70,7 @@
 | B14a | Prototype | A new user signs up with email, confirms it from a real verification email (or uses Google), and lands signed in; each demo business has its own sign-in. | UC-21, UC-01, UC-13, S-02 | supabase, vercel-react-best-practices, frontend-design | 0.75 h | B14 | — | in-progress |
 | B14b | Prototype | After sign-up, a user fills a short onboarding form, confirms the drafted business card, and lands on a main dashboard with four dashboards: Product, Money, Market and Customers. | UC-21, UC-02, S-20, S-21, S-06 | frontend-design, fastapi | 1 h | B14a | — | done |
 | B14c | Prototype | On Product, a user sees Existing and New products, adds one, and gets its exact category from the Google product taxonomy (a football lands in Soccer Balls, a chair in Chairs). | UC-16, S-22 | supabase-postgres-best-practices, tdd, fastapi, frontend-design | 1 h | B14b | — | done |
-| B14d | Prototype | Opening a product shows it against products in the same category on price, features and add-ons, each value with its source and date, plus premium inspirations from the top of the category. | UC-20, UC-06, S-23 | tdd, fastapi, frontend-design | 1 h | B14c | — | todo |
+| B14d | Prototype | Opening a product shows it against products in the same category on price, features and add-ons, each value with its source and date, plus premium inspirations from the top of the category. | UC-20, UC-06, S-23 | tdd, fastapi, frontend-design | 1 h | B14c | — | done |
 | B14e | Prototype | On Money, a user uploads a CSV or Excel export (or adds entries by hand) and sees revenue, profit margin against the Indian industry benchmark, product prices, the transaction log and runway. | UC-17, S-24 | tdd, fastapi, frontend-design | 1.25 h | B14b | — | todo |
 | B14f | Prototype | Money and the product comparison show competitors' reported revenue, margin and funding, each with a source link and date, or Unknown. | UC-17, UC-20, S-24, S-23 | tdd, fastapi | 0.75 h | B14e, B14d | — | todo |
 | B14g | Prototype | On Customers, a user sees reviews and comments from uploads, their own product pages and web mentions, with sentiment and the top requests, each linked to its source. | UC-18, UC-15, S-26 | tdd, fastapi, frontend-design | 1 h | B14b | — | todo |
@@ -373,7 +373,7 @@
 - **Prompt:** `prompts/B14c-products-in-exact-market-categories.md`
 
 ### B14d — Like-for-like product comparison and inspirations
-- **Status:** todo
+- **Status:** done
 - **Goal:** Opening a product shows it against products in the same category on price, features and add-ons, each value with its source and date, plus premium inspirations from the top of the category.
 - **Why now:** The user's core ask for the Product layer; reuses the comparison engine.
 - **Slice:** UC UC-20, UC-06 · Screens S-23 · Components C-11, C-29

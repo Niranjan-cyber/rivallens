@@ -1330,7 +1330,7 @@
       "id": "B14d",
       "title": "Like-for-like product comparison and inspirations",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "Opening a product shows it against products in the same category on price, features and add-ons, each value with its source and date, plus premium inspirations from the top of the category.",
       "why_now": "The user's core ask for the Product layer; reuses the comparison engine.",
