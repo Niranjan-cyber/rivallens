@@ -19,7 +19,9 @@ from app.modules.discovery.service import blocked, india_signals, registrable_do
 
 log = logging.getLogger("discovery")
 TAVILY_KEY = os.getenv("TAVILY_API_KEY", "").strip()
-MIN_SIMILARITY = 0.05  # spec says 0.08 (E2E Networks scores 0.059); 0.03 let in unrelated SaaS (D-59, L-17)
+# Spec says 0.08. Search hits need 0.05 (0.03 let in unrelated SaaS); AI suggestions were already judged relevant by the
+# model, so 0.02 is enough (CtrlS, an Indian host with ₹ pricing, scored 0.03). D-59, L-17.
+MIN_SIMILARITY = {"llm": 0.02, "search": 0.05}
 
 
 class Candidate(BaseModel):
@@ -89,8 +91,8 @@ def verify(c: dict, ctext: str) -> dict:
     body = split_sections(page["html"])[0] + ("\n" + split_sections(pricing_html)[0] if page_type == "pricing" else "")
     signals, sim = india_signals(body, url), similarity(ctext, body)
     reasons = [f"India signals: {', '.join(signals['hits'])}" if signals["score"] else "no India signals on the homepage",
-               f"similarity {sim:.2f}" + ("" if sim >= MIN_SIMILARITY else " (too different from your card)")]
-    ok = signals["score"] >= 1 and sim >= MIN_SIMILARITY
+               f"similarity {sim:.2f}" + ("" if sim >= MIN_SIMILARITY[c["via"]] else " (too different from your card)")]
+    ok = signals["score"] >= 1 and sim >= MIN_SIMILARITY[c["via"]]
     return {**out, "status": "verified" if ok else "rejected", "reasons": reasons, "signals": signals, "similarity": sim, "page": (url, page_type)}
 
 
@@ -113,7 +115,7 @@ def discover(job: Job, profile_id: UUID) -> dict:
         gen = Candidates(queries=[f"{ctext[:80]} India"], candidates=[])
     job.step("generate_candidates", "done", len(gen.candidates), f"{len(gen.candidates)} suggested")
 
-    pool = {registrable_domain(c.domain): {"name": c.name, "domain": registrable_domain(c.domain), "origin": "ai_suggested"}
+    pool = {registrable_domain(c.domain): {"name": c.name, "domain": registrable_domain(c.domain), "origin": "ai_suggested", "via": "llm"}
             for c in gen.candidates[:10] if c.domain}
     category = card_value(card, "category") or ctext[:60]
     queries = [f"{category} India pricing ₹ per month", *gen.queries][:3]
@@ -123,7 +125,7 @@ def discover(job: Job, profile_id: UUID) -> dict:
             for r in _tavily(q):
                 d = registrable_domain(r.get("url", ""))
                 if d and not blocked(r["url"]) and d not in pool:
-                    pool[d] = {"name": d.split(".")[0].replace("-", " ").title(), "domain": d, "origin": "ai_suggested"}
+                    pool[d] = {"name": d.split(".")[0].replace("-", " ").title(), "domain": d, "origin": "ai_suggested", "via": "search"}
                     found += 1
         job.step("search", "done", found, f"{found} more from {len(queries)} web searches")
     else:

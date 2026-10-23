@@ -1,0 +1,12 @@
+# C-25 keep-warm: Render Free sleeps after 15 idle minutes; a cold start costs ~50 s on a judge's first click.
+name: keep-warm
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: curl -fsS --max-time 90 https://rivallens-api.onrender.com/healthz

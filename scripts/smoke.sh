@@ -12,10 +12,14 @@ check() { # url, expected text
 check "$FRONTEND_URL/" "RivalLens"
 check "$FRONTEND_URL/login" "Try demo account"
 check "$FRONTEND_URL/app" "Demo Lab"
+check "$FRONTEND_URL/mock/seed-nimbusdeploy/nimbusdeploy" "Demo data: fictional company"
+check "$FRONTEND_URL/robots.txt" "/mock/"
 
 if [[ -n "${BACKEND_URL:-}" ]]; then
   check "$BACKEND_URL/healthz" '"ok"'
   code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$BACKEND_URL/api/v1/profiles")
   [[ "$code" == 401 ]] && echo "ok   $BACKEND_URL/api/v1/profiles (401 without token)" || { echo "FAIL profiles without token returned $code"; exit 1; }
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$BACKEND_URL/api/v1/demo/mocks")
+  [[ "$code" == 401 ]] && echo "ok   $BACKEND_URL/api/v1/demo/mocks (401 without token)" || { echo "FAIL demo/mocks without token returned $code"; exit 1; }
 fi
 echo "smoke passed"
