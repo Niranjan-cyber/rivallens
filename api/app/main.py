@@ -12,6 +12,7 @@ from app.modules.changes.router import router as changes_router
 from app.modules.comparison.router import router as comparison_router
 from app.modules.demo.router import router as demo_router
 from app.modules.discovery.router import router as discovery_router
+from app.modules.customers.router import router as customers_router
 from app.modules.money.router import router as money_router
 from app.modules.products.router import router as products_router
 from app.modules.profiles.router import router as profiles_router
@@ -37,6 +38,7 @@ app.add_middleware(
 app.include_router(profiles_router)
 app.include_router(products_router)
 app.include_router(money_router)
+app.include_router(customers_router)
 app.include_router(demo_router)
 app.include_router(changes_router)
 app.include_router(alerts_router)
