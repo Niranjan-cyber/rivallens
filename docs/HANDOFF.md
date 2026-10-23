@@ -63,8 +63,8 @@ Read this first in a new session. Then read `AGENTS.md`, which loads automatical
 | B14f | done | Competitors' revenue, profit and funding from news and filings. Kept only if the quote is word for word in the source, the amount matches, it isn't a comparison figure, and results state a period (D-80). Shown on Money and on product Brands | `api/app/modules/money/facts.py`, `web/components/rival-money.tsx` |
 | B14g | done | Customers (S-26). Uploads (reviews, comments, social insight exports), own-page JSON-LD reviews, web mentions (brand word + customer voice; no social or company-database sites). LLM sentiment plus up to 8 themes (request, complaint, praise), each citing mention ids that exist | `api/app/modules/customers/{service,router}.py`, `web/components/customers.tsx` |
 | B14h | done | Market (S-09, slug `dashboard`). "Simulate a competitor move" (demo accounts with mock instances; replaces Demo Lab in the header), "Check competitors now", category prices now, Indian market news (Tavily news, Indian business domains, at least 2 market words) | `web/components/market-extras.tsx`, `api/app/modules/products/news.py` |
-| **B14i** | **next** | Customer segment plus a per-product simulator fed by every dashboard | see §5 |
-| B14j | todo | Four demo businesses built from real data | see §5 |
+| B14i | done | Customer segment plus a per-product simulator fed by every dashboard | see §5 |
+| **B14j** | **next** | Four demo businesses built from real data | see §5 |
 | B14k | todo | Exit: golden path v2 twice, README, deck, public repo | see §5 |
 
 **Shared helpers to reuse:**

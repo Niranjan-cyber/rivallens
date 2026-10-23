@@ -320,7 +320,8 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 | Competitors' revenue and funding from filings and news, each a verbatim quote with its link (e.g. Campus Activewear Q1 FY26 revenue ₹343.3 cr from its press release) | |
 | Products (existing/new) in exact Google-taxonomy categories | |
 | Customers: review/comment/insight uploads, own-page reviews, web mentions → sentiment and themes (requests, complaints, praise), each opening its quotes | |
-| Like-for-like comparison from real brand product pages: price position vs median, features, premium inspirations, brand ranges | Customer segment per product; simulator fed by Money, Market and Customers |
+| Like-for-like comparison from real brand product pages: price position vs median, features, premium inspirations, brand ranges | |
+| Per product: a suggested customer segment that must cite its evidence (price position, review themes, onboarding answers), and a price simulator whose inputs come from Market (category median, receipts), Money (unit cost from the Damodaran margin, runway) and Customers (sentiment ±20%, requests), each a chip linking to its dashboard | |
 | Change detection + noise ledger | |
 | Market: "Simulate a competitor move" next to "Check competitors now", category prices now, Indian market news and funding with links | |
 | Receipts with frozen evidence | Four demo businesses (footwear D2C, bakery, SaaS, quick commerce) built from real datasets |

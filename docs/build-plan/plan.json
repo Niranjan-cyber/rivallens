@@ -1637,7 +1637,7 @@
       "id": "B14i",
       "title": "Customer segment and a simulator fed by every dashboard",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "Each product shows a suggested customer segment and a simulator whose inputs come from Market (category prices, receipts), Money (cost, margin, runway) and Customers (sentiment, requests), each input linked to its dashboard.",
       "why_now": "Ties the four dashboards together; the decision layer the user described.",
