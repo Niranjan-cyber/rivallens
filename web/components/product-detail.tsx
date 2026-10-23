@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { inr } from "@/components/money";
+import { ProductPlan } from "@/components/product-plan";
 import { rupees } from "@/components/products";
 import { api, type Job, type Product } from "@/lib/api";
 
@@ -115,6 +116,8 @@ export function ProductDetail() {
           {note && <p role="status" className="mt-3 text-[14px] text-charcoal">{note}</p>}
         </div>
       </div>
+
+      <ProductPlan productId={p.id} profileId={p.profile_id} version={data} />
 
       <div role="tablist" className="mt-8 flex w-fit gap-1 rounded-pill bg-lifted p-1">
         {([["compare", `Compare (${data.rows.length})`], ["premium", `Premium inspirations (${data.premium.length})`], ["brands", `Brands (${data.brands.length})`]] as const).map(([k, label]) => (

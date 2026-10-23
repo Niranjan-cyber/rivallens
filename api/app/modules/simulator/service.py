@@ -96,3 +96,56 @@ def viability_flags(sim: dict, comparables: list[dict], inspiration: list[dict])
         flags.append({"code": "incumbent_heavy", "severity": "medium", "assumption_keys": [], "evidence_ids": [c["evidence_id"] for c in big],
                       "text": "Large incumbents dominate: " + "; ".join(f"{c['name']} ({c['reason']})" for c in big[:3])})
     return flags
+
+
+# ---- B14i: per-product inputs from the other dashboards. They feed the formula above; they don't change it. ----
+
+def sentiment_shift(split: dict) -> float | None:
+    """Customers' net sentiment moves base conversion by at most ±20%; under 3 labelled mentions it moves nothing."""
+    pos, neg, neu = (split.get(k, 0) for k in ("positive", "negative", "neutral"))
+    n = pos + neg + neu
+    return round(max(-0.2, min(0.2, 0.2 * (pos - neg) / n)), 3) if n >= 3 else None
+
+
+def _words(s: str) -> set[str]:
+    from app.modules.products.taxonomy import tokens
+    return tokens(s)
+
+
+def feature_coverage(mine: list[str], theirs: list[list[str]]) -> float:
+    """Share of the comparables' features that share a word with one of this product's features."""
+    union = list({f.lower(): f for fs in theirs for f in fs}.values())
+    if not union:
+        return 0.5
+    own = set().union(*(_words(f) for f in mine)) if mine else set()
+    return sum(bool(_words(f) & own) for f in union) / len(union)
+
+
+def request_boost(f: float, mine: list[str], themes: list[dict]) -> tuple[float, list[str]]:
+    """Each customer request this product already answers adds 0.05 to feature coverage (capped at 1)."""
+    own = set().union(*(_words(x) for x in mine)) if mine else set()
+    covered = [t["label"] for t in themes if t["kind"] == "request" and _words(t["label"]) & own]
+    return round(min(1.0, f + 0.05 * len(covered)), 2), covered
+
+
+def unit_cost(price: float, own: float | None, gross_margin: float | None) -> tuple[float | None, str]:
+    if own is not None:
+        return own, "product"
+    if gross_margin is not None:
+        return round(price * (1 - gross_margin)), "benchmark"
+    return None, "default"
+
+
+def runway_flag(option: dict, runway_months: float | None) -> dict | None:
+    be = option["scenarios"]["expected"]["break_even_month"]
+    if runway_months is None or (be is not None and be <= runway_months):
+        return None
+    return {"code": "break_even_after_runway", "severity": "high", "evidence_ids": [], "assumption_keys": [],
+            "text": f"Cash lasts about {runway_months:g} months at the current burn, but this price "
+                    + (f"breaks even in month {be}." if be else "doesn't break even within 36 months.")}
+
+
+def checked_segment(seg: dict, evidence: set[str]) -> dict | None:
+    """Keep a suggested segment only if it cites evidence that exists."""
+    ids = [i for i in seg.get("evidence_ids", []) if i in evidence]
+    return {**seg, "evidence_ids": ids} if ids and seg.get("segment") else None

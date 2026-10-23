@@ -247,7 +247,11 @@ def add_comparable(product_id: UUID, body: ComparableIn, user: UserDep, conn: Co
 
 @router.get("/products/{product_id}/comparison")
 def product_comparison(product_id: UUID, user: UserDep, conn: ConnDep) -> dict:
-    p = _owned_product(conn, product_id, user.id)
+    return comparison_data(conn, _owned_product(conn, product_id, user.id))
+
+
+def comparison_data(conn: Connection, p: dict) -> dict:
+    """Shared with the product simulator (B14i)."""
     rows = [dict(r) for r in conn.execute(text("""
         select distinct on (domain, lower(name)) url, domain, name, brand, niche, price, currency, rating, review_count, features, observed_at
         from market_products where taxonomy_id = :t and url is distinct from :own

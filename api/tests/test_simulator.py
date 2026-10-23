@@ -46,3 +46,47 @@ def test_zero_ramp_is_treated_as_immediate():
 def test_indian_digit_grouping():
     from app.modules.simulator.service import inr
     assert (inr(999), inr(1499), inr(3358585), inr(50000000)) == ("₹999", "₹1,499", "₹33,58,585", "₹5,00,00,000")
+
+
+# ---- B14i: per-product inputs from Money, Customers and Market ----
+from app.modules.simulator.service import checked_segment, feature_coverage, request_boost, runway_flag, sentiment_shift, unit_cost
+
+
+def test_sentiment_shift_is_bounded_and_needs_three_labelled_mentions():
+    assert sentiment_shift({"positive": 1, "negative": 1}) is None  # too few to move anything
+    assert sentiment_shift({"positive": 3, "negative": 1, "neutral": 1, "unrated": 9}) == 0.08  # 0.2 × (3 − 1) / 5
+    assert sentiment_shift({"negative": 10}) == -0.2
+    assert sentiment_shift({"positive": 10}) == 0.2
+
+
+def test_feature_coverage_by_shared_words():
+    assert feature_coverage(["Cushioned midsole", "Breathable mesh"], [["EVA cushioning midsole"], ["Rubber outsole", "breathable mesh upper"]]) == 2 / 3
+    assert feature_coverage(["anything"], []) == 0.5  # nothing to compare against
+
+
+def test_requests_the_product_covers_raise_coverage():
+    themes = [{"label": "Wider sizes", "kind": "request"}, {"label": "Mesh that breathes", "kind": "request"},
+              {"label": "Breathable mesh", "kind": "praise"}]
+    f, covered = request_boost(0.5, ["Breathable mesh upper"], themes)
+    assert (f, covered) == (0.55, ["Mesh that breathes"])
+    assert request_boost(0.98, ["mesh"], themes)[0] == 1.0
+
+
+def test_unit_cost_prefers_the_product_then_the_industry_margin():
+    assert unit_cost(1999, 800, 0.5) == (800, "product")
+    assert unit_cost(2000, None, 0.535) == (930, "benchmark")
+    assert unit_cost(2000, None, None) == (None, "default")
+
+
+def test_runway_flag_when_break_even_is_later_than_runway():
+    opt = {"scenarios": {"expected": {"break_even_month": 9}}}
+    assert runway_flag(opt, 4.5)["code"] == "break_even_after_runway"
+    assert runway_flag(opt, 12) is None
+    assert runway_flag(opt, None) is None  # profitable or no cash entered
+    assert runway_flag({"scenarios": {"expected": {"break_even_month": None}}}, 30)["severity"] == "high"
+
+
+def test_segment_must_cite_existing_evidence():
+    ev = {"E1", "E2", "E3"}
+    assert checked_segment({"segment": "Weekend runners", "why": ["a"], "evidence_ids": ["E1", "E9"]}, ev)["evidence_ids"] == ["E1"]
+    assert checked_segment({"segment": "Anyone", "why": [], "evidence_ids": ["E7"]}, ev) is None

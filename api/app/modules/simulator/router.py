@@ -10,7 +10,9 @@ from app.auth import UserDep
 from app.db import ConnDep
 from app.modules.comparison.router import competitor_cells
 from app.modules.discovery.pipeline import card_value
-from app.modules.simulator.service import DEFAULTS, inr, simulate, viability_flags
+from app.llm.gateway import LLMUnavailable, complete_json
+from app.modules.simulator.service import (DEFAULTS, checked_segment, feature_coverage, inr, request_boost, runway_flag,
+                                           sentiment_shift, simulate, unit_cost, viability_flags)
 
 router = APIRouter(prefix="/api/v1", tags=["simulator"])
 UNITS = {"segment_size": "accounts", "base_conversion": "share", "elasticity_best": "", "elasticity_expected": "", "elasticity_worst": "",
@@ -150,3 +152,131 @@ def add_option(profile_id: UUID, body: OptionIn, user: UserDep, conn: ConnDep) -
     _own(conn, profile_id, user.id)
     current = _load(conn, profile_id) or {"_overrides": {}, "_extra": None}
     return _public(save_version(conn, profile_id, current["_overrides"], body.price_inr))
+
+
+# ---- B14i: a simulator and a suggested segment per product, fed by Market, Money and Customers ----
+
+LINKS = {"market": "dashboard", "money": "money", "customers": "customers", "product": "product-detail", "default": None}
+
+
+def _in(label: str, value: str, source: str, evidence_id: str | None = None) -> dict:
+    return {"label": label, "value": value, "source": source, "link": LINKS[source], "evidence_id": evidence_id}
+
+
+def _product(conn: Connection, product_id: UUID, user_id: UUID) -> tuple[dict, dict, dict]:
+    from app.modules.products.router import _owned_product, comparison_data
+    p = _owned_product(conn, product_id, user_id)
+    card = conn.execute(text("select card from profiles where id = :p"), {"p": p["profile_id"]}).scalar() or {}
+    return p, card, comparison_data(conn, p)
+
+
+def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
+    from app.modules.customers.router import customer_summary
+    from app.modules.money.router import money_summary
+    pid, pos, inputs = p["profile_id"], comp["position"], []
+    price = float(p["price"]) if p["price"] is not None else None
+    if pos["n"] >= 2:
+        m = pos["median"]
+        basis = "same-niche" if comp["basis"] == "niche" else "same-category"
+        inputs.append(_in("Market price (median)", f"{inr(m)} across {pos['n']} {basis} products", "market"))
+    else:
+        priced = [c for c in _market(conn, pid)[0] if c["price_inr"]]
+        if len(priced) >= 2:
+            m = statistics.median(c["price_inr"] for c in priced)
+            inputs.append(_in("Market price (median)", f"{inr(m)} across {len(priced)} monitored competitors", "market"))
+        elif price:
+            m = price
+            inputs.append(_in("Market price", f"{inr(m)}: your own price, no market prices yet", "product"))
+        else:
+            raise HTTPException(409, {"code": "insufficient_price_data", "message": "Find comparable products or set this product's price first."})
+    receipt = conn.execute(text("""select e.id, c.name, e.delta_pct from change_events e join competitors c on c.id = e.competitor_id
+        where c.profile_id = :p and e.change_type like 'price_%' order by e.observed_at desc limit 1"""), {"p": pid}).mappings().first()
+    if receipt:
+        d = receipt["delta_pct"]
+        inputs.append(_in("Latest competitor price change", f"{receipt['name']} {float(d):+g}%" if d is not None else receipt["name"],
+                          "market", str(receipt["id"])))
+    a = {**DEFAULTS, **(card_value(card, "sim_assumptions") or {})}
+    if p["stage"] == "existing":
+        a["upfront_cost"] = 0
+        inputs.append(_in("Launch cost", "₹0: already selling", "product"))
+    money = money_summary(conn, pid, card)
+    met, bench = money["metrics"], money["benchmark"] or {}
+    runway = met["runway_months"]
+    uc, uc_source = unit_cost(price or m, float(p["unit_cost"]) if p["unit_cost"] is not None else None, bench.get("gross_margin"))
+    if uc is not None:
+        inputs.append(_in("Unit cost", f"{inr(uc)} (yours)" if uc_source == "product" else
+                          f"{inr(uc)}: {bench['industry']} gross margin {bench['gross_margin']:.1%}, Damodaran India",
+                          "product" if uc_source == "product" else "money"))
+    if met["operating_margin"] is not None:
+        inputs.append(_in("Your operating margin", f"{met['operating_margin']:.1%}", "money"))
+    inputs.append(_in("Runway", f"{runway:g} months" if runway is not None else
+                      "not burning cash" if money["transactions_count"] and money["cash"] is not None else "unknown: add cash and transactions", "money"))
+    cs = customer_summary(conn, pid)
+    shift = sentiment_shift(cs["sentiment"])
+    if shift is not None:
+        a["base_conversion"] = round(a["base_conversion"] * (1 + shift), 4)
+        sp = cs["sentiment"]
+        inputs.append(_in("Customer sentiment", f"{sp.get('positive', 0)} positive, {sp.get('negative', 0)} negative → conversion {shift:+.0%}", "customers"))
+    features = [str(x) for x in p["features"] or []]
+    f, covered = request_boost(feature_coverage(features, [r["features"] or [] for r in comp["rows"]]), features, cs["themes"])
+    inputs.append(_in("Feature coverage", f"{f:.0%} of comparables' features", "market"))
+    if covered:
+        inputs.append(_in("Customer requests you answer", ", ".join(covered[:3]), "customers"))
+    sim = simulate(m, f, a, planned=price)
+    flags = []
+    for o in sim["options"]:
+        if uc is not None:
+            o["unit_margin_inr"] = round(o["price_inr"] - uc)
+            o["gross_profit_12m_inr"] = round(o["scenarios"]["expected"]["revenue_12m_inr"] * (1 - uc / o["price_inr"]))
+        o["after_runway"] = runway_flag(o, runway) is not None
+    chosen = next(o for o in sim["options"] if o["id"] == sim["recommended_option"])
+    if flag := runway_flag(chosen, runway):
+        flags.append(flag)
+    if uc is not None and chosen["unit_margin_inr"] <= 0:
+        flags.append({"code": "negative_unit_margin", "severity": "high", "evidence_ids": [], "assumption_keys": [],
+                      "text": f"At {inr(chosen['price_inr'])} each unit costs more than it sells for ({inr(uc)})."})
+    return sim | {"assumptions": a, "inputs": inputs, "viability_flags": flags, "price_unit": "" if p["unit"] == "one_time" else f"/{p['unit']}",
+                  "label": "Scenario model, not a forecast", "product_id": str(p["id"])}
+
+
+@router.get("/products/{product_id}/simulation")
+def get_product_simulation(product_id: UUID, user: UserDep, conn: ConnDep) -> dict:
+    return product_sim(conn, *_product(conn, product_id, user.id))
+
+
+class Segment(BaseModel):
+    segment: str = Field(description="Who to sell this product to, in under 12 words")
+    why: list[str] = Field(description="2-4 short reasons, each grounded in the evidence")
+    evidence_ids: list[str] = Field(description="Ids of the evidence lines the reasons rest on")
+
+
+@router.get("/products/{product_id}/segment")
+def get_segment(product_id: UUID, user: UserDep, conn: ConnDep) -> dict:
+    from app.modules.customers.router import customer_summary
+    p, card, comp = _product(conn, product_id, user.id)
+    pos, evidence = comp["position"], {}
+    if pos["pct_vs_median"] is not None:
+        side = "above" if pos["pct_vs_median"] >= 0 else "below"
+        evidence["P1"] = {"text": f"Price {inr(float(p['price']))} is {abs(pos['pct_vs_median'])}% {side} the median {inr(pos['median'])} "
+                                  f"of {pos['n']} comparable products", "source": "market"}
+    themes = customer_summary(conn, p["profile_id"])["themes"][:6]
+    for i, t in enumerate(themes, 1):
+        evidence[f"T{i}"] = {"text": f"Customer {t['kind']}: {t['label']} ({t['count']} mentions)", "source": "customers"}
+    if tc := card_value(card, "target_customer"):
+        evidence["C1"] = {"text": f"Target customer named at onboarding: {tc}", "source": "profile"}
+    if cities := card_value(card, "india_markets"):
+        evidence["C2"] = {"text": "Where it sells: " + ", ".join(cities if isinstance(cities, list) else [str(cities)]), "source": "profile"}
+    out = {"segment": None, "why": [], "evidence_ids": [], "evidence": [{"id": k, **v} for k, v in evidence.items()]}
+    if not evidence:
+        return out | {"message": "Set a price, find comparables or collect customer reviews first."}
+    try:
+        seg = complete_json("product_segment", Segment, {
+            "instructions": "Suggest the customer segment this product should target in India. Use only the evidence lines and cite their ids. "
+                            "Cite the price line and at least two customer themes when they exist. No invented facts or numbers.",
+            "product": f"{p['name']} ({p['niche'] or p['category_path'] or ''})",
+            "evidence": "\n".join(f"{k}: {v['text']}" for k, v in evidence.items()),
+        }, "product_segment.v1")
+    except LLMUnavailable:
+        return out | {"message": "The AI is busy; try again in a minute."}
+    checked = checked_segment(seg.model_dump(), set(evidence))
+    return out | (checked or {"message": "The suggestion didn't cite any evidence, so it was dropped."})
