@@ -7,6 +7,13 @@ import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 
 type Mode = "login" | "signup";
+const DEMO_PASSWORD = "RivalLens-demo-2026";
+const DEMOS = [
+  { email: "stride@rivallens.demo", name: "Stride & Co.", what: "Running shoes, Pune" },
+  { email: "bakery@rivallens.demo", name: "Kesar Bakehouse", what: "Bakery café, Pune" },
+  { email: "stacknest@rivallens.demo", name: "StackNest", what: "App hosting SaaS, Pune" },
+  { email: "quickkart@rivallens.demo", name: "QuickKart", what: "Quick commerce, Bengaluru" },
+];
 
 export default function Login() {
   const router = useRouter();
@@ -40,23 +47,13 @@ export default function Login() {
     router.push("/app");
   }
 
-  async function tryDemo() {
+  // B14j: four demo businesses built from real data by api/scripts/build_demo.py (D-76); shared sign-ins, listed in the README.
+  async function signInDemo(email: string) {
     setBusy("demo");
     setMessage(null);
-    const { error } = await supabase.auth.signInAnonymously();
-    if (error) {
-      setBusy(null);
-      return setMessage(`Demo unavailable: ${error.message}. You can still create an account.`);
-    }
-    try {
-      await api("/api/v1/demo/guest-clone", { method: "POST" });
-    } catch (err) {
-      // already_cloned means this browser already has its demo copy; anything else is a real failure.
-      if (!(err instanceof Error && err.message.includes("already loaded"))) {
-        setBusy(null);
-        return setMessage(`${(err as Error).message} You can still create an account.`);
-      }
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password: DEMO_PASSWORD });
+    setBusy(null);
+    if (error) return setMessage(`Demo unavailable: ${error.message}. You can still create an account.`);
     router.push("/app");
   }
 
@@ -93,11 +90,17 @@ export default function Login() {
           </p>
         )}
         <div className="mt-6 border-t border-ink/10 pt-6">
-          <button type="button" onClick={tryDemo} disabled={busy !== null}
-            className="min-h-11 w-full rounded-btn border-[1.5px] border-ink bg-white text-[16px] font-medium disabled:opacity-60">
-            {busy === "demo" ? "Loading demo data…" : "Try demo account"}
-          </button>
-          <p className="mt-2 text-center text-[13px] text-slate">No sign-up. You get a private copy of four demo businesses.</p>
+          <p className="text-[14px] font-medium">Or open a demo business</p>
+          <p className="mt-1 text-[13px] text-slate">Fictional businesses built from real datasets and public pages. Shared with other visitors.</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {DEMOS.map((d) => (
+              <button key={d.email} type="button" onClick={() => signInDemo(d.email)} disabled={busy !== null}
+                className="rounded-btn border-[1.5px] border-ink bg-white p-3 text-left disabled:opacity-60">
+                <span className="block text-[15px] font-medium">{d.name}</span>
+                <span className="block text-[12px] text-slate">{d.what}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </main>

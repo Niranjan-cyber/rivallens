@@ -22,7 +22,7 @@ from app.modules.money.service import parse_amount, parse_date
 router = APIRouter(prefix="/api/v1", tags=["customers"])
 SOCIAL = re.compile(r"//(www\.)?(youtube|youtu\.be|instagram|facebook|x|twitter|linkedin)\.", re.I)
 # Company databases and job sites describe the business, not what customers say.
-NOT_VOICE = re.compile(r"(^|\.)(cbinsights|tracxn|crunchbase|rocketreach|zaubacorp|glassdoor|ambitionbox|owler|pitchbook|craft|wikipedia|zoominfo)\.", re.I)
+NOT_VOICE = re.compile(r"(^|\.)(cbinsights|tracxn|crunchbase|rocketreach|zaubacorp|glassdoor|ambitionbox|indeed|naukri|bbb|owler|pitchbook|craft|wikipedia|zoominfo)\.", re.I)
 ANALYSE_LIMIT = 80
 VOICE = re.compile(r"\b(review|reviews|tried|ordered|order|taste|tasted|delivery|delivered|bought|love|loved|quality|recommend|worst|best|disappoint\w*|service|value for money)\b", re.I)
 

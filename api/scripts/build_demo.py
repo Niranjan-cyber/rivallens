@@ -54,6 +54,21 @@ BUSINESSES = {
         "mocks": ["nimbusdeploy", "kitehost", "orbitly"],
         "comparables": [],
     },
+    "bakery": {
+        "email": "bakery@rivallens.demo",
+        "about": {"name": "Kesar Bakehouse", "business_type": "Local business", "city": "Pune",
+                  "description": "Neighbourhood bakery café: fresh breads, brownies, cakes and coffee",
+                  "products": "Choco chip brownie, Chocolate cake slice, Cappuccino", "funding_stage": "Bootstrapped",
+                  "target_customer": "Students and young professionals near Koregaon Park"},
+        "basis": "The Bread Basket bakery's real transactions, priced from Theobroma's public menu",
+        "prices": {"Choco chip brownie": 110, "Chocolate cake slice": 155, "Cappuccino": 175},
+        "money_files": ["bakery/orders-apr2026-aug2026.csv"],
+        "review_files": ["bakery/reviews-amazon-fine-food-baked-goods.csv"],
+        "rivals": ["Theobroma"],
+        "competitors": ["https://theobroma.in/"],
+        "mocks": [],
+        "comparables": ["Choco chip brownie", "Chocolate cake slice"],
+    },
     "quickkart": {
         "email": "quickkart@rivallens.demo",
         "about": {"name": "QuickKart", "business_type": "Startup", "city": "Bengaluru",
@@ -187,7 +202,7 @@ def build(key: str) -> None:
         wait(c, c.post(f"/api/v1/products/{ids[name]}/comparables/find").raise_for_status().json()["job_id"], f"comparables for {name}")
     if b["rivals"]:
         wait(c, c.post(f"/api/v1/profiles/{pid}/money/rivals/find", json={"companies": b["rivals"]}).raise_for_status().json()["job_id"], "competitor money")
-    if b.get("collect", True):
+    if b.get("collect"):  # off for demo businesses: they are fictional, so any web mention is about someone else
         wait(c, c.post(f"/api/v1/profiles/{pid}/customers/collect").raise_for_status().json()["job_id"], "customer mentions")
     r = c.post(f"/api/v1/profiles/{pid}/market/news")
     log("  market news:", r.json() if r.is_success else r.text[:160])
