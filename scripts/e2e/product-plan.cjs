@@ -37,7 +37,7 @@ const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
     await page.getByRole("link", { name: "Product" }).first().click();
     await page.locator("li", { hasText: "Stride Runner" }).getByText("Google product taxonomy").waitFor({ timeout: 120000 });
     const productUrl = BASE + await page.getByRole("link", { name: "Stride Runner" }).first().getAttribute("href");
-    await page.getByRole("link", { name: "Money" }).first().click();
+    await page.getByRole("link", { name: "Finance" }).first().click();
     await page.locator("[data-screen=S-24]").waitFor();
     const FIX = "C:/Career/Hackathons/Pulzion HackNova/fixtures/demo/stride/";
     for (const f of ["orders-oct2025-sep2026.xlsx", "bank-statement-oct2025-sep2026.csv"]) {

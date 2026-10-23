@@ -18,7 +18,7 @@ const flat = (s, n = 500) => s.replace(/\s+/g, " ").slice(0, n);
       await page.waitForTimeout(2500);
       console.log(`\n== ${name}\nOVERVIEW:`, flat(await page.locator("[data-screen=S-21]").innerText(), 700));
       await page.screenshot({ path: `${OUT}/b14j-${tag}-overview.png`, fullPage: true });
-      for (const [nav, screen, len] of [["Product", "S-22", 500], ["Money", "S-24", 700], ["Market", "S-09", 700], ["Customers", "S-26", 500]]) {
+      for (const [nav, screen, len] of [["Product", "S-22", 500], ["Finance", "S-24", 700], ["Market", "S-09", 700], ["Customers", "S-26", 500]]) {
         await page.locator("nav[aria-label=Dashboards]").getByRole("link", { name: nav, exact: true }).click();
         await page.locator(`[data-screen=${screen}]`).waitFor();
         await page.waitForTimeout(3500);

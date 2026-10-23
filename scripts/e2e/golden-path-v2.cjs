@@ -1,4 +1,4 @@
-// B14k golden path v2 on the live app, as Stride & Co.: Overview → Product → Money → Customers → Market (simulate a move,
+// B14k golden path v2 on the live app, as Stride & Co.: Overview → Product → Finance → Customers → Market (simulate a move,
 // check competitors, receipt) → Product re-plans → Report → switch to the bakery.
 // node golden-path-v2.cjs <playwright-core> <out-dir> <chrome-exe>
 const { chromium } = require(process.argv[2]);
@@ -27,7 +27,7 @@ const flat = (s, n = 400) => s.replace(/\s+/g, " ").slice(0, n);
     console.log("   segment:", flat(await page.locator("[data-testid=segment]").innerText(), 300));
     await page.screenshot({ path: `${OUT}/gp2-3-product.png`, fullPage: true });
 
-    await nav("Money");
+    await nav("Finance");
     await page.locator("[data-screen=S-24]").waitFor();
     await page.waitForTimeout(3000);
     console.log("4. money:", flat(await page.locator("[data-screen=S-24] .grid").first().innerText(), 400));
