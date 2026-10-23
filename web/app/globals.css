@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* Tokens from web/DESIGN.md (adapted from the provided design reference). Light theme only. */
+@theme {
+  --color-canvas: #f3f0ee;
+  --color-lifted: #fcfbfa;
+  --color-ink: #141413;
+  --color-charcoal: #262627;
+  --color-slate: #696969;
+  --color-dust: #d1cdc7;
+  --color-ghost: #e8e2da;
+  --color-signal: #cf4500;
+  --color-signal-light: #f37338;
+  --color-clay: #9a3a0a;
+  --color-link: #3860be;
+
+  --font-sans: var(--font-sofia), Arial, sans-serif;
+
+  --radius-btn: 20px;
+  --radius-stadium: 40px;
+  --radius-pill: 999px;
+
+  --shadow-lift-1: 0 4px 24px 0 rgb(0 0 0 / 0.04);
+  --shadow-lift-2: 0 24px 48px 0 rgb(0 0 0 / 0.08);
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-weight: 450;
+  line-height: 1.4;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
+}
+
+@keyframes orbit-drift {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.orbit-drift {
+  animation: orbit-drift 90s linear infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-drift {
+    animation: none;
+  }
+}
