@@ -67,7 +67,7 @@ Speaker notes: none, since this slide is read, not presented.
 
 ```mermaid
 flowchart LR
-  A[Sign up<br/>email or Google] --> B[Onboarding<br/>business details]
+  A[Sign up<br/>email + password,<br/>verified] --> B[Onboarding<br/>business details]
   B --> C[Business card<br/>AI draft, you confirm]
   C --> D[Main dashboard]
   D --> P[Product]
@@ -203,7 +203,7 @@ flowchart TB
     GW[LLM gateway ✅<br/>cache · fallback · replay]
   end
   subgraph Data["Supabase (Mumbai)"]
-    AUTH[Auth ✅<br/>email + Google, guest]
+    AUTH[Auth ✅<br/>verified email, guest demo]
     DB[(Postgres ✅<br/>profiles · products · market_products ·<br/>snapshots · receipts · alerts · simulations)]
     ST[(Storage ✅<br/>gzipped page snapshots)]
   end
@@ -238,7 +238,7 @@ Layout note:
 - Arrows into **simulator** from products, money and customers show the "every dashboard feeds the product decision" idea.
 
 **Data flow, in 4 numbered callouts:**
-1. **Sign in.** The browser signs in with Supabase (verified email or Google) and sends its JWT to the API on every call. The service key never leaves the server.
+1. **Sign in.** The browser signs in with Supabase (email and password, with a verified email) and sends its JWT to the API on every call. The service key never leaves the server.
 2. **Product.** A product is classified into an exact Google taxonomy id. The API then reads public product pages (schema.org data) and keeps only those in the same id. Each value stores its link and the date it was seen.
 3. **Market.** Competitor pages are fetched, saved as unchangeable snapshots, split into sections and diffed. Noise goes to the ledger; real changes become receipts, alerts and simulator re-plans.
 4. **Display.** The web app only renders the API's JSON. Scraped HTML never runs in the app; "View original" opens a sandboxed iframe through a 5-minute signed link.
@@ -269,7 +269,7 @@ Icons: `monitor`, `layout-dashboard`, `server`, `database`, `hard-drive`, `spark
 | AI | Gemini `flash-lite` → Groq `gpt-oss-120b` | Free, with fallback; answers cached and checked against a JSON schema |
 | Search | Tavily (free 1,000 credits a month) | Competitor discovery, category news and funding |
 | Email | Resend | Alert emails |
-| Sign-in | Supabase Auth: verified email (sent through Gmail SMTP, free) and Google sign-in (🛠) | Real accounts at no cost |
+| Sign-in | Supabase Auth: email and password with a verified email (confirmation sent through Gmail SMTP, free) | Real accounts at no cost |
 | Reference data | Google product taxonomy ✅ (exact categories); Damodaran India margins, UCI Online Retail II (CC BY), The Bread Basket (CC0) 🛠 | Exact categories, margin benchmarks, demo businesses' transactions |
 | Product data | Brand stores' public product pages (schema.org JSON-LD) ✅ | Real, dated category prices and features |
 
@@ -313,7 +313,7 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 
 | ✅ Built and live | 🛠 Planned (in build) |
 |---|---|
-| Email sign-up with confirmation link, Google button, guest demo | Google sign-in switched on (provider setup) |
+| Email + password sign-up with a confirmation link, guest demo | |
 | Onboarding form → AI-drafted business card → Overview | |
 | Money: CSV/Excel upload with column check, manual entries, revenue, margin vs Damodaran India benchmark, burn, runway, transaction log | |
 | Four-dashboard navigation (Product, Money, Market, Customers) | |
