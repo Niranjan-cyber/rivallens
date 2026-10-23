@@ -1393,7 +1393,7 @@
       "id": "B14e",
       "title": "Money dashboard from uploads and manual entry",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "On Money, a user uploads a CSV or Excel export (or adds entries by hand) and sees revenue, profit margin against the Indian industry benchmark, product prices, the transaction log and runway.",
       "why_now": "Money is the second input to the product decisions.",

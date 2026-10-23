@@ -71,7 +71,7 @@
 | B14b | Prototype | After sign-up, a user fills a short onboarding form, confirms the drafted business card, and lands on a main dashboard with four dashboards: Product, Money, Market and Customers. | UC-21, UC-02, S-20, S-21, S-06 | frontend-design, fastapi | 1 h | B14a | — | done |
 | B14c | Prototype | On Product, a user sees Existing and New products, adds one, and gets its exact category from the Google product taxonomy (a football lands in Soccer Balls, a chair in Chairs). | UC-16, S-22 | supabase-postgres-best-practices, tdd, fastapi, frontend-design | 1 h | B14b | — | done |
 | B14d | Prototype | Opening a product shows it against products in the same category on price, features and add-ons, each value with its source and date, plus premium inspirations from the top of the category. | UC-20, UC-06, S-23 | tdd, fastapi, frontend-design | 1 h | B14c | — | done |
-| B14e | Prototype | On Money, a user uploads a CSV or Excel export (or adds entries by hand) and sees revenue, profit margin against the Indian industry benchmark, product prices, the transaction log and runway. | UC-17, S-24 | tdd, fastapi, frontend-design | 1.25 h | B14b | — | todo |
+| B14e | Prototype | On Money, a user uploads a CSV or Excel export (or adds entries by hand) and sees revenue, profit margin against the Indian industry benchmark, product prices, the transaction log and runway. | UC-17, S-24 | tdd, fastapi, frontend-design | 1.25 h | B14b | — | done |
 | B14f | Prototype | Money and the product comparison show competitors' reported revenue, margin and funding, each with a source link and date, or Unknown. | UC-17, UC-20, S-24, S-23 | tdd, fastapi | 0.75 h | B14e, B14d | — | todo |
 | B14g | Prototype | On Customers, a user sees reviews and comments from uploads, their own product pages and web mentions, with sentiment and the top requests, each linked to its source. | UC-18, UC-15, S-26 | tdd, fastapi, frontend-design | 1 h | B14b | — | todo |
 | B14h | Prototype | Market shows competitor changes, category news and funding with links, the category price trend, and a 'Simulate a competitor move' control that replaces Demo Lab. | UC-04, UC-10, UC-11, S-25, S-10 | frontend-design, fastapi | 0.75 h | B14b | — | todo |
@@ -389,7 +389,7 @@
 - **Prompt:** `prompts/B14d-like-for-like-product-comparison-and.md`
 
 ### B14e — Money dashboard from uploads and manual entry
-- **Status:** todo
+- **Status:** done
 - **Goal:** On Money, a user uploads a CSV or Excel export (or adds entries by hand) and sees revenue, profit margin against the Indian industry benchmark, product prices, the transaction log and runway.
 - **Why now:** Money is the second input to the product decisions.
 - **Slice:** UC UC-17 · Screens S-24 · Components C-30

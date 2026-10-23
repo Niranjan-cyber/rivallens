@@ -132,7 +132,7 @@ def get_money(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict:
     out = money_summary(conn, profile_id, profile["card"] or {})
     out["recent"] = [dict(r) | {"date": r["date"].isoformat()} for r in conn.execute(text("""
         select date, kind, amount::float as amount, product, quantity::float as quantity, description, source from transactions
-        where profile_id = :p order by date desc, created_at desc limit 50"""), {"p": profile_id}).mappings()]
+        where profile_id = :p order by date desc, created_at desc limit 25"""), {"p": profile_id}).mappings()]
     out["sources"] = [dict(r) for r in conn.execute(text("""select source, count(*) as rows, min(date)::text as first, max(date)::text as last
         from transactions where profile_id = :p group by source order by source"""), {"p": profile_id}).mappings()]
     out["industries"] = industries()

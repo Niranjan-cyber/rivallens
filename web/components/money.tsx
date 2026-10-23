@@ -123,7 +123,7 @@ export function MoneyDashboard({ profileId }: { profileId: string }) {
       )}
 
       {data.recent.length > 0 && (
-        <Block title="Transaction log (latest 50)">
+        <Block title="Transaction log (latest 25)">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-[14px]">
               <thead className="text-[13px] text-slate"><tr><th className="p-2 font-medium">Date</th><th className="p-2 font-medium">Type</th><th className="p-2 font-medium">Amount</th><th className="p-2 font-medium">Product / description</th><th className="p-2 font-medium">Source</th></tr></thead>
