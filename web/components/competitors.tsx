@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SampleBadge } from "@/components/ui";
@@ -139,7 +140,7 @@ export function Competitors({ profileId }: { profileId: string }) {
               <input type="checkbox" checked={c.selected} onChange={() => toggle(c)} aria-label={`Watch ${c.name}`} className="mt-1 size-5 shrink-0 accent-ink" />
               <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2 text-[18px] font-medium">
-                  {c.name}
+                  <Link href={`/app/${profileId}/competitor?id=${c.id}`} className="underline-offset-4 hover:underline">{c.name}</Link>
                   {c.is_demo_data && <SampleBadge label="Demo data" />}
                   <span className="text-[13px] font-normal text-slate">{ORIGIN[c.origin] ?? c.origin}</span>
                 </p>

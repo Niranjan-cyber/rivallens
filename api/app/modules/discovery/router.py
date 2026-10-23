@@ -155,3 +155,52 @@ def patch_competitor(competitor_id: UUID, body: CompetitorPatch, user: UserDep, 
 @router.post("/profiles/{profile_id}/monitoring/start", status_code=202)
 def start_monitoring(profile_id: UUID, user: UserDep, background: BackgroundTasks) -> JobAccepted:
     return create_run(profile_id, user, background)  # first run over the selected sources is the baseline
+
+
+@router.get("/competitors/{competitor_id}")
+def competitor_history(competitor_id: UUID, user: UserDep, conn: ConnDep) -> dict:
+    """S-12: current fields, a dated timeline (checks, receipts, failures) and per-plan monthly ₹ price series."""
+    from app.modules.alerts.service import alert_text
+    from app.modules.changes.runs import show
+    from app.modules.comparison.router import USD_INR_RATE
+    from app.modules.comparison.service import monthly_inr
+
+    profile_id = conn.execute(text("select c.profile_id from competitors c join profiles p on p.id = c.profile_id where c.id = :c and p.user_id = :u"),
+                              {"c": competitor_id, "u": user.id}).scalar()
+    if profile_id is None:
+        raise HTTPException(404, {"code": "not_found", "message": "Competitor not found."})
+    comp = _competitors(conn, profile_id, competitor_id)[0]
+    snaps = conn.execute(text("""
+        select sn.id, sn.observed_at, sn.status, sn.run_id, o.fields, o.origin
+        from snapshots sn join sources s on s.id = sn.source_id left join observations o on o.snapshot_id = sn.id
+        where s.competitor_id = :c order by sn.observed_at
+    """), {"c": competitor_id}).mappings().all()
+    events = conn.execute(text("""select id, change_type, field_path, prev_value, curr_value, delta_pct, observed_at, status, after_snapshot_id
+        from change_events where competitor_id = :c order by observed_at"""), {"c": competitor_id}).mappings().all()
+    by_snap = {}
+    for e in events:
+        by_snap.setdefault(e["after_snapshot_id"], []).append(e)
+
+    timeline, series = [], {}
+    for i, sn in enumerate(snaps):
+        if sn["status"] != "ok":
+            timeline.append({"type": "failure", "at": sn["observed_at"], "ref_id": sn["id"],
+                             "label": f"Failed (not a change): {sn['status'].replace('_', ' ')}"})
+            continue
+        found = by_snap.get(sn["id"], [])
+        for e in found:
+            change = {"change_type": e["change_type"], "field_path": e["field_path"], "delta_pct": e["delta_pct"]}
+            timeline.append({"type": "receipt", "at": e["observed_at"], "ref_id": e["id"],
+                             "label": alert_text(comp.name, change, show(e["prev_value"]), show(e["curr_value"]), "").split(" · observed")[0]
+                                      + ("" if e["status"] == "confirmed" else " (needs review)")})
+        if not found:
+            label = ("Baseline saved" if i == 0 else "Checked: no meaningful change") + (" (demo seed)" if sn["origin"] == "seed" else "")
+            timeline.append({"type": "run", "at": sn["observed_at"], "ref_id": sn["run_id"] or sn["id"], "label": label})
+        for pl in (sn["fields"] or {}).get("plans", []):
+            amount = monthly_inr(pl["price"], USD_INR_RATE)
+            if amount is not None:
+                series.setdefault(pl["name"], []).append({"at": sn["observed_at"], "amount_inr": amount,
+                                                          "source": "internet_archive" if sn["origin"] == "internet_archive" else "observed"})
+    latest = next(((sn["fields"], sn["observed_at"]) for sn in reversed(snaps) if sn["status"] == "ok" and sn["fields"]), (None, None))
+    return {**comp.model_dump(mode="json"), "current_fields": latest[0], "current_observed_at": latest[1],
+            "timeline": list(reversed(timeline)), "price_series": [{"plan": k, "points": v} for k, v in series.items()]}

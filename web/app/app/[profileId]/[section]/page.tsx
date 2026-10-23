@@ -4,6 +4,7 @@ import { AlertCenter } from "@/components/alert-center";
 import { AlertRulesForm } from "@/components/alert-rules";
 import { CardView } from "@/components/card-view";
 import { ComparisonMatrix } from "@/components/comparison";
+import { CompetitorDetail } from "@/components/competitor-detail";
 import { Competitors } from "@/components/competitors";
 import { Dashboard } from "@/components/dashboard";
 import { ReceiptView } from "@/components/receipt";
@@ -21,6 +22,7 @@ async function Section({ params }: { params: PageProps<"/app/[profileId]/[sectio
   if (section === "receipt") return <ReceiptView profileId={profileId} />;
   if (section === "card") return <CardView profileId={profileId} />;
   if (section === "competitors") return <Competitors profileId={profileId} />;
+  if (section === "competitor") return <CompetitorDetail profileId={profileId} />;
   if (section === "dashboard") return <Dashboard profileId={profileId} />;
   if (section === "comparison") return <ComparisonMatrix profileId={profileId} />;
   if (section === "simulator") return <Simulator profileId={profileId} />;

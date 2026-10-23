@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SampleBadge } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -93,7 +94,8 @@ export function ComparisonMatrix({ profileId }: { profileId: string }) {
                   {data.rows.map((r, i) => (
                     <tr key={r.competitor_id ?? "you"} className={`border-b border-ghost ${r.subject === "you" ? "bg-canvas" : ""}`}>
                       <th scope="row" className="sticky left-0 bg-inherit p-3 align-top font-medium">
-                        <span className="block">{r.ranked ? `${data.rows.filter((x, j) => x.ranked && j < i).length + 1}. ` : ""}{r.name}</span>
+                        <span className="block">{r.ranked ? `${data.rows.filter((x, j) => x.ranked && j < i).length + 1}. ` : ""}
+                          {r.competitor_id ? <Link href={`/app/${profileId}/competitor?id=${r.competitor_id}`} className="underline-offset-4 hover:underline">{r.name}</Link> : r.name}</span>
                         <span className="block text-[13px] font-normal text-slate">
                           {r.ranked ? `score ${Math.round((r.score ?? 0) * 100)}` : `not ranked: ${r.known_weight_pct}% of weight known`}
                           {r.unknown_count > 0 && ` · ${r.unknown_count} unknown`}
