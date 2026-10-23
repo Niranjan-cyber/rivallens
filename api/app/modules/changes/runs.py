@@ -1,5 +1,6 @@
 """A monitoring run over a profile's sources: fetch → sections → extract → compare → ledger and change events."""
 import hashlib
+import logging
 import json
 from datetime import UTC, datetime
 from uuid import UUID
@@ -76,8 +77,11 @@ def monitor(job: Job, profile_id: UUID, run_id: UUID) -> dict:
         if ctx["triggers"]:  # re-plan the launch simulation on the biggest comparable move (specs §1 C-11)
             from app.modules.simulator.router import replan
             trigger = max(ctx["triggers"], key=lambda t: abs(t[3] or 0))
-            with engine.begin() as conn:
-                replan(conn, profile_id, *trigger)
+            try:  # a simulator problem must never fail an otherwise good monitoring run
+                with engine.begin() as conn:
+                    replan(conn, profile_id, *trigger)
+            except Exception:
+                logging.getLogger("simulator").exception("re-plan failed for profile %s", profile_id)
         status = "done"
     finally:
         with engine.begin() as conn:

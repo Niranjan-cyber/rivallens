@@ -57,11 +57,11 @@ def _market(conn: Connection, profile_id: UUID) -> tuple[list[dict], list[dict],
 def compute(conn: Connection, profile_id: UUID, overrides: dict, extra_option: float | None) -> dict:
     card = conn.execute(text("select card from profiles where id = :p"), {"p": profile_id}).scalar() or {}
     comparables, inspiration, union = _market(conn, profile_id)
-    priced = [c for c in comparables if c["price_inr"] is not None]
+    priced = [c for c in comparables if c["price_inr"]]  # free mid tiers can't anchor a price (median 0)
     planned = (card_value(card, "price") or {}).get("amount")
     if len(priced) >= 2:
         m, m_origin = statistics.median(c["price_inr"] for c in priced), "evidence"
-    elif planned:
+    elif planned and planned > 0:
         m, m_origin = float(planned), "your assumption"  # ideas and thin markets: anchor on the user's own price, labelled
     else:
         raise HTTPException(409, {"code": "insufficient_price_data", "message": "Need prices from at least 2 comparable competitors, or your own price on the card."})

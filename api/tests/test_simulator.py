@@ -37,3 +37,7 @@ def test_flags_fire_for_an_unfundable_idea():
     sim = {**simulate(50000, 0.5, a, planned=50000), "assumptions": a}
     codes = {f["code"] for f in viability_flags(sim, comparables=[], inspiration=[])}
     assert {"no_breakeven_36m", "capital_intensive", "no_verified_india_competitors"} <= codes
+
+
+def test_zero_ramp_is_treated_as_immediate():
+    assert break_even_month(1000, 0.1, {**DEFAULTS, "segment_size": 100, "ramp_months": 0, "upfront_cost": 5000, "monthly_cost": 0}) == 1

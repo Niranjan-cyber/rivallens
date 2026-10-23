@@ -154,7 +154,7 @@ export function ReceiptView({ profileId }: { profileId: string }) {
             <dt className="text-[14px] text-slate">Launch simulation</dt>
             <dd className="text-[17px]">
               <Link href={`/app/${profileId}/simulator`} className="text-link underline">
-                Re-planned: recommended ₹{Number(receipt.simulation_impact.before).toLocaleString("en-IN")} → ₹{Number(receipt.simulation_impact.after).toLocaleString("en-IN")}
+                Re-planned: recommended {receipt.simulation_impact.before != null && `₹${Number(receipt.simulation_impact.before).toLocaleString("en-IN")} → `}₹{Number(receipt.simulation_impact.after).toLocaleString("en-IN")}
               </Link>
             </dd>
           </div>

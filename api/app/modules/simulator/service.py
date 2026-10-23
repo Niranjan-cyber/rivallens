@@ -24,7 +24,7 @@ def conversion(p: float, m: float, f: float, c0: float, e: float, k: float) -> f
 
 
 def _customers(conv: float, month: int, a: dict) -> float:
-    return a["segment_size"] * conv * min(1, month / a["ramp_months"])
+    return a["segment_size"] * conv * min(1, month / max(a["ramp_months"], 1))
 
 
 def break_even_month(p: float, conv: float, a: dict) -> int | None:
