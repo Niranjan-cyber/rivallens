@@ -48,7 +48,7 @@
 | B01 | Prototype | Anyone can open the public URL and click from the S-01 landing through stub screens S-03 to S-18 labelled sample data. | UC-13, S-01, S-03, S-09, S-10, S-11, S-13, S-14, S-15, S-16, S-18 | frontend-design, vercel-react-best-practices | 0.35 h | — | — | done |
 | B02 | Prototype | S-03 Home on the public URL lists profile cards fetched from the deployed FastAPI service. | UC-13, S-03 | fastapi, render-deploy, render-debug | 0.35 h | B01 | — | done |
 | B03 | Prototype | A visitor can click 'Try demo account' or sign up with email and land on S-03 showing profiles stored in Supabase for their own account. | UC-01, UC-13, S-01, S-02, S-03 | supabase, supabase-postgres-best-practices, fastapi | 0.45 h | B02 | — | done |
-| B04 | Prototype | In the Demo Lab, a user applies 'cosmetic' then 'price cut' to NimbusDeploy (demo) and Run monitor on S-10 shows 0 meaningful changes the first time and the Pro price drop as meaningful the second time, with every ignored diff listed with its reason. | UC-04, UC-10, S-09, S-10, S-18, S-19 | tdd, fastapi, vercel-react-best-practices, code-review | 0.55 h | B03 | — | todo |
+| B04 | Prototype | In the Demo Lab, a user applies 'cosmetic' then 'price cut' to NimbusDeploy (demo) and Run monitor on S-10 shows 0 meaningful changes the first time and the Pro price drop as meaningful the second time, with every ignored diff listed with its reason. | UC-04, UC-10, S-09, S-10, S-18, S-19 | tdd, fastapi, vercel-react-best-practices, code-review | 0.55 h | B03 | — | done |
 | B05 | Prototype | Clicking the meaningful change on S-10 opens S-11, which shows prev → curr, delta, observed-at and the before/after snapshot text with the price highlighted. | UC-05, S-10, S-11 | supabase, frontend-design | 0.3 h | B04 | — | todo |
 | B06 | Prototype | After a price-cut run, a high-priority alert linking to the receipt appears in the bell (an email copy goes to the owner address). | UC-08, UC-12, S-11, S-16, S-17 | tdd, fastapi | 0.35 h | B05 | — | todo |
 | B07 | Prototype | A signed-in user types one line about their business on S-04 and gets a pre-filled S-05 wizard with AI-drafted badges, then saves the profile and sees its card on S-06. | UC-02, S-04, S-05, S-06 | tdd, frontend-design | 0.4 h | B03 | — | todo |
@@ -118,7 +118,7 @@
 - **Notes:** Supabase direct DB host may be IPv6-only on free: use the session pooler URI.
 
 ### B04 — Winning feature: noise ledger on a real monitoring run
-- **Status:** todo
+- **Status:** done
 - **Goal:** In the Demo Lab, a user applies 'cosmetic' then 'price cut' to NimbusDeploy (demo) and Run monitor on S-10 shows 0 meaningful changes the first time and the Pro price drop as meaningful the second time, with every ignored diff listed with its reason.
 - **Why now:** Riskiest unknown and the winning feature; it scores change detection, data accuracy and history. Built rules-only on mock pages so it doesn't depend on the LLM.
 - **Slice:** UC UC-04, UC-10 · Screens S-09, S-10, S-18, S-19 · Components C-02, C-03, C-06, C-07, C-08, C-13, C-15, C-16

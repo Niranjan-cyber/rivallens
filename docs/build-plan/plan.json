@@ -357,7 +357,7 @@
       "id": "B04",
       "title": "Winning feature: noise ledger on a real monitoring run",
       "phase": "prototype",
-      "status": "todo",
+      "status": "done",
       "milestone": null,
       "goal": "In the Demo Lab, a user applies 'cosmetic' then 'price cut' to NimbusDeploy (demo) and Run monitor on S-10 shows 0 meaningful changes the first time and the Pro price drop as meaningful the second time, with every ignored diff listed with its reason.",
       "why_now": "Riskiest unknown and the winning feature; it scores change detection, data accuracy and history. Built rules-only on mock pages so it doesn't depend on the LLM.",
