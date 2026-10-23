@@ -15,12 +15,16 @@ from app.jobs import Job
 from app.modules.collector.service import fetch
 from app.modules.customers.service import analyse, mentions_from_rows, reviews_from_html, suggest_review_mapping
 from app.modules.discovery.pipeline import _tavily
+from app.modules.discovery.service import registrable_domain
 from app.modules.money.router import _read
 from app.modules.money.service import parse_amount, parse_date
 
 router = APIRouter(prefix="/api/v1", tags=["customers"])
 SOCIAL = re.compile(r"//(www\.)?(youtube|youtu\.be|instagram|facebook|x|twitter|linkedin)\.", re.I)
+# Company databases and job sites describe the business, not what customers say.
+NOT_VOICE = re.compile(r"(^|\.)(cbinsights|tracxn|crunchbase|rocketreach|zaubacorp|glassdoor|ambitionbox|owler|pitchbook|craft|wikipedia|zoominfo)\.", re.I)
 ANALYSE_LIMIT = 80
+VOICE = re.compile(r"\b(review|reviews|tried|ordered|order|taste|tasted|delivery|delivered|bought|love|loved|quality|recommend|worst|best|disappoint\w*|service|value for money)\b", re.I)
 
 
 def _own(conn: Connection, profile_id: UUID, user_id: UUID) -> dict:
@@ -114,10 +118,12 @@ def _collect_job(job: Job, profile_id: UUID, p: dict) -> dict:
         for r in reviews_from_html(page["html"]) if page["status"] == "ok" else []:
             found.append(r | {"source_type": "own_site", "source": url, "url": url, "product": None})
     job.step("web", "running", None, "Searching the web for mentions…")
-    for q in (f'"{p["name"]}" reviews', f'"{p["name"]}" customers'):
+    brand = next((w for w in re.findall(r"[a-z0-9]+", p["name"].lower()) if len(w) >= 4), p["name"].lower())  # "theobroma"
+    for q in (f'"{p["name"]}" reviews', f"{brand} review customers"):
         for r in _tavily(q):
-            u = r.get("url", "")
-            if SOCIAL.search(u) or (website and website.split("//")[-1].split("/")[0] in u) or p["name"].lower() not in (r.get("content") or "").lower():
+            u, body = r.get("url", ""), (r.get("content") or "").lower()
+            own = brand in registrable_domain(u) or (website and registrable_domain(website) == registrable_domain(u))
+            if SOCIAL.search(u) or NOT_VOICE.search(registrable_domain(u)) or own or brand not in body or not VOICE.search(body):
                 continue
             found.append({"text": f"{r.get('title', '')}. {r.get('content', '')}"[:1200], "rating": None, "author": None, "date": None,
                           "source_type": "web", "source": u, "url": u, "product": None})
