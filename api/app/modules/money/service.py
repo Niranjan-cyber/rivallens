@@ -147,7 +147,8 @@ def metrics(txs: list[dict], cash: float | None) -> dict:
             products[t["product"]]["units"] += t.get("quantity") or 0
             products[t["product"]]["revenue"] += t["amount"]
     months = [{"month": k, "revenue": round(v["product_sales"] or v["other_sales"]), "expenses": round(v["expenses"])} for k, v in sorted(by_month.items())]
-    last = months[-3:]
+    this_month = date.today().strftime("%Y-%m")
+    last = [m for m in months if m["month"] < this_month][-3:] or months[-3:]  # the last three complete months
     rev = sum(m["revenue"] for m in last) / len(last) if last else 0
     exp = sum(m["expenses"] for m in last) / len(last) if last else 0
     burn = max(exp - rev, 0)

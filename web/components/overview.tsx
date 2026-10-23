@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
+import { inr } from "@/components/money";
 import { SampleBadge } from "@/components/ui";
 import { api, type Product, type ProfileSummary } from "@/lib/api";
 
@@ -15,10 +16,12 @@ export function Overview({ profileId }: { profileId: string }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [items, setItems] = useState<Product[] | null>(null);
+  const [money, setMoney] = useState<{ transactions_count: number; metrics: { monthly_revenue: number; operating_margin: number | null; runway_months: number | null; monthly_burn: number }; benchmark: { industry: string; operating_margin: number | null } | null } | null>(null);
 
   useEffect(() => {
     api<Profile>(`/api/v1/profiles/${profileId}`).then(setProfile, () => {});
     api<Product[]>(`/api/v1/profiles/${profileId}/products`).then(setItems, () => {});
+    api<NonNullable<typeof money>>(`/api/v1/profiles/${profileId}/money`).then(setMoney, () => {});
     api<ProfileSummary[]>("/api/v1/profiles").then((ps) => setSummary(ps.find((p) => p.id === profileId) ?? null), () => {});
   }, [profileId]);
 
@@ -49,8 +52,20 @@ export function Overview({ profileId }: { profileId: string }) {
             <p className="text-charcoal">Add what you sell or plan to sell. Each product is compared only with products in its exact category.</p>
           )}
         </Tile>
-        <Tile title="Money" href={`/app/${profileId}/money`} cta="Upload sales or add entries">
-          <p className="text-charcoal">Upload a CSV or Excel export from your bank, payment gateway or accounting tool to see revenue, margin and runway.</p>
+        <Tile title="Money" href={`/app/${profileId}/money`} cta={money?.transactions_count ? "Open money" : "Upload sales or add entries"}>
+          {money?.transactions_count ? (
+            <>
+              <p className="text-[28px] font-medium tracking-[-0.02em]">
+                {money.metrics.runway_months != null ? `${money.metrics.runway_months} months of runway` : money.metrics.monthly_burn ? "Add cash to see runway" : "Not burning cash"}
+              </p>
+              <p className="mt-1 text-charcoal">
+                {inr(money.metrics.monthly_revenue)} revenue a month, operating margin {money.metrics.operating_margin != null ? `${(money.metrics.operating_margin * 100).toFixed(1)}%` : "—"}
+                {money.benchmark?.operating_margin != null ? ` vs ${(money.benchmark.operating_margin * 100).toFixed(1)}% for ${money.benchmark.industry} in India` : ""}.
+              </p>
+            </>
+          ) : (
+            <p className="text-charcoal">Upload a CSV or Excel export from your bank, payment gateway or accounting tool to see revenue, margin and runway.</p>
+          )}
         </Tile>
         <Tile title="Market" href={`/app/${profileId}/dashboard`} cta="Open market">
           {summary ? (
