@@ -13,6 +13,8 @@ export default function Login() {
   const [mode, setMode] = useState<Mode>("login");
   const [busy, setBusy] = useState<"form" | "demo" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [unconfirmed, setUnconfirmed] = useState<string | null>(null);
+  const callback = () => `${window.location.origin}/auth/callback`;
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,18 +23,40 @@ export default function Login() {
     const password = String(f.get("password"));
     setBusy("form");
     setMessage(null);
+    setUnconfirmed(null);
     const { data, error } =
       mode === "login"
         ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password, options: { data: { name: String(f.get("name") ?? "") } } });
+        : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: callback(), data: { name: String(f.get("name") ?? "") } } });
     setBusy(null);
     if (error) {
-      setMessage(error.message.includes("already registered") ? "That email already has an account. Log in instead." : error.message);
-      if (error.message.includes("already registered")) setMode("login");
-      return;
+      if (error.message.includes("already registered")) {
+        setMode("login");
+        return setMessage("That email already has an account. Log in instead.");
+      }
+      if (error.code === "email_not_confirmed") {
+        setUnconfirmed(email);
+        return setMessage("Confirm your email first. The link is in your inbox (check spam too).");
+      }
+      return setMessage(error.message);
     }
-    if (!data.session) return setMessage("Check your inbox to confirm your email, then log in.");
+    if (!data.session) {
+      setUnconfirmed(email);
+      return setMessage(`We sent a confirmation link to ${email}. Open it to finish creating your account.`);
+    }
     router.push("/app");
+  }
+
+  async function resend() {
+    if (!unconfirmed) return;
+    const { error } = await supabase.auth.resend({ type: "signup", email: unconfirmed, options: { emailRedirectTo: callback() } });
+    setMessage(error ? error.message : `Sent again to ${unconfirmed}.`);
+  }
+
+  async function google() {
+    setMessage(null);
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: callback() } });
+    if (error) setMessage(error.message.includes("not enabled") ? "Google sign-in isn't switched on yet. Use email for now." : error.message);
   }
 
   async function tryDemo() {
@@ -82,7 +106,17 @@ export default function Login() {
             {busy === "form" ? "Working…" : mode === "login" ? "Log in" : "Create account"}
           </button>
         </form>
-        {message && <p role="alert" className="mt-4 rounded-btn bg-canvas p-4 text-[14px]">{message}</p>}
+        <button type="button" onClick={google} disabled={busy !== null}
+          className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-btn border-[1.5px] border-ink bg-white text-[16px] font-medium disabled:opacity-60">
+          <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.7Z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24Z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6h-4a12 12 0 0 0 0 10.8l4-3.1Z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.4.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9Z"/></svg>
+          Continue with Google
+        </button>
+        {message && (
+          <p role="alert" className="mt-4 rounded-btn bg-canvas p-4 text-[14px]">
+            {message}
+            {unconfirmed && <> <button type="button" onClick={resend} className="font-medium underline">Resend the email</button></>}
+          </p>
+        )}
         <div className="mt-6 border-t border-ink/10 pt-6">
           <button type="button" onClick={tryDemo} disabled={busy !== null}
             className="min-h-11 w-full rounded-btn border-[1.5px] border-ink bg-white text-[16px] font-medium disabled:opacity-60">
