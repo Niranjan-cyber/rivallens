@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { inr } from "@/components/money";
+import { CoverageStrip, Findings, NextAction, useSetup } from "@/components/setup";
 import { SampleBadge } from "@/components/ui";
 import { api, type Product, type ProfileSummary } from "@/lib/api";
 
@@ -19,6 +20,7 @@ export function Overview({ profileId }: { profileId: string }) {
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [items, setItems] = useState<Product[] | null>(null);
   const [customers, setCustomers] = useState<Customers | null>(null);
+  const setup = useSetup(profileId);
   const [money, setMoney] = useState<{ transactions_count: number; metrics: { monthly_revenue: number; operating_margin: number | null; runway_months: number | null; monthly_burn: number | null }; benchmark: { industry: string; operating_margin: number | null } | null } | null>(null);
 
   useEffect(() => {
@@ -43,7 +45,19 @@ export function Overview({ profileId }: { profileId: string }) {
       <p className="mt-2 text-[17px] text-charcoal">
         {meta ? `${meta}. ` : ""}
         <Link href={`/app/${profileId}/card`} className="underline">Business card</Link>
+        {setup.data && !setup.data.complete && <> · <Link href={`/app/${profileId}/setup`} className="underline">Finish setting up</Link></>}
       </p>
+
+      {setup.data && (
+        <div className="mt-8 grid gap-6">
+          <NextAction profileId={profileId} action={setup.data.next_action} onDone={setup.load} />
+          <div>
+            <h2 className="text-[20px] font-medium tracking-[-0.02em]">What we found</h2>
+            <div className="mt-3"><Findings findings={setup.data.findings} /></div>
+          </div>
+          <CoverageStrip coverage={setup.data.coverage} />
+        </div>
+      )}
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         <Tile title="Product" href={`/app/${profileId}/product`} cta={products.length ? "Open products" : "Add your products"}>

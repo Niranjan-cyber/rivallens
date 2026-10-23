@@ -9,6 +9,7 @@ import { Competitors } from "@/components/competitors";
 import { Dashboard } from "@/components/dashboard";
 import { Customers } from "@/components/customers";
 import { MoneyDashboard } from "@/components/money";
+import { SetupView } from "@/components/setup";
 import { Overview } from "@/components/overview";
 import { ProductDetail } from "@/components/product-detail";
 import { Products } from "@/components/products";
@@ -30,6 +31,7 @@ async function Section({ params }: { params: PageProps<"/app/[profileId]/[sectio
   if (section === "competitors") return <Competitors profileId={profileId} />;
   if (section === "competitor") return <CompetitorDetail profileId={profileId} />;
   if (section === "home") return <Overview profileId={profileId} />;
+  if (section === "setup") return <SetupView profileId={profileId} />;
   if (section === "product") return <Products profileId={profileId} />;
   if (section === "finance") return <MoneyDashboard profileId={profileId} />;
   if (section === "customers") return <Customers profileId={profileId} />;

@@ -9,13 +9,14 @@ export const groups = [
 ] as const;
 
 export const groupOf: Record<string, (typeof groups)[number]["key"]> = {
-  home: "home", product: "product", simulator: "product", finance: "money", customers: "customers",
+  home: "home", setup: "home", product: "product", simulator: "product", finance: "money", customers: "customers",
   dashboard: "market", competitors: "market", comparison: "market", alerts: "market", reports: "market", settings: "market",
   competitor: "market", run: "market", receipt: "market", card: "home", "product-detail": "product",
 };
 
 export const sections = [
   { slug: "home", label: "Overview", screen: "S-21", purpose: "What needs your attention this week across products, finance, market and customers." },
+  { slug: "setup", label: "Getting started", screen: "S-27", purpose: "Guided setup: products and prices, competitors, like-for-like products, the first check, then findings with evidence and one next step." },
   { slug: "product", label: "Products", screen: "S-22", purpose: "Your existing and new products, each in its exact market category." },
   { slug: "finance", label: "Finance", screen: "S-24", purpose: "Revenue, margins, funding, transactions and runway from your uploads and entries." },
   { slug: "customers", label: "Customers", screen: "S-26", purpose: "What customers say and want, from reviews, comments and mentions." },

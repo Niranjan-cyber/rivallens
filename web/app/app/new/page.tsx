@@ -114,7 +114,7 @@ export default function NewProfile() {
     const offering = (get("offering_type") as string) === "product" ? "product" : "service";
     const full: Card = { ...card, watch: { value: watch, origin: card.watch?.origin ?? "user" } };
     await api<{ id: string }>("/api/v1/profiles", { method: "POST", body: JSON.stringify({ kind, offering_type: offering, name, card: full }) }).then(
-      (p) => router.push(`/app/${p.id}/home`),
+      (p) => router.push(`/app/${p.id}/setup`),
       (e: Error) => setError(e.message),
     );
   }
