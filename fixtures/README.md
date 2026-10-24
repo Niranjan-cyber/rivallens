@@ -6,6 +6,7 @@ Real data samples that the schemas, parsers and tests are based on. They were fe
 |---|---|---|---|
 | `pricing-pages/` | Official pricing pages: render.com, railway.com, netlify.com, vercel.com, e2enetworks.com (Indian provider), digitalocean.com | `<name>-pricing.html` (raw HTML, 220 KB–1.2 MB) | `GET https://<site>/pricing`, all returned HTTP 200 |
 | `robots/` | robots.txt of the same 6 hosts | `<name>-robots.txt` | `GET https://<site>/robots.txt` |
+| `sample-companies/` | **Synthetic**, not fetched: two fictional businesses for manual exploration (onboarding entries, sales and review CSVs) | `README.md`, `a-ironleaf-*.csv`, `b-homenest-*.csv` | Hand-written test data; see its README |
 | `wayback-cdx/` | Internet Archive CDX API | `render-pricing-cdx.json`, `e2enetworks-pricing-cdx.json` | `GET https://web.archive.org/cdx/search/cdx?url=<url>&output=json&from=2025&filter=statuscode:200&collapse=digest&limit=8` |
 
 **Not yet captured (specs marked doc-based and unverified):**

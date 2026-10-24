@@ -1,0 +1,50 @@
+date,type,amount,product,description
+2026-03-15,funding,6000000,,Angel round (SYNTHETIC TEST DATA)
+2026-04-28,sale,588690,cast iron dosa tawa,"Online orders, 310 units"
+2026-04-28,sale,374850,cast iron kadhai,"Online orders, 150 units"
+2026-04-28,sale,89940,cast iron appam pan,"Online orders, 60 units"
+2026-04-28,expense,442462,,Foundry and raw material (COGS)
+2026-04-28,expense,115883,,Shipping and packaging
+2026-04-28,expense,231766,,Performance marketing
+2026-04-28,expense,420000,,Salaries (6 people)
+2026-04-28,expense,65000,,"Workshop rent, Coimbatore"
+2026-05-28,sale,645660,cast iron dosa tawa,"Online orders, 340 units"
+2026-05-28,sale,424830,cast iron kadhai,"Online orders, 170 units"
+2026-05-28,sale,104930,cast iron appam pan,"Online orders, 70 units"
+2026-05-28,expense,493676,,Foundry and raw material (COGS)
+2026-05-28,expense,129296,,Shipping and packaging
+2026-05-28,expense,258592,,Performance marketing
+2026-05-28,expense,420000,,Salaries (6 people)
+2026-05-28,expense,65000,,"Workshop rent, Coimbatore"
+2026-06-28,sale,693135,cast iron dosa tawa,"Online orders, 365 units"
+2026-06-28,sale,449820,cast iron kadhai,"Online orders, 180 units"
+2026-06-28,sale,127415,cast iron appam pan,"Online orders, 85 units"
+2026-06-28,expense,533555,,Foundry and raw material (COGS)
+2026-06-28,expense,139741,,Shipping and packaging
+2026-06-28,expense,279481,,Performance marketing
+2026-06-28,expense,420000,,Salaries (6 people)
+2026-06-28,expense,65000,,"Workshop rent, Coimbatore"
+2026-07-28,sale,740610,cast iron dosa tawa,"Online orders, 390 units"
+2026-07-28,sale,512295,cast iron kadhai,"Online orders, 205 units"
+2026-07-28,sale,134910,cast iron appam pan,"Online orders, 90 units"
+2026-07-28,expense,582882,,Foundry and raw material (COGS)
+2026-07-28,expense,152660,,Shipping and packaging
+2026-07-28,expense,305319,,Performance marketing
+2026-07-28,expense,420000,,Salaries (6 people)
+2026-07-28,expense,65000,,"Workshop rent, Coimbatore"
+2026-08-28,sale,797580,cast iron dosa tawa,"Online orders, 420 units"
+2026-08-28,sale,549780,cast iron kadhai,"Online orders, 220 units"
+2026-08-28,sale,157395,cast iron appam pan,"Online orders, 105 units"
+2026-08-28,expense,631997,,Foundry and raw material (COGS)
+2026-08-28,expense,165523,,Shipping and packaging
+2026-08-28,expense,331046,,Performance marketing
+2026-08-28,expense,420000,,Salaries (6 people)
+2026-08-28,expense,65000,,"Workshop rent, Coimbatore"
+2026-09-28,sale,864045,cast iron dosa tawa,"Online orders, 455 units"
+2026-09-28,sale,599760,cast iron kadhai,"Online orders, 240 units"
+2026-09-28,sale,179880,cast iron appam pan,"Online orders, 120 units"
+2026-09-28,expense,690348,,Foundry and raw material (COGS)
+2026-09-28,expense,180805,,Shipping and packaging
+2026-09-28,expense,361611,,Performance marketing
+2026-09-28,expense,420000,,Salaries (6 people)
+2026-09-28,expense,65000,,"Workshop rent, Coimbatore"
