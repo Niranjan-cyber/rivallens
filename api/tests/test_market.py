@@ -34,3 +34,25 @@ def test_in_category_counts_sub_categories_only():
     assert not in_category("Food, Beverages & Tobacco > Food Items > Bakery Mixes", bakery)  # a prefix, not a child
     assert not in_category("Food, Beverages & Tobacco > Food Items", bakery)  # the parent is broader
     assert not in_category(None, bakery)
+
+
+def test_catalogue_links_pick_matching_products_not_merch():
+    from app.modules.products.market import catalogue_links
+    cat = {"products": [
+        {"handle": "aramse-coffee-journal", "title": "Coffee Journal", "product_type": "Merchandise", "tags": ["gift"]},
+        {"handle": "french-press", "title": "Coffee + French Press", "product_type": "Equipment", "tags": []},
+        {"handle": "vienna-roast", "title": "Vienna Roast", "product_type": "Coffee", "tags": ["filter", "ground"]},
+        {"handle": "south-indian-filter-coffee", "title": "South Indian Filter Coffee Powder", "product_type": "Coffee", "tags": []},
+    ]}
+    assert catalogue_links("https://www.bluetokaicoffee.com/products.json?limit=250", cat, {"filter", "powder"}, 5) == [
+        "https://www.bluetokaicoffee.com/products/south-indian-filter-coffee",
+        "https://www.bluetokaicoffee.com/products/vienna-roast"]
+    assert catalogue_links("https://x.in/products.json", {"products": []}, {"filter"}, 5) == []
+    assert catalogue_links("https://x.in/products.json", {"oops": 1}, {"filter"}, 5) == []
+
+
+def test_niche_overlap_needs_every_distinguishing_word():
+    assert niche_overlap("Filter coffee powder", "Filter coffee powder South Indian Traditional Filter Coffee", leaf="Coffee") is True
+    assert niche_overlap("Filter coffee powder", "Instant coffee powder Classic Protein Coffee Powder", leaf="Coffee") is False
+    assert niche_overlap("Cold brew coffee bags", "Canned cold brew Orange Mint", leaf="Coffee") is False
+    assert niche_overlap("Coffee", "Coffee Cappuccino", leaf="Coffee") is False  # nothing beyond the category word

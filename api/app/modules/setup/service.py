@@ -70,8 +70,10 @@ def _steps(s: dict, base: str) -> list[dict]:
               "action": _act("Compare", f"{base}/product-detail?id={good[0]['id']}")}
     else:
         tried = [p for p in cat if p.get("searched")]
-        notes = " ".join(f"For {p['name']} we read {p['searched']['pages_read']} product pages from {p['searched']['stores']} stores; "
-                         f"none was {(p['niche'] or p['name']).lower()} with a readable price." for p in tried)
+        notes = " ".join(f"For {p['name']} we read {p['searched']['pages_read']} product pages from {p['searched']['stores']} stores and found "
+                         f"{p['like_for_like'] or 'no'} {(p['niche'] or p['name']).lower()} with a price (we need {LIKE_FOR_LIKE})"
+                         + (f"; {p['searched']['unclassified']} pages couldn't be classified, so weren't counted." if p["searched"].get("unclassified") else ".")
+                         for p in tried)
         fresh = [p for p in cat if not p.get("searched")]
         if fresh:
             p = fresh[0]

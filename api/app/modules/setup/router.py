@@ -31,7 +31,8 @@ def _products(conn: Connection, profile_id: UUID) -> list[dict]:
     searched = {}  # product id -> its latest comparables search (finished or not)
     for j in conn.execute(text("""select status, result from jobs where profile_id = :p and kind = 'comparables' and result ? 'product_id'
                                   order by created_at"""), {"p": profile_id}).mappings():
-        searched[j["result"]["product_id"]] = {"stores": len(j["result"].get("stores", [])), "pages_read": j["result"].get("pages_read", 0)}
+        searched[j["result"]["product_id"]] = {"stores": len(j["result"].get("stores", [])), "pages_read": j["result"].get("pages_read", 0),
+                                             "unclassified": j["result"].get("unclassified", 0)}
     out = []
     for p in conn.execute(text(f"select {COLS} from products where profile_id = :p order by stage, created_at"), {"p": profile_id}).mappings():
         p = dict(p)

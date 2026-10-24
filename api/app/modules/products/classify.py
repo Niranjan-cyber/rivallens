@@ -50,8 +50,13 @@ class Picks(BaseModel):
     items: list[Pick]
 
 
+BATCH = 8  # free models answer only the first ~9 of a long list; the rest silently fell back to the root category (L-25)
+
+
 def classify_many(names: list[str], business: str = "") -> list[dict]:
-    """One LLM call for several products (onboarding lists 3-10); same output per product as classify()."""
+    """One LLM call per batch of products; same output per product as classify()."""
+    if len(names) > BATCH:
+        return [c for i in range(0, len(names), BATCH) for c in classify_many(names[i:i + BATCH], business)]
     shortlists = [candidates(f"{n} {business}", 15) or candidates(business, 15) for n in names]
     top = [{"taxonomy_id": s[0]["id"], "path": s[0]["path"], "niche": None, "source": "top_match"} if s else
            {"taxonomy_id": None, "path": None, "niche": None, "source": "none"} for s in shortlists]

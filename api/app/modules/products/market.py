@@ -15,7 +15,7 @@ from sqlalchemy import text
 from app.db import engine
 from app.jobs import Job
 from app.llm.gateway import LLMUnavailable, complete_json
-from app.modules.collector.service import fetch
+from app.modules.collector.service import fetch, fetch_json
 from app.modules.discovery.pipeline import _tavily
 from app.modules.discovery.service import blocked, registrable_domain
 from app.modules.products.classify import classify_many
@@ -51,8 +51,11 @@ def hint(p: dict) -> str:
 
 
 def niche_overlap(a: str | None, b: str | None, leaf: str = "") -> bool:
+    """Like-for-like: every word that sets our product type apart (beyond the category's own word) appears in theirs.
+    One shared word is not enough: 'protein coffee powder' is not 'filter coffee powder' (L-25)."""
     generic = tokens(leaf)
-    return bool((tokens(a or "") - generic) & (tokens(b or "") - generic))
+    ours = tokens(a or "") - generic
+    return bool(ours) and ours <= tokens(b or "") - generic
 
 
 def product_links(base: str, html: str, niche_words: set[str], n: int) -> list[str]:
@@ -65,6 +68,21 @@ def product_links(base: str, html: str, niche_words: set[str], n: int) -> list[s
         seen.add(url)
         (hits if tokens(url.rsplit("/", 1)[-1].replace("-", " ")) & niche_words else rest).append(url)
     return (hits + rest)[:n]
+
+
+def catalogue_links(url: str, catalogue: dict, niche_words: set[str], n: int) -> list[str]:
+    """Shopify's public /products.json: keep products whose title, type or tags name the niche, best match first (L-24).
+    Roasters name blends ("Vienna Roast"), so URL words alone miss them and pick journals and French presses instead."""
+    root = "{0.scheme}://{0.netloc}".format(urlsplit(url))
+    scored = []
+    for p in catalogue.get("products") or []:
+        if not isinstance(p, dict) or not p.get("handle"):
+            continue
+        tags = p.get("tags") or []
+        rest = tokens(" ".join([p.get("product_type") or "", *(tags if isinstance(tags, list) else [str(tags)])]))
+        if score := 3 * len(tokens(p.get("title") or "") & niche_words) + len(rest & niche_words):  # the title says what it is
+            scored.append((-score, len(scored), f"{root}/products/{p['handle']}"))
+    return [u for *_, u in sorted(scored)][:n]
 
 
 class Features(BaseModel):
@@ -114,6 +132,10 @@ def find_comparables(job: Job, product_id) -> dict:
 
     job.step("stores", "running", len(stores), "Reading brand stores (robots.txt respected)…")
     for d in stores:
+        cat_url = f"https://www.{d}/products.json?limit=250"
+        if links := catalogue_links(cat_url, fetch_json(cat_url) or {}, words, LINKS_PER_DOMAIN):
+            pages += links
+            continue
         for url in next(urls for dd, urls in listings if dd == d):
             listing = fetch(url)
             links = product_links(url, listing["html"], words, LINKS_PER_DOMAIN) if listing["status"] == "ok" else []
@@ -148,4 +170,5 @@ def find_comparables(job: Job, product_id) -> dict:
                    "niche": f["cat"]["niche"], "name": f["name"][:200], "brand": f["brand"], "desc": (f["description"] or "")[:600],
                    "price": inr, "cur": f["currency"], "rating": f["rating"], "rc": f["review_count"],
                    "feat": json.dumps(f.get("features") or []), "at": now})
-    return {"product_id": str(product_id), "stores": stores, "pages_read": len(found), "same_category": len(same)}
+    return {"product_id": str(product_id), "stores": stores, "pages_read": len(found), "same_category": len(same),
+            "unclassified": sum(c["source"] != "ai" for c in cats)}  # the AI couldn't place these: shown, never counted

@@ -1,5 +1,6 @@
 """C-06 collector: page → visible text split into keyed, hashed sections."""
 import hashlib
+import json
 import re
 
 from selectolax.lexbor import LexborHTMLParser as HTMLParser, LexborNode as Node
@@ -210,6 +211,17 @@ def fetch(url: str) -> dict:
     if len(text) < 1024 and size > 50 * 1024:
         return {**out, "status": "needs_js"}
     return {**out, "status": "ok", "html": body}
+
+
+def fetch_json(url: str) -> dict | None:
+    """A public JSON document (a shop's product catalogue), robots.txt respected; None on any failure."""
+    try:
+        if not allowed_by_robots(url):
+            return None
+        code, ctype, body, _ = _get(url)
+        return json.loads(body) if code == 200 and "json" in ctype else None
+    except (Blocked, OverflowError, httpx.HTTPError, ValueError):
+        return None
 
 
 def store_snapshot(source_id: str, observed_at: str, html: str) -> tuple[str, str | None]:

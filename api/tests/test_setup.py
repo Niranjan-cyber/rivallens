@@ -97,5 +97,5 @@ def test_after_searching_every_product_the_step_explains_and_moves_on():
     s["products"][0] |= {"price": 450, "broad": 6, "searched": {"stores": 5, "pages_read": 12}}
     p = plan(s, BASE)
     c = step(p, "comparables")
-    assert c["status"] == "blocked" and "12 product pages from 5 stores" in c["detail"]
+    assert c["status"] == "blocked" and "12 product pages from 5 stores and found no filter coffee powder" in c["detail"]
     assert p["next_action"]["kind"] == "monitor"
