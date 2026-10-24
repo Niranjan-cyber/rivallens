@@ -48,8 +48,8 @@ const [NAME, KIND, CITY, WHAT, PRODUCTS, WHO, PRICES] = (process.env.BIZ ?? "Hil
     await page.locator("[data-screen=S-27]").waitFor();
     const setupUrl = page.url();
     await page.waitForFunction(() => document.querySelectorAll("[data-step]").length >= 7);
-    await page.waitForTimeout(8000); // products are classified on a background thread
-    await page.reload();
+    // products are classified on a background thread; the page says "Adding your products" and refreshes itself
+    await page.waitForFunction(() => !document.querySelector("[data-testid=next-action]")?.textContent?.includes("Adding your products"), null, { timeout: 120000 });
     await next.waitFor();
     console.log("2 SETUP", setupUrl, "\n ", await steps(), "\n  NEXT:", flat(await next.innerText(), 300));
     await shot("first-insight-setup-start");

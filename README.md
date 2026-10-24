@@ -51,7 +51,16 @@ Create an account, describe the business, and **Finish** lands on **Getting star
 - **What we found:** only what the data supports, each with its evidence: a price position needs at least 3 like-for-like prices; a gap of more than 60% from the median is flagged as a likely size or pack mismatch, not a conclusion.
 - **Data coverage:** what is covered, missing or failed for Market, Products, Finance and Customers.
 
-The overview shows the same next step, findings and coverage. Everything is read from saved data, so it survives refresh, logout and login. `node scripts/e2e/first-insight.cjs <playwright-core> <out-dir> <chrome>` walks it on the live URL as a brand-new founder.
+The overview shows the same next step, the top findings, what changed **since your last visit** and a status on each dashboard (Covered, Missing, Check failed, Out of date). Everything is read from saved data, so it survives refresh, logout and login. `BIZ="name|kind|city|what you do|products|customers|prices" node scripts/e2e/first-insight.cjs <playwright-core> <out-dir> <chrome>` walks it on the live URL as a brand-new founder (a coffee roaster by default).
+
+### What counts as evidence
+- A market median needs **at least 3 like-for-like prices**: every word that names the product type must match ("protein coffee powder" is not "filter coffee powder"). Similar products come from Indian stores' public catalogues (Shopify `/products.json`) and each page's own product data.
+- Prices at ₹0, in another currency, or more than 5× from the others' median stay listed with the reason but don't count.
+- Every number says whether it was **Observed** on a public page, is **Your data**, or is an **Estimate**.
+- Competitor checks older than 14 days make re-checking the next step; prices older than 30 days are flagged, older than 90 days give no conclusion. Failed, running or stale searches are shown, never dropped.
+
+### Deciding a price
+The simulator on each product follows unit cost → gross profit → cash → runway. An existing product is calibrated to its real units sold in Finance, and each price shows the runway it leads to (at today's price this equals Finance's runway). A new product gets a month-by-month cash path. Every assumption shows where it came from and can be changed for that product; a sensitivity check says whether the best price changes if price sensitivity, unit cost or conversion is 20% off; saved scenarios are dated and say what changed since the last one.
 
 ## How change detection works
 
@@ -137,9 +146,10 @@ The API is a modular monolith: `collector`, `extractor`, `changes`, `alerts`, `d
 |---|---|---|
 | Gemini free | low requests per minute; flash-latest timed out on this account | flash-lite default, 30 s timeout, Groq fallback, Postgres cache (repeat drafts are cache hits); empty answers are never cached |
 | Groq free | Llama 3.3 retired (404) | `openai/gpt-oss-120b`; models checked by listing them with the key |
-| Tavily | 1,000 credits/month | 3 basic searches per discovery; demo guests limited to 2 discoveries a day; global cap 20 a day |
-| Render Free | sleeps after 15 min idle, 512 MB | keep-warm pinger; no headless browser; pure-Python similarity instead of scikit-learn |
+| Tavily | 1,000 credits/month | 3 basic searches per discovery; 5 discoveries per account a day; past 10 a day, discovery runs on AI suggestions only (each still verified) |
+| Render Free | sleeps after 15 min idle, 512 MB | keep-warm pinger; reads retry twice while it wakes; no headless browser; pure-Python similarity instead of scikit-learn |
 | Resend | delivers only to the account owner without a domain | `ALERT_EMAIL_OVERRIDE`; status recorded as sent, failed or skipped |
+| Supabase email | built-in sender reaches only the project team | password reset emails need a free SMTP sender set in Supabase Auth (owner step); signed-in users can change their password without email |
 
 ## Run it locally
 
@@ -150,14 +160,21 @@ cd api && python -m venv .venv && .venv/Scripts/pip install -r requirements.txt 
 #           GEMINI_API_KEY, GROQ_API_KEY, TAVILY_API_KEY, RESEND_API_KEY, ALERT_EMAIL_OVERRIDE, WEB_ORIGIN
 .venv/Scripts/python -m scripts.setup_db --migrate --seed   # needs MOCK_BASE_URL pointing at a deployed web app
 .venv/Scripts/uvicorn app.main:app --reload
-.venv/Scripts/python -m pytest -q                            # 67 tests, no live LLM keys needed (recorded fixtures)
+.venv/Scripts/python -m pytest -q                            # 91 tests, no live LLM keys needed (recorded fixtures)
 
 # Web
 cd web && npm install && npm run dev   # NEXT_PUBLIC_API_BASE_URL, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
 # Smoke test the deployed app
 FRONTEND_URL=https://rivallens-eight.vercel.app BACKEND_URL=https://rivallens-api.onrender.com bash scripts/smoke.sh
+
+# Before and after a deploy: tests, smoke, account isolation, live overview and simulator checks (--full adds a new-founder walk)
+PW=<playwright-core dir> CHROME=<chrome.exe> ISO_EMAIL=<test user> ISO_PASSWORD=<…> bash scripts/check-all.sh
 ```
+
+**Account isolation:** `python -m scripts.isolation_check <user A> <password>` calls every API route (from the OpenAPI schema) without a token and as a fresh user B with A's ids; any 2xx for B is a leak. All 54 routes with ids pass.
+
+**Scheduled checks:** `.github/workflows/scheduled-checks.yml` calls `POST /api/v1/cron/checks` daily. It starts only checks that are due (a week since the last, a day if pages failed), at most 3 a call, so it needs no secret.
 
 Tests cover:
 - the section splitter, price rules on real fixture lines, and the noise rules (cosmetic redesign → 0 changes) and field diff on rendered mock pages
@@ -168,12 +185,16 @@ Tests cover:
 - the simulator formula against hand-computed cases, and the per-product inputs (sentiment bounded ±20%, coverage, unit cost, runway flag, segment evidence check)
 - money parsing, de-duplication of bank settlements, and Unknown margin, burn and runway when no costs are uploaded
 - category matching (sub-categories count, siblings don't), price position and news filtering
+- the setup plan: steps, coverage, findings only with enough like-for-like prices, stale and failed data, services without product pages
+- like-for-like matching, catalogue product picking and price screening (₹0, other currencies, outliers)
+- the decision model: gross-profit break-even, calibration to real sales, runway at each price, launch cash path, sensitivity and scenario differences
 
 ## What's not built (honest limits)
 
 - **Pricing extraction is rules-only.** The LLM merge for pricing sections was cut. Rules work well on structured pages; on JavaScript-heavy real pages many cells stay *Unknown*.
 - **Wayback backfill** (archive history) was cut.
-- **No scheduled monitoring yet.** Runs are on demand; the MVP adds a cron.
+- **Password reset emails need an SMTP sender.** Supabase's built-in email reaches only the project team; add a free SMTP sender in Supabase Auth settings for reset links to reach users.
+- **Price sensitivity is a default (1.2).** No business here has enough price history to estimate it; the sensitivity check shows how much the best price depends on it.
 - **Services don't fit the product taxonomy.** Google's taxonomy covers goods; a membership or SaaS plan gets "Software" or no category, so its simulator anchors on the monitored competitors or its own price, labelled.
 - **Web mentions only work for real brands.** The demo businesses are fictional, so their Customers dashboards use uploads only.
 - **Quick-commerce sites (Blinkit, Zepto, Instamart, BigBasket, JioMart) refuse automated fetches,** so QuickKart watches no pages; its Market and Finance come from news and filings.

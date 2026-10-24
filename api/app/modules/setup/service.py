@@ -29,7 +29,9 @@ def _steps(s: dict, base: str) -> list[dict]:
 
     unpriced = [p for p in products if p["price"] is None]
     uncategorised = [p for p in products if not p["category_path"]]
-    if not products:
+    if not products and s.get("creating_products"):  # onboarding classifies the listed products on a background thread
+        st = {"status": "running", "detail": "Adding the products you listed, each in its exact category…", "action": _act("Adding your products", kind="wait")}
+    elif not products:
         st = {"status": "todo", "detail": "Add what you sell, so it can be compared with the same products.", "action": _act("Add a product", f"{base}/product")}
     elif unpriced:
         p = unpriced[0]

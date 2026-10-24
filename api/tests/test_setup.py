@@ -137,3 +137,9 @@ def test_a_service_with_no_product_pages_anywhere_gets_the_services_path():
     s["products"][0] |= {"name": "Wedding photography package", "price": 85000, "searched": {"status": "done", "stores": 6, "pages_read": 0}}
     c = step(plan(s, BASE), "comparables")
     assert c["status"] == "blocked" and "pricing pages" in c["detail"] and c["action"] is None
+
+
+def test_products_still_being_created_after_onboarding_are_shown_as_working():
+    s = state(products=[], creating_products=True)
+    p = plan(s, BASE)
+    assert step(p, "products")["status"] == "running" and p["next_action"]["kind"] != "link"

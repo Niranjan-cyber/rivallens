@@ -111,7 +111,8 @@ def _since(conn: Connection, profile_id: UUID, since: datetime) -> dict:
 
 @router.get("/profiles/{profile_id}/setup")
 def get_setup(profile_id: UUID, user: UserDep, conn: ConnDep, since: datetime | None = None) -> dict:
-    prof = conn.execute(text("select card from profiles where id = :p and user_id = :u"), {"p": profile_id, "u": user.id}).mappings().first()
+    prof = conn.execute(text("select card, created_at > now() - interval '3 minutes' as fresh from profiles where id = :p and user_id = :u"),
+                        {"p": profile_id, "u": user.id}).mappings().first()
     if not prof:
         raise HTTPException(404, {"code": "not_found", "message": "Business not found."})
     card = prof["card"] or {}
@@ -123,7 +124,8 @@ def get_setup(profile_id: UUID, user: UserDep, conn: ConnDep, since: datetime | 
     complaints = sorted((t for t in cust["themes"] if t["kind"] == "complaint"), key=lambda t: -t.get("count", len(t["mention_ids"])))
     state = {
         "card": {"target_customer": card_value(card, "target_customer"), "markets": markets if isinstance(markets, list) else [markets]},
-        "products": _products(conn, profile_id), "discovery": _discovery(conn, profile_id), "competitors": dict(comp),
+        "products": (products := _products(conn, profile_id)), "discovery": _discovery(conn, profile_id), "competitors": dict(comp),
+        "creating_products": not products and prof["fresh"] and bool(card_value(card, "main_products")),
         "monitoring": _monitoring(conn, profile_id), "receipt": _receipt(conn, profile_id),
         "money": {"transactions": money["transactions_count"], "has_costs": money["metrics"]["monthly_expenses"] is not None,
                   "runway_months": money["metrics"]["runway_months"]},
