@@ -34,18 +34,21 @@ export function Customers({ profileId }: { profileId: string }) {
   const [data, setData] = useState<Data | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const load = useCallback(() => api<Data>(`/api/v1/profiles/${profileId}/customers`).then((d) => (setError(null), setData(d)), (e: Error) => setError(e.message)), [profileId]);
   useEffect(() => { load(); }, [load]);
 
   async function collect() {
     setStatus("Starting…");
+    setActionError(null);
     try {
       const { job_id } = await api<{ job_id: string }>(`/api/v1/profiles/${profileId}/customers/collect`, { method: "POST" });
-      await waitFor(job_id, setStatus);
-      setStatus(null);
+      const job = await waitFor(job_id, setStatus);
+      if (job?.status === "failed" || job?.status === "stale") setActionError(job.error?.message ?? "Collecting stopped early. Try again.");
     } catch (e) {
-      setStatus((e as Error).message);
+      setActionError((e as Error).message);
     }
+    setStatus(null); // the button comes back, so a failed collect can be retried
     load();
   }
 
@@ -155,12 +158,13 @@ export function Customers({ profileId }: { profileId: string }) {
             className="mt-3 inline-flex min-h-11 items-center rounded-btn border-[1.5px] border-ink bg-ink px-5 text-[15px] font-medium text-canvas disabled:opacity-60">
             {status ?? "Collect mentions"}
           </button>
+          {actionError && <p role="alert" className="mt-3 text-[14px] text-charcoal">{actionError}</p>}
           {data.sources.length > 0 && (
             <ul className="mt-4 grid gap-1 text-[14px]">
               {data.sources.map((x) => (
                 <li key={x.source} className="flex justify-between gap-2">
                   <span className="truncate">{SOURCE[x.source_type]}: {x.source} ({x.rows})</span>
-                  <button type="button" className="shrink-0 text-slate underline" onClick={() => api(`/api/v1/profiles/${profileId}/customers/sources/${encodeURIComponent(x.source)}`, { method: "DELETE" }).then(load)}>Remove</button>
+                  <button type="button" className="shrink-0 text-slate underline" onClick={() => confirm(`Remove all mentions from ${x.source}?`) && api(`/api/v1/profiles/${profileId}/customers/sources/${encodeURIComponent(x.source)}`, { method: "DELETE" }).then(load, (e: Error) => setActionError(`Not removed: ${e.message}`))}>Remove</button>
                 </li>
               ))}
             </ul>

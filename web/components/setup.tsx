@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { KIND_LABEL, type Kind } from "@/components/product-plan";
+import { LoadError } from "@/components/ui";
 import { api, type Job } from "@/lib/api";
 
 export type Action = { label: string; href: string | null; kind: "link" | "price" | "discover" | "comparables" | "monitor" | "wait"; product_id?: string; product?: string; unit?: string; key?: string; why?: string };
@@ -81,7 +82,7 @@ export function useSetup(profileId: string, since?: string | null) {
   const [data, setData] = useState<Setup | null>(null);
   const [error, setError] = useState<string | null>(null);
   const load = useCallback(() => api<Setup>(`/api/v1/profiles/${profileId}/setup${since ? `?since=${encodeURIComponent(since)}` : ""}`)
-    .then(setData, (e: Error) => setError(e.message)), [profileId, since]);
+    .then((d) => (setError(null), setData(d)), (e: Error) => setError(e.message)), [profileId, since]);
   useEffect(() => { load(); }, [load]);
   const running = data?.steps.some((s) => s.status === "running");
   useEffect(() => {
@@ -194,7 +195,7 @@ function AddProduct({ profileId, onDone }: { profileId: string; onDone: () => vo
 // S-27: guided setup after onboarding. Every step reads from saved data, so it survives refresh, logout and login.
 export function SetupView({ profileId }: { profileId: string }) {
   const { data, error, load } = useSetup(profileId);
-  if (error) return <p className="rounded-btn bg-lifted p-6">{error}</p>;
+  if (error && !data) return <LoadError what="your setup plan" message={error} onRetry={load} />;
   if (!data) return <div className="h-60 rounded-stadium bg-lifted" aria-busy="true" />;
   const required = data.steps.filter((s) => s.status !== "optional");
   const done = required.filter((s) => s.status === "done").length;

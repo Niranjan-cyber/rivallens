@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MarketPulse, SimulateMove } from "@/components/market-extras";
 import { RunMonitorButton } from "@/components/run-monitor";
-import { SampleBadge } from "@/components/ui";
+import { LoadError, SampleBadge } from "@/components/ui";
 import { api, type ProfileSummary } from "@/lib/api";
 import type { Simulation } from "@/components/simulator";
 
@@ -13,16 +13,20 @@ type RunSummary = { id: string; kind: string; started_at: string; counts: { sour
 // S-09: the latest picture for one profile and the Run monitor button.
 export function Dashboard({ profileId }: { profileId: string }) {
   const [profile, setProfile] = useState<ProfileSummary | null>(null);
-  const [runs, setRuns] = useState<RunSummary[]>([]);
-  const [unread, setUnread] = useState(0);
+  const [runs, setRuns] = useState<RunSummary[] | null>(null);
+  const [unread, setUnread] = useState<number | null>(null);
   const [sim, setSim] = useState<Simulation | null>(null);
+  const [failedAreas, setFailed] = useState<string[]>([]);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    api<ProfileSummary[]>("/api/v1/profiles").then((ps) => setProfile(ps.find((p) => p.id === profileId) ?? null), () => {});
-    api<RunSummary[]>(`/api/v1/profiles/${profileId}/runs?limit=5`).then(setRuns, () => {});
-    api<{ id: string }[]>(`/api/v1/alerts?profile_id=${profileId}&unread=true`).then((a) => setUnread(a.length), () => {});
-    api<Simulation>(`/api/v1/profiles/${profileId}/simulation`).then(setSim, () => {});
-  }, [profileId]);
+    // a failed request is named, never shown as 0 alerts or "no checks yet"
+    const failed = (area: string) => () => setFailed((f) => (f.includes(area) ? f : [...f, area]));
+    api<ProfileSummary[]>("/api/v1/profiles").then((ps) => setProfile(ps.find((p) => p.id === profileId) ?? null), failed("competitors"));
+    api<RunSummary[]>(`/api/v1/profiles/${profileId}/runs?limit=5`).then(setRuns, failed("recent checks"));
+    api<{ id: string }[]>(`/api/v1/alerts?profile_id=${profileId}&unread=true`).then((a) => setUnread(a.length), failed("alerts"));
+    api<Simulation>(`/api/v1/profiles/${profileId}/simulation`).then(setSim, () => {}); // optional card: hidden when unavailable
+  }, [profileId, attempt]);
 
   const when = (ts: string) => new Date(ts).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 
@@ -34,6 +38,9 @@ export function Dashboard({ profileId }: { profileId: string }) {
       </div>
       <p className="mt-2 text-[17px] text-charcoal">{profile?.note}</p>
       <SimulateMove />
+      {failedAreas.length > 0 && (
+        <div className="mt-6"><LoadError what={failedAreas.join(", ")} message="The server may be waking up." onRetry={() => { setFailed([]); setAttempt((a) => a + 1); }} /></div>
+      )}
       <div className="mt-6"><RunMonitorButton profileId={profileId} /></div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -42,7 +49,7 @@ export function Dashboard({ profileId }: { profileId: string }) {
           <p className="mt-2 text-[17px]">competitors watched</p>
         </Link>
         <Link href={`/app/${profileId}/alerts`} className="rounded-stadium bg-lifted p-7 hover:shadow-lift-1">
-          <p className={`text-[48px] font-medium leading-none tracking-[-0.03em] ${unread ? "text-signal" : ""}`}>{unread}</p>
+          <p className={`text-[48px] font-medium leading-none tracking-[-0.03em] ${unread ? "text-signal" : ""}`}>{unread ?? "–"}</p>
           <p className="mt-2 text-[17px]">unread alerts</p>
         </Link>
         <Link href={`/app/${profileId}/card`} className="rounded-stadium bg-lifted p-7 hover:shadow-lift-1">
@@ -61,7 +68,9 @@ export function Dashboard({ profileId }: { profileId: string }) {
       )}
 
       <h2 className="mt-10 text-[24px] font-medium tracking-[-0.02em]">Recent checks</h2>
-      {runs.length === 0 ? (
+      {runs == null ? (
+        <p className="mt-2 text-slate">{failedAreas.includes("recent checks") ? "Couldn't load recent checks." : "Loading…"}</p>
+      ) : runs.length === 0 ? (
         <p className="mt-2 text-charcoal">No checks yet. The first check saves a baseline of every watched page.</p>
       ) : (
         <ul className="mt-3 divide-y divide-ghost rounded-btn bg-lifted px-6">

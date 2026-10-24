@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { inr } from "@/components/money";
 import { ProductPlan } from "@/components/product-plan";
 import { rupees } from "@/components/products";
+import { LoadError } from "@/components/ui";
 import { api, type Job, type Product } from "@/lib/api";
 
 type Row = {
@@ -64,19 +65,19 @@ export function ProductDetail() {
   async function setPrice(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const price = Number(new FormData(e.currentTarget).get("price"));
-    await api(`/api/v1/products/${id}`, { method: "PATCH", body: JSON.stringify({ price }) });
-    load();
+    setNote(null);
+    await api(`/api/v1/products/${id}`, { method: "PATCH", body: JSON.stringify({ price }) }).then(() => { load(); }, (err: Error) => setNote(`Price not saved: ${err.message}`));
   }
 
   async function setWho(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const who = String(new FormData(e.currentTarget).get("who")).trim();
-    await api(`/api/v1/products/${id}`, { method: "PATCH", body: JSON.stringify({ target_customer: who || null }) });
-    load();
+    setNote(null);
+    await api(`/api/v1/products/${id}`, { method: "PATCH", body: JSON.stringify({ target_customer: who || null }) }).then(() => { load(); }, (err: Error) => setNote(`Not saved: ${err.message}`));
   }
 
   if (!id) return <p className="rounded-btn bg-lifted p-4">Pick a product from Products.</p>;
-  if (!data) return <div className="h-40 rounded-stadium bg-lifted" aria-busy="true">{note}</div>;
+  if (!data) return note ? <LoadError what="this product" message={note} onRetry={() => { setNote(null); load(); }} /> : <div className="h-40 rounded-stadium bg-lifted" aria-busy="true" />;
   const { product: p, position: pos } = data;
   const path = p.category_path?.split(" > ") ?? [];
   const sameNiche = data.rows.filter((r) => r.same_niche).length;

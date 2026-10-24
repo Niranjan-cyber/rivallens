@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { LoadError } from "@/components/ui";
 import { api } from "@/lib/api";
 
 type Scenario = { conversion: number; customers_m12: number; revenue_12m_inr: number; break_even_month: number | null };
@@ -31,10 +32,11 @@ export function ProductPlan({ productId, profileId, version }: { productId: stri
   const [sim, setSim] = useState<Sim | null>(null);
   const [seg, setSeg] = useState<Segment | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     api<Sim>(`/api/v1/products/${productId}/simulation`).then((s) => { setSim(s); setError(null); }, (e: Error) => setError(e.message));
     api<Segment>(`/api/v1/products/${productId}/segment`).then(setSeg, (e: Error) => setSeg({ segment: null, why: [], evidence_ids: [], evidence: [], message: `Couldn't load the segment: ${e.message}` }));
-  }, [productId, version]);
+  }, [productId, version, attempt]);
   const href = (link: string | null) => (link === "product-detail" ? `/app/${profileId}/product-detail?id=${productId}` : `/app/${profileId}/${link}`);
 
   return (
@@ -60,7 +62,7 @@ export function ProductPlan({ productId, profileId, version }: { productId: stri
           <p className="text-[15px] font-medium">Price simulator for this product</p>
           <p className="text-[12px] text-slate">{sim?.label ?? "Scenario model, not a forecast"}</p>
         </div>
-        {error && <p className="mt-2 text-charcoal">{error}</p>}
+        {error && <div className="mt-3"><LoadError what="the simulator" message={error} onRetry={() => { setError(null); setAttempt((a) => a + 1); }} /></div>}
         {sim && <SimBody sim={sim} href={href} productId={productId} onChange={setSim} />}
       </div>
     </div>

@@ -10,6 +10,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.config import SUPABASE_JWT_SECRET, SUPABASE_PUBLIC_KEY, SUPABASE_URL
 
 _bearer = HTTPBearer(auto_error=False)
+LEEWAY = 30  # seconds of clock difference with Supabase Auth; without it a token used right after sign-in can fail on iat
 _jwks = jwt.PyJWKClient(f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json", cache_keys=True) if SUPABASE_URL else None
 
 
@@ -25,9 +26,9 @@ def _decode(token: str) -> dict:
     # with the shared secret if we have it, otherwise by asking Supabase Auth (one HTTP call).
     if jwt.get_unverified_header(token).get("alg") != "HS256":
         key = _jwks.get_signing_key_from_jwt(token)
-        return jwt.decode(token, key, algorithms=["RS256", "ES256"], audience="authenticated")
+        return jwt.decode(token, key, algorithms=["RS256", "ES256"], audience="authenticated", leeway=LEEWAY)
     if SUPABASE_JWT_SECRET:
-        return jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated")
+        return jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated", leeway=LEEWAY)
     r = httpx.get(f"{SUPABASE_URL}/auth/v1/user", headers={"apikey": SUPABASE_PUBLIC_KEY, "Authorization": f"Bearer {token}"}, timeout=10)
     if r.status_code != 200:
         raise jwt.InvalidTokenError("rejected by Supabase Auth")

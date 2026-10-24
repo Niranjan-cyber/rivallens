@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { RivalMoney } from "@/components/rival-money";
+import { LoadError } from "@/components/ui";
 import { api } from "@/lib/api";
 
 type Month = { month: string; revenue: number; expenses: number };
@@ -35,15 +36,17 @@ const FIELD_LABEL: Record<string, string> = { date: "Date", amount: "Amount", cr
 export function MoneyDashboard({ profileId }: { profileId: string }) {
   const [data, setData] = useState<Money | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const load = useCallback(() => api<Money>(`/api/v1/profiles/${profileId}/money`).then(setData, (e: Error) => setError(e.message)), [profileId]);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const load = useCallback(() => api<Money>(`/api/v1/profiles/${profileId}/money`).then((d) => (setError(null), setData(d)), (e: Error) => setError(e.message)), [profileId]);
   useEffect(() => { load(); }, [load]);
 
   async function saveSettings(patch: { cash?: number | null; industry?: string | null }) {
-    await api(`/api/v1/profiles/${profileId}/money/settings`, { method: "PUT", body: JSON.stringify({ cash: data?.cash ?? null, industry: data?.industry ?? null, ...patch }) });
-    load();
+    setSaveError(null);
+    await api(`/api/v1/profiles/${profileId}/money/settings`, { method: "PUT", body: JSON.stringify({ cash: data?.cash ?? null, industry: data?.industry ?? null, ...patch }) })
+      .then(load, (e: Error) => setSaveError(`Not saved: ${e.message}`));
   }
 
-  if (!data) return <div className="h-40 rounded-stadium bg-lifted" aria-busy="true">{error}</div>;
+  if (!data) return error ? <LoadError what="your finance data" message={error} onRetry={load} /> : <div className="h-40 rounded-stadium bg-lifted" aria-busy="true" />;
   const m = data.metrics;
   const b = data.benchmark;
   const marginGap = m.operating_margin != null && b?.operating_margin != null ? m.operating_margin - b.operating_margin : null;
@@ -95,6 +98,8 @@ export function MoneyDashboard({ profileId }: { profileId: string }) {
         </div>
       </div>
 
+      {saveError && <p role="alert" className="mt-3 rounded-btn bg-lifted p-4 text-[15px]">{saveError}</p>}
+
       {m.months.length > 0 && <Chart months={m.months} />}
 
       <RivalMoney profileId={profileId} />
@@ -122,7 +127,7 @@ export function MoneyDashboard({ profileId }: { profileId: string }) {
               <li key={s.source} className="flex flex-wrap items-center justify-between gap-2">
                 <span>{s.source === "manual" ? "Entered by hand" : s.source} · {s.rows} rows · {s.first} to {s.last}</span>
                 <button type="button" className="text-[14px] text-slate underline"
-                  onClick={() => confirm(`Remove all rows from ${s.source}?`) && api(`/api/v1/profiles/${profileId}/money/sources/${encodeURIComponent(s.source)}`, { method: "DELETE" }).then(load)}>Remove</button>
+                  onClick={() => confirm(`Remove all rows from ${s.source}?`) && api(`/api/v1/profiles/${profileId}/money/sources/${encodeURIComponent(s.source)}`, { method: "DELETE" }).then(load, (e: Error) => setSaveError(`Not removed: ${e.message}`))}>Remove</button>
               </li>
             ))}
           </ul>
