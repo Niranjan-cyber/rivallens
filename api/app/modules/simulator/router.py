@@ -11,7 +11,8 @@ from app.db import ConnDep
 from app.modules.comparison.router import competitor_cells
 from app.modules.discovery.pipeline import card_value
 from app.llm.gateway import LLMUnavailable, complete_json
-from app.modules.simulator.service import (DEFAULTS, checked_segment, feature_coverage, inr, request_boost, runway_flag,
+from app.modules.simulator.service import (ASSUMPTION_LABEL, DEFAULTS, calibrate_segment, checked_segment, conversion, feature_coverage, inr,
+                                           launch_cash_months, request_boost, runway_flag, runway_with, scenario_diff, sensitivity,
                                            sentiment_shift, simulate, unit_cost, viability_flags)
 
 router = APIRouter(prefix="/api/v1", tags=["simulator"])
@@ -176,15 +177,29 @@ def _product(conn: Connection, product_id: UUID, user_id: UUID) -> tuple[dict, d
     return p, card, comparison_data(conn, p)
 
 
+def _units_per_month(conn: Connection, profile_id, name: str) -> float | None:
+    """This product's units sold a month in Finance (the last 3 months of sales data), or None."""
+    v = conn.execute(text("""
+        select sum(coalesce(quantity, 1))::float / 3 from transactions
+        where profile_id = :p and kind = 'sale' and lower(product) = lower(:n)
+          and date > (select max(date) from transactions where profile_id = :p and kind = 'sale') - 90"""), {"p": profile_id, "n": name}).scalar()
+    return round(v, 1) if v else None
+
+
+SHOWN = ("segment_size", "base_conversion", "elasticity_expected", "ramp_months", "upfront_cost", "monthly_cost")
+
+
 def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
+    """Workstream 4: unit cost → gross profit → break-even and runway, calibrated to real sales when Finance has them.
+    Every input and assumption says where it comes from; the founder can override any assumption for this product."""
     from app.modules.customers.router import customer_summary
     from app.modules.money.router import money_summary
     pid, pos, inputs = p["profile_id"], comp["position"], []
     price = float(p["price"]) if p["price"] is not None else None
+    existing = p["stage"] == "existing"
     if pos["n"] >= 3:  # like-for-like only, the same bar as the product page and setup
         m = pos["median"]
-        basis = "same-niche" if comp["basis"] == "niche" else "same-category"
-        inputs.append(_in("Market price (median)", f"{inr(m)} across {pos['n']} {basis} products", "market"))
+        inputs.append(_in("Market price (median)", f"{inr(m)} across {pos['n']} like-for-like products", "market"))
     else:
         priced = [c for c in _market(conn, pid)[0] if c["price_inr"]]
         if len(priced) >= 2:
@@ -201,13 +216,16 @@ def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
         d = receipt["delta_pct"]
         inputs.append(_in("Latest competitor price change", f"{receipt['name']} {float(d):+g}%" if d is not None else receipt["name"],
                           "market", str(receipt["id"])))
-    a = {**DEFAULTS, **(card_value(card, "sim_assumptions") or {})}
-    if p["stage"] == "existing":
-        a["upfront_cost"] = 0
-        inputs.append(_in("Launch cost", "₹0: already selling", "product"))
+
+    # Assumptions: defaults < an existing product's (its costs are already in Finance, it sells from month 1) < business < this product
+    mine = {k: float(v) for k, v in (p.get("sim_assumptions") or {}).items() if k in DEFAULTS}
+    a = {**DEFAULTS, **({"upfront_cost": 0, "monthly_cost": 0, "ramp_months": 1} if existing else {}),
+         **(card_value(card, "sim_assumptions") or {}), **mine}
+    origin = {k: "yours" if k in mine else "default" for k in DEFAULTS}
+
     money = money_summary(conn, pid, card)
     met, bench = money["metrics"], money["benchmark"] or {}
-    runway = met["runway_months"]
+    cash, burn, runway = money["cash"], met["monthly_burn"], met["runway_months"]
     uc, uc_source = unit_cost(price or m, float(p["unit_cost"]) if p["unit_cost"] is not None else None, bench.get("gross_margin"))
     if uc is not None:
         inputs.append(_in("Unit cost", f"{inr(uc)} (yours)" if uc_source == "product" else
@@ -216,34 +234,119 @@ def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
     if met["operating_margin"] is not None:
         inputs.append(_in("Your operating margin", f"{met['operating_margin']:.1%}", "money"))
     inputs.append(_in("Runway", f"{runway:g} months" if runway is not None else
-                      "not burning cash" if met["monthly_burn"] == 0 else
-                      "unknown: add your costs" if met["monthly_burn"] is None else "unknown: add cash in the bank", "money"))
+                      "not burning cash" if burn == 0 else
+                      "unknown: add your costs" if burn is None else "unknown: add cash in the bank", "money"))
+
     cs = customer_summary(conn, pid)
-    shift = sentiment_shift(cs["sentiment"])
-    if shift is not None:
-        a["base_conversion"] = round(a["base_conversion"] * (1 + shift), 4)
-        sp = cs["sentiment"]
-        inputs.append(_in("Customer sentiment", f"{sp.get('positive', 0)} positive, {sp.get('negative', 0)} negative → conversion {shift:+.0%}", "customers", kind="estimate"))
     features = [str(x) for x in p["features"] or []]
     f, covered = request_boost(feature_coverage(features, [r["features"] or [] for r in comp["rows"]]), features, cs["themes"])
     inputs.append(_in("Feature coverage", f"{f:.0%} of comparables' features", "market", kind="estimate"))
     if covered:
         inputs.append(_in("Customer requests you answer", ", ".join(covered[:3]), "customers"))
-    sim = simulate(m, f, a, planned=price)
+
+    # Calibrate to real sales: the segment that makes today's price sell what Finance says it sold
+    units = _units_per_month(conn, pid, p["name"]) if existing and price else None
+    seg = calibrate_segment(units, conversion(price, m, f, a["base_conversion"], a["elasticity_expected"], a["coverage_weight"])) if units else None
+    if seg and "segment_size" not in mine:
+        a["segment_size"], origin["segment_size"] = seg, "your sales"
+        inputs.append(_in("Units sold a month", f"{units:g} (last 3 months of sales)", "money"))
+    else:  # real sales already reflect what customers think; only an uncalibrated model is nudged by sentiment
+        shift = sentiment_shift(cs["sentiment"])
+        if shift is not None and "base_conversion" not in mine:
+            a["base_conversion"], origin["base_conversion"] = round(a["base_conversion"] * (1 + shift), 4), "estimate"
+            sp = cs["sentiment"]
+            inputs.append(_in("Customer sentiment", f"{sp.get('positive', 0)} positive, {sp.get('negative', 0)} negative → conversion {shift:+.0%}",
+                              "customers", kind="estimate"))
+    if existing:
+        inputs.append(_in("Launch and running costs", "₹0: already selling, its costs are in your Finance numbers", "product"))
+
+    sim = simulate(m, f, a, planned=price, unit_cost=uc)
     flags = []
+    now_gp = None
+    if existing and price and uc is not None:  # today's monthly gross profit, the baseline every option's runway moves from
+        now_gp = (price - uc) * a["segment_size"] * conversion(price, m, f, a["base_conversion"], a["elasticity_expected"], a["coverage_weight"])
     for o in sim["options"]:
+        e = o["scenarios"]["expected"]
+        if existing and o["origin"] == "your planned price":
+            o["origin"] = "your price today"
         if uc is not None:
             o["unit_margin_inr"] = round(o["price_inr"] - uc)
-            o["gross_profit_12m_inr"] = round(o["scenarios"]["expected"]["revenue_12m_inr"] * (1 - uc / o["price_inr"]))
-        o["after_runway"] = runway_flag(o, runway) is not None
+            o["gross_profit_12m_inr"] = e["gross_profit_12m_inr"]
+        if existing:
+            o["runway_months"] = runway_with(cash, burn, e["monthly_gross_profit"][11] - now_gp) if now_gp is not None else None
+            o["after_runway"] = False
+        else:
+            # without a unit cost there is no gross profit to pay costs from: the cash path stays unknown rather than counting revenue as profit
+            o["cash_out_month"] = launch_cash_months(cash, burn, a["upfront_cost"], a["monthly_cost"], e["monthly_gross_profit"]) if uc is not None else None
+            o["after_runway"] = runway_flag(o, runway) is not None
+        e.pop("monthly_gross_profit", None)
+        for s in o["scenarios"].values():
+            s.pop("monthly_gross_profit", None)
     chosen = next(o for o in sim["options"] if o["id"] == sim["recommended_option"])
-    if flag := runway_flag(chosen, runway):
+    if not existing and chosen.get("cash_out_month"):
+        flags.append({"code": "cash_runs_out", "severity": "high", "evidence_ids": [], "assumption_keys": ["upfront_cost", "monthly_cost"],
+                      "text": f"With this launch at {inr(chosen['price_inr'])}, cash runs out in month {chosen['cash_out_month']}: "
+                              "today's burn plus the launch and running costs outpace its gross profit."})
+    elif not existing and (flag := runway_flag(chosen, runway)):
         flags.append(flag)
+    if existing and chosen.get("runway_months") is not None and runway is not None and chosen["runway_months"] < runway:
+        flags.append({"code": "shorter_runway", "severity": "medium", "evidence_ids": [], "assumption_keys": [],
+                      "text": f"At {inr(chosen['price_inr'])} runway goes from {runway:g} to {chosen['runway_months']:g} months."})
     if uc is not None and chosen["unit_margin_inr"] <= 0:
         flags.append({"code": "negative_unit_margin", "severity": "high", "evidence_ids": [], "assumption_keys": [],
                       "text": f"At {inr(chosen['price_inr'])} each unit costs more than it sells for ({inr(uc)})."})
-    return sim | {"assumptions": a, "inputs": inputs, "viability_flags": flags, "price_unit": "" if p["unit"] == "one_time" else f"/{p['unit']}",
+    assumptions = [{"key": k, "label": ASSUMPTION_LABEL[k], "value": a[k], "origin": origin[k]}
+                   for k in SHOWN if not (existing and k in ("upfront_cost", "monthly_cost", "ramp_months"))]
+    return sim | {"assumptions": a, "assumption_list": assumptions, "inputs": inputs, "viability_flags": flags,
+                  "sensitivity": sensitivity(m, f, a, uc, price), "existing": existing, "current_price_inr": price,
+                  "runway_now_months": runway, "basis": "gross profit" if uc is not None else "revenue",
+                  "price_unit": "" if p["unit"] == "one_time" else f"/{p['unit']}",
                   "label": "Scenario model, not a forecast", "product_id": str(p["id"])}
+
+
+class ProductAssumptionsIn(BaseModel):
+    assumptions: dict[str, float | None]  # None resets that assumption to its default
+
+
+@router.put("/products/{product_id}/assumptions")
+def put_product_assumptions(product_id: UUID, body: ProductAssumptionsIn, user: UserDep, conn: ConnDep) -> dict:
+    p, card, comp = _product(conn, product_id, user.id)
+    bad = [k for k, v in body.assumptions.items() if k not in DEFAULTS or (v is not None and v < 0)]
+    if bad:
+        raise HTTPException(422, {"code": "bad_assumption", "message": f"Unknown or negative: {', '.join(bad)}."})
+    mine = {**(p.get("sim_assumptions") or {}), **{k: v for k, v in body.assumptions.items() if v is not None}}
+    for k, v in body.assumptions.items():
+        if v is None:
+            mine.pop(k, None)
+    conn.execute(text("update products set sim_assumptions = cast(:a as jsonb) where id = :id"), {"a": json.dumps(mine), "id": product_id})
+    return product_sim(conn, *_product(conn, product_id, user.id))
+
+
+def _scenarios(conn: Connection, product_id: UUID) -> list[dict]:
+    rows = [dict(r) for r in conn.execute(text("""select id, created_at, assumptions, inputs, recommended_price_inr::float as recommended_price_inr, result
+        from product_scenarios where product_id = :p order by created_at"""), {"p": product_id}).mappings()]
+    out = []
+    for i, r in enumerate(rows):
+        out.append({"id": str(r["id"]), "created_at": r["created_at"].isoformat(), "recommended_price_inr": r["recommended_price_inr"],
+                    "reason": r["result"].get("reason"), "flags": [f["text"] for f in r["result"].get("viability_flags", [])],
+                    "changes": scenario_diff(rows[i - 1], r) if i else []})
+    return list(reversed(out))
+
+
+@router.post("/products/{product_id}/scenarios", status_code=201)
+def save_scenario(product_id: UUID, user: UserDep, conn: ConnDep) -> list[dict]:
+    sim = product_sim(conn, *_product(conn, product_id, user.id))
+    conn.execute(text("""insert into product_scenarios (product_id, assumptions, inputs, recommended_price_inr, result)
+        values (:p, cast(:a as jsonb), cast(:i as jsonb), :r, cast(:res as jsonb))"""),
+                 {"p": product_id, "a": json.dumps(sim["assumptions"]), "i": json.dumps([{"label": x["label"], "value": x["value"]} for x in sim["inputs"]]),
+                  "r": sim["recommended_price_inr"], "res": json.dumps({k: sim[k] for k in ("reason", "viability_flags", "options")})})
+    return _scenarios(conn, product_id)
+
+
+@router.get("/products/{product_id}/scenarios")
+def list_scenarios(product_id: UUID, user: UserDep, conn: ConnDep) -> list[dict]:
+    _product(conn, product_id, user.id)
+    return _scenarios(conn, product_id)
 
 
 @router.get("/products/{product_id}/simulation")

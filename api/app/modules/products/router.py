@@ -26,7 +26,7 @@ from app.modules.products.taxonomy import candidates, path_of
 router = APIRouter(prefix="/api/v1", tags=["products"])
 log = logging.getLogger(__name__)
 COLS = ("id, profile_id, name, stage, description, url, taxonomy_id, category_path, niche, category_source, price, currency, unit, "
-        "unit_cost, features, add_ons, source, is_demo_data, created_at, target_customer")
+        "unit_cost, features, add_ons, source, is_demo_data, created_at, target_customer, sim_assumptions")
 Unit = Literal["one_time", "month", "year", "hour", "user"]
 
 
@@ -51,6 +51,7 @@ class Product(BaseModel):
     is_demo_data: bool
     created_at: datetime
     target_customer: str | None = None
+    sim_assumptions: dict = {}
 
 
 class ProductIn(BaseModel):

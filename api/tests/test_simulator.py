@@ -6,6 +6,9 @@ def test_round_99_and_proposed_options():
     assert (round_99(1146.65), round_99(1349), round_99(1551.35)) == (1099, 1399, 1599)
     assert [o["price_inr"] for o in propose_options(1349, planned=999)] == [1099, 1399, 1599, 999]  # P added: 999 is >5% off
     assert [o["id"] for o in propose_options(1049, planned=1049)] == ["A", "B", "C"]  # planned ≈ B, no P
+    # under ₹1,000 the step is ₹10, so a ₹130 brownie gets three distinct options, not ₹99 twice
+    assert [o["price_inr"] for o in propose_options(130)] == [109, 129, 149]
+    assert round_99(45) == 44 and round_99(5) == 4
 
 
 def test_conversion_is_c0_at_market_price_and_half_coverage():
@@ -90,3 +93,72 @@ def test_segment_must_cite_existing_evidence():
     ev = {"E1", "E2", "E3"}
     assert checked_segment({"segment": "Weekend runners", "why": ["a"], "evidence_ids": ["E1", "E9"]}, ev)["evidence_ids"] == ["E1"]
     assert checked_segment({"segment": "Anyone", "why": [], "evidence_ids": ["E7"]}, ev) is None
+
+
+# ---- Workstream 4: the model checks out against hand-worked numbers ----
+from app.modules.simulator.service import calibrate_segment, launch_cash_months, runway_with, scenario_diff, sensitivity
+
+
+def test_break_even_counts_gross_profit_when_unit_cost_is_known():
+    a = {**DEFAULTS, "segment_size": 1000, "ramp_months": 1, "upfront_cost": 10000, "monthly_cost": 0}
+    # 1000 × 10% = 100 units a month. Revenue: ₹100 × 100 = ₹10,000 → month 1. Gross profit at unit cost ₹60: ₹4,000 → month 3.
+    assert break_even_month(100, 0.10, a) == 1
+    assert break_even_month(100, 0.10, a, unit_cost=60) == 3
+    assert break_even_month(100, 0.10, a, unit_cost=100) is None  # no margin, never
+
+
+def test_existing_product_is_calibrated_to_its_real_sales():
+    # 300 units a month at today's price, model conversion 3% there → a reachable segment of 10,000
+    assert calibrate_segment(300, 0.03) == 10000
+    assert calibrate_segment(None, 0.03) is None and calibrate_segment(300, 0) is None
+
+
+def test_runway_moves_with_the_change_in_monthly_gross_profit():
+    # ₹6 L cash, ₹1 L burn: 6 months. A price that earns ₹20,000 more a month → burn ₹80,000 → 7.5 months.
+    assert runway_with(600000, 100000, 20000) == 7.5
+    assert runway_with(600000, 100000, -50000) == 4.0
+    assert runway_with(600000, 100000, 150000) is None  # stops burning
+    assert runway_with(None, 100000, 0) is None and runway_with(600000, None, 0) is None
+
+
+def test_launch_cash_path_month_by_month():
+    # ₹3 L cash, ₹50k burn, ₹1 L launch, ₹20k a month to run, gross profit 10k, 20k, 30k…
+    profits = [10000 * m for m in range(1, 37)]
+    # cash after launch 2,00,000; month m spends 70,000 and earns 10,000m: 1.4 L, 0.9 L, 0.5 L, 0.2 L, 0, then −10,000 → out in month 6
+    assert launch_cash_months(300000, 50000, 100000, 20000, profits) == 6
+    assert launch_cash_months(300000, 0, 0, 0, profits) is None  # never runs out within 36 months
+    assert launch_cash_months(300000, 50000, 100000, 20000, [0] * 36) == 3  # 2,00,000 / 70,000 → out during month 3
+    assert launch_cash_months(None, 50000, 0, 0, [0] * 36) is None
+
+
+def test_sensitivity_reports_whether_the_recommendation_holds():
+    a = {**DEFAULTS, "ramp_months": 1, "upfront_cost": 0, "monthly_cost": 0}
+    rows = sensitivity(1000, 0.5, a, unit_cost=400)
+    names = [r["assumption"] for r in rows]
+    assert names == ["Price sensitivity", "Price sensitivity", "Unit cost", "Unit cost", "Conversion", "Conversion"]
+    assert {r["change"] for r in rows} == {"−20%", "+20%"}
+    assert all("recommended_price_inr" in r and "gross_profit_12m_inr" in r and "same_recommendation" in r for r in rows)
+    assert len(sensitivity(1000, 0.5, a, unit_cost=None)) == 4  # no unit cost, nothing to vary
+
+
+def test_scenario_diff_says_what_changed_and_why():
+    prev = {"assumptions": {"base_conversion": 0.03}, "inputs": [{"label": "Market price (median)", "value": "₹3,249"}], "recommended_price_inr": 2999}
+    curr = {"assumptions": {"base_conversion": 0.04}, "inputs": [{"label": "Market price (median)", "value": "₹3,024"}], "recommended_price_inr": 2799}
+    d = scenario_diff(prev, curr)
+    assert "Recommended ₹2,999 → ₹2,799" in d[0]
+    assert any("Market price (median): ₹3,249 → ₹3,024" in x for x in d) and any("Conversion at market price" in x for x in d)
+    assert scenario_diff(curr, curr) == []
+
+
+def test_recommendation_maximises_gross_profit_when_unit_cost_is_known():
+    a = {**DEFAULTS, "ramp_months": 1, "upfront_cost": 0, "monthly_cost": 0}
+    by_revenue = simulate(1000, 0.5, a)
+    by_profit = simulate(1000, 0.5, a, unit_cost=800)
+    # elasticity 1.2 > 1: the cheapest option has the most revenue, but at ₹800 a unit its margin is thin
+    assert by_revenue["recommended_price_inr"] < by_profit["recommended_price_inr"]
+    assert "gross profit" in by_profit["reason"]
+
+
+def test_your_price_replaces_a_proposed_option_within_5_percent():
+    opts = propose_options(130, planned=110)
+    assert [o["price_inr"] for o in opts] == [110, 129, 149] and opts[0]["origin"] == "your planned price"
