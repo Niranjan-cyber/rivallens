@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { inr } from "@/components/money";
-import { CoverageStrip, Findings, NextAction, useSetup } from "@/components/setup";
+import { COV_LABEL, CoverageStrip, Findings, NextAction, SinceLastVisit, useSetup, type Coverage } from "@/components/setup";
 import { SampleBadge } from "@/components/ui";
 import { api, type Product, type ProfileSummary } from "@/lib/api";
 
@@ -20,7 +20,15 @@ export function Overview({ profileId }: { profileId: string }) {
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [items, setItems] = useState<Product[] | null>(null);
   const [customers, setCustomers] = useState<Customers | null>(null);
-  const setup = useSetup(profileId);
+  // The viewer's last visit, kept only in this browser (a convenience; storage can be missing, so every access is guarded)
+  const [lastVisit] = useState<string | null>(() => {
+    try { return typeof window === "undefined" ? null : localStorage.getItem(`rl-visit-${profileId}`); } catch { return null; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(`rl-visit-${profileId}`, new Date().toISOString()); } catch { /* private window */ }
+  }, [profileId]);
+  const setup = useSetup(profileId, lastVisit);
+  const status = (area: string) => setup.data?.coverage.find((c) => c.area === area)?.status;
   const [money, setMoney] = useState<{ transactions_count: number; metrics: { monthly_revenue: number; operating_margin: number | null; runway_months: number | null; monthly_burn: number | null }; benchmark: { industry: string; operating_margin: number | null } | null } | null>(null);
 
   useEffect(() => {
@@ -51,6 +59,7 @@ export function Overview({ profileId }: { profileId: string }) {
       {setup.data && (
         <div className="mt-8 grid gap-6">
           <NextAction profileId={profileId} action={setup.data.next_action} onDone={setup.load} />
+          {setup.data.since && <SinceLastVisit since={setup.data.since} profileId={profileId} />}
           <div>
             <h2 className="text-[20px] font-medium tracking-[-0.02em]">What we found</h2>
             <div className="mt-3"><Findings findings={setup.data.findings} /></div>
@@ -60,7 +69,7 @@ export function Overview({ profileId }: { profileId: string }) {
       )}
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
-        <Tile title="Product" href={`/app/${profileId}/product`} cta={products.length ? "Open products" : "Add your products"}>
+        <Tile title="Product" status={status("Products")} href={`/app/${profileId}/product`} cta={products.length ? "Open products" : "Add your products"}>
           {products.length ? (
             <>
               <p className="text-[28px] font-medium tracking-[-0.02em]">{products.length} product{products.length > 1 ? "s" : ""}</p>
@@ -70,7 +79,7 @@ export function Overview({ profileId }: { profileId: string }) {
             <p className="text-charcoal">Add what you sell or plan to sell. Each product is compared only with products in its exact category.</p>
           )}
         </Tile>
-        <Tile title="Finance" href={`/app/${profileId}/finance`} cta={money?.transactions_count ? "Open finance" : "Upload sales or add entries"}>
+        <Tile title="Finance" status={status("Finance")} href={`/app/${profileId}/finance`} cta={money?.transactions_count ? "Open finance" : "Upload sales or add entries"}>
           {money?.transactions_count ? (
             <>
               <p className="text-[28px] font-medium tracking-[-0.02em]">
@@ -85,7 +94,7 @@ export function Overview({ profileId }: { profileId: string }) {
             <p className="text-charcoal">Upload a CSV or Excel export from your bank, payment gateway or accounting tool to see revenue, margin and runway.</p>
           )}
         </Tile>
-        <Tile title="Market" href={`/app/${profileId}/dashboard`} cta="Open market">
+        <Tile title="Market" status={status("Market")} href={`/app/${profileId}/dashboard`} cta="Open market">
           {summary ? (
             <>
               <p className="text-[28px] font-medium tracking-[-0.02em]">{summary.competitors_monitored} competitors watched</p>
@@ -98,7 +107,7 @@ export function Overview({ profileId }: { profileId: string }) {
             <p className="text-charcoal">Find competitors in India and watch their prices, plans and features.</p>
           )}
         </Tile>
-        <Tile title="Customers" href={`/app/${profileId}/customers`} cta={customers?.total ? "Open customers" : "Add reviews or comments"}>
+        <Tile title="Customers" status={status("Customers")} href={`/app/${profileId}/customers`} cta={customers?.total ? "Open customers" : "Add reviews or comments"}>
           {customers?.total ? (
             <>
               <p className="text-[28px] font-medium tracking-[-0.02em]">{customers.total} mentions</p>
@@ -116,10 +125,13 @@ export function Overview({ profileId }: { profileId: string }) {
   );
 }
 
-function Tile({ title, href, cta, children }: { title: string; href: string; cta: string; children: ReactNode }) {
+function Tile({ title, href, cta, status, children }: { title: string; href: string; cta: string; status?: Coverage["status"]; children: ReactNode }) {
   return (
     <Link href={href} className="flex flex-col rounded-stadium bg-lifted p-7 hover:shadow-lift-2">
-      <p className="text-[15px] font-medium text-slate">{title}</p>
+      <p className="flex items-center justify-between gap-2 text-[15px] font-medium text-slate">
+        {title}
+        {status && <span data-status={status} className={`rounded-pill px-2.5 py-0.5 text-[12px] ${status === "ok" ? "bg-ghost text-ink" : status === "missing" ? "bg-white" : "bg-signal/15 text-ink"}`}>{COV_LABEL[status]}</span>}
+      </p>
       <div className="mt-2 flex-1">{children}</div>
       <p className="mt-5 text-[15px] font-medium underline">{cta}</p>
     </Link>

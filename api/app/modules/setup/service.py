@@ -94,6 +94,9 @@ def _steps(s: dict, base: str) -> list[dict]:
             st = {"status": "todo", "detail": f"{notes + ' ' if notes else ''}{why}We read Indian stores' product pages and keep only "
                                               f"{(p['niche'] or p['name']).lower()}.",
                   "action": _act(f"Find products like {p['name']}", kind="comparables", product_id=p["id"])}
+        elif not any(search(p).get("pages_read") for p in tried):  # no store sells it as a product page: a service, priced by quote or plan
+            st = {"status": "blocked", "detail": "No store sells this as a product page (usual for services), so we compare you through "
+                                                  "competitors' pricing pages in the next step instead.", "action": None}
         else:  # searched every product and found nothing like-for-like: say so and move on, don't loop on the same button
             st = {"status": "blocked", "detail": f"{notes} Paste the page of a product you compete with and we'll add it if it matches.",
                   "action": _act("Paste a rival product page", f"{base}/product-detail?id={tried[0]['id']}")}
@@ -115,7 +118,7 @@ def _steps(s: dict, base: str) -> list[dict]:
 
     m = s["money"]
     if not m["transactions"]:
-        st = {"status": "optional", "detail": "Upload sales and costs (CSV or Excel) to see margin and runway.", "action": _act("Upload", f"{base}/finance")}
+        st = {"status": "optional", "detail": "Upload sales and costs (CSV or Excel) to see margin and runway.", "action": _act("Upload sales and costs", f"{base}/finance")}
     elif not m["has_costs"]:
         st = {"status": "optional", "detail": "Sales are in, but no costs yet, so margin, burn and runway stay unknown.", "action": _act("Add costs", f"{base}/finance")}
     else:
@@ -124,7 +127,7 @@ def _steps(s: dict, base: str) -> list[dict]:
 
     c = s["customers"]
     st = ({"status": "done", "detail": f"{c['total']} reviews and comments.", "action": _act("Open customers", f"{base}/customers")} if c["total"] else
-          {"status": "optional", "detail": "Upload reviews or comments to see what customers ask for.", "action": _act("Upload", f"{base}/customers")})
+          {"status": "optional", "detail": "Upload reviews or comments to see what customers ask for.", "action": _act("Upload reviews or comments", f"{base}/customers")})
     out.append({"key": "customers", "title": "What customers say"} | st)
     return out
 

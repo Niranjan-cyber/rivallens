@@ -91,8 +91,26 @@ def _receipt(conn: Connection, profile_id: UUID) -> dict | None:
             "text": alert_text(e["name"], change, show(e["prev_value"]), show(e["curr_value"]), "").split(" · observed")[0]}
 
 
+def _since(conn: Connection, profile_id: UUID, since: datetime) -> dict:
+    """What happened after the viewer's last visit: confirmed competitor changes, new customer mentions, checks run and failed pages."""
+    receipts = [{"id": str(e["id"]), "observed_at": _day(e["observed_at"]),
+                 "text": alert_text(e["name"], {"field_path": e["field_path"], "delta_pct": e["delta_pct"]}, show(e["prev_value"]),
+                                    show(e["curr_value"]), "").split(" · observed")[0]}
+                for e in conn.execute(text("""
+        select e.id, c.name, e.field_path, e.prev_value, e.curr_value, e.delta_pct, e.observed_at
+        from change_events e join competitors c on c.id = e.competitor_id
+        where c.profile_id = :p and e.status = 'confirmed' and e.observed_at > :s order by e.observed_at desc limit 5"""),
+                                      {"p": profile_id, "s": since}).mappings()]
+    counts = conn.execute(text("""select
+        (select count(*) from customer_mentions where profile_id = :p and created_at > :s) as mentions,
+        (select count(*) from runs where profile_id = :p and status = 'done' and started_at > :s) as runs,
+        (select count(*) from snapshots sn join sources so on so.id = sn.source_id join competitors c on c.id = so.competitor_id
+          where c.profile_id = :p and sn.status <> 'ok' and sn.observed_at > :s) as failed"""), {"p": profile_id, "s": since}).mappings().one()
+    return {"at": _day(since), "receipts": receipts, **counts}
+
+
 @router.get("/profiles/{profile_id}/setup")
-def get_setup(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict:
+def get_setup(profile_id: UUID, user: UserDep, conn: ConnDep, since: datetime | None = None) -> dict:
     prof = conn.execute(text("select card from profiles where id = :p and user_id = :u"), {"p": profile_id, "u": user.id}).mappings().first()
     if not prof:
         raise HTTPException(404, {"code": "not_found", "message": "Business not found."})
@@ -112,4 +130,7 @@ def get_setup(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict:
         "customers": {"total": cust["total"],
                       "complaint": {"label": complaints[0]["label"], "count": complaints[0].get("count", len(complaints[0]["mention_ids"]))} if complaints else None},
     }
-    return plan(state, f"/app/{profile_id}")
+    out = plan(state, f"/app/{profile_id}")
+    if since:
+        out["since"] = _since(conn, profile_id, since if since.tzinfo else since.replace(tzinfo=UTC))
+    return out

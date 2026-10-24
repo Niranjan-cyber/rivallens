@@ -130,3 +130,10 @@ def test_services_without_a_product_category_are_compared_through_competitors():
     c = step(p, "comparables")
     assert c["status"] == "blocked" and "pricing pages" in c["detail"]
     assert step(p, "products")["status"] == "done" and p["next_action"]["kind"] == "monitor"
+
+
+def test_a_service_with_no_product_pages_anywhere_gets_the_services_path():
+    s = state(competitors={"selected": 2, "total": 2})
+    s["products"][0] |= {"name": "Wedding photography package", "price": 85000, "searched": {"status": "done", "stores": 6, "pages_read": 0}}
+    c = step(plan(s, BASE), "comparables")
+    assert c["status"] == "blocked" and "pricing pages" in c["detail"] and c["action"] is None

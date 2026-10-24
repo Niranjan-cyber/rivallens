@@ -9,7 +9,9 @@ export type Action = { label: string; href: string | null; kind: "link" | "price
 type Step = { key: string; title: string; status: "done" | "todo" | "running" | "blocked" | "optional"; detail: string; action: Action | null };
 export type Finding = { kind: string; basis: Kind; text: string; evidence: { label: string; href: string }; action: Action };
 export type Coverage = { area: string; status: "ok" | "missing" | "failed" | "stale"; detail: string };
-export type Setup = { steps: Step[]; findings: Finding[]; coverage: Coverage[]; next_action: Action; complete: boolean };
+export type Since = { at: string; receipts: { id: string; text: string; observed_at: string }[]; mentions: number; runs: number; failed: number };
+export type Setup = { steps: Step[]; findings: Finding[]; coverage: Coverage[]; next_action: Action; complete: boolean; since?: Since };
+export const COV_LABEL: Record<Coverage["status"], string> = { ok: "Covered", missing: "Missing", failed: "Check failed", stale: "Out of date" };
 
 const btn = "inline-flex min-h-11 items-center rounded-btn border-[1.5px] border-ink px-5 text-[16px] font-medium disabled:opacity-50";
 const CHIP: Record<Step["status"], string> = { done: "Done", todo: "To do", running: "Working", blocked: "Blocked", optional: "Optional" };
@@ -74,10 +76,12 @@ function ActionControl({ profileId, action, primary, onDone }: { profileId: stri
   );
 }
 
-export function useSetup(profileId: string) {
+// since: the viewer's last visit (kept in this browser only), so the overview can say what is new.
+export function useSetup(profileId: string, since?: string | null) {
   const [data, setData] = useState<Setup | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const load = useCallback(() => api<Setup>(`/api/v1/profiles/${profileId}/setup`).then(setData, (e: Error) => setError(e.message)), [profileId]);
+  const load = useCallback(() => api<Setup>(`/api/v1/profiles/${profileId}/setup${since ? `?since=${encodeURIComponent(since)}` : ""}`)
+    .then(setData, (e: Error) => setError(e.message)), [profileId, since]);
   useEffect(() => { load(); }, [load]);
   const running = data?.steps.some((s) => s.status === "running");
   useEffect(() => {
@@ -101,12 +105,13 @@ export function NextAction({ profileId, action, onDone }: { profileId: string; a
   );
 }
 
-export function Findings({ findings }: { findings: Finding[] }) {
+export function Findings({ findings, top = 3 }: { findings: Finding[]; top?: number }) {
+  const [all, setAll] = useState(false);
   if (!findings.length)
     return <p className="rounded-btn bg-lifted p-6 text-charcoal">No conclusions yet. We only state a finding when enough real data supports it; the steps above say what is missing.</p>;
   return (
     <ul data-testid="findings" className="grid gap-3">
-      {findings.map((f, i) => (
+      {(all ? findings : findings.slice(0, top)).map((f, i) => (
         <li key={i} className="rounded-btn bg-lifted p-5">
           <p className="text-[17px]"><span className="mr-2 rounded-pill bg-white px-2 py-0.5 text-[12px] font-medium">{KIND_LABEL[f.basis]}</span>{f.text}</p>
           <p className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[15px]">
@@ -115,7 +120,27 @@ export function Findings({ findings }: { findings: Finding[] }) {
           </p>
         </li>
       ))}
+      {findings.length > top && (
+        <li><button type="button" onClick={() => setAll(!all)} className="text-[15px] font-medium underline">
+          {all ? "Show fewer" : `Show ${findings.length - top} more`}
+        </button></li>
+      )}
     </ul>
+  );
+}
+
+export function SinceLastVisit({ since, profileId }: { since: Since; profileId: string }) {
+  const parts = [since.receipts.length && `${since.receipts.length} competitor change${since.receipts.length > 1 ? "s" : ""}`,
+    since.mentions && `${since.mentions} new review${since.mentions > 1 ? "s" : ""} or comment${since.mentions > 1 ? "s" : ""}`,
+    since.runs && `${since.runs} check${since.runs > 1 ? "s" : ""} run`, since.failed && `${since.failed} page${since.failed > 1 ? "s" : ""} couldn't be read`].filter(Boolean);
+  return (
+    <div data-testid="since" className="rounded-btn bg-lifted p-5 text-[15px]">
+      <p className="font-medium">Since your last visit ({since.at})</p>
+      <p className="mt-1 text-charcoal">{parts.length ? parts.join(" · ") : "Nothing new."}</p>
+      {since.receipts.map((r) => (
+        <Link key={r.id} href={`/app/${profileId}/receipt?id=${r.id}`} className="mt-1 block underline">{r.text} (seen {r.observed_at})</Link>
+      ))}
+    </div>
   );
 }
 
@@ -124,7 +149,7 @@ export function CoverageStrip({ coverage }: { coverage: Coverage[] }) {
     <ul data-testid="coverage" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
       {coverage.map((c) => (
         <li key={c.area} className={`rounded-btn p-4 ${COV[c.status]}`}>
-          <p className="text-[14px] font-medium">{c.area} · {c.status === "ok" ? "Covered" : c.status === "failed" ? "Check failed" : c.status === "stale" ? "Out of date" : "Missing"}</p>
+          <p className="text-[14px] font-medium">{c.area} · {COV_LABEL[c.status]}</p>
           <p className="mt-1 text-[14px]">{c.detail}</p>
         </li>
       ))}
