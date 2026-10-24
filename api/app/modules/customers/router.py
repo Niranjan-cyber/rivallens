@@ -113,14 +113,19 @@ def _collect_job(job: Job, profile_id: UUID, p: dict) -> dict:
         pages = [r[0] for r in conn.execute(text("select url from products where profile_id = :p and url is not null"), {"p": profile_id})]
     website = str(card_value(p["card"] or {}, "website") or "")
     job.step("own_site", "running", len(pages), "Reading reviews on your product pages (robots.txt respected)…")
+    read = 0
     for url in pages[:10]:
         page = fetch(url)
+        read += page["status"] == "ok"
         for r in reviews_from_html(page["html"]) if page["status"] == "ok" else []:
             found.append(r | {"source_type": "own_site", "source": url, "url": url, "product": None})
     job.step("web", "running", None, "Searching the web for mentions…")
     brand = next((w for w in re.findall(r"[a-z0-9]+", p["name"].lower()) if len(w) >= 4), p["name"].lower())  # "theobroma"
+    results = 0
     for q in (f'"{p["name"]}" reviews', f"{brand} review customers"):
-        for r in _tavily(q):
+        hits = _tavily(q)
+        results += len(hits)
+        for r in hits:
             u, body = r.get("url", ""), (r.get("content") or "").lower()
             own = brand in registrable_domain(u) or (website and registrable_domain(website) == registrable_domain(u))
             if SOCIAL.search(u) or NOT_VOICE.search(registrable_domain(u)) or own or brand not in body or not VOICE.search(body):
@@ -134,7 +139,9 @@ def _collect_job(job: Job, profile_id: UUID, p: dict) -> dict:
                 values (:p, :source_type, :source, :url, :author, :text, :rating, :date, :product, :demo)"""),
                          [x | {"p": profile_id, "demo": p["is_demo_data"]} for x in found])
     out = _analyse_job(job, profile_id, _business(p))
-    return {"own_site": sum(f["source_type"] == "own_site" for f in found), "web": sum(f["source_type"] == "web" for f in found)} | out
+    # what was read, so the page can say why a collect found nothing instead of looking broken
+    return {"own_site": sum(f["source_type"] == "own_site" for f in found), "web": sum(f["source_type"] == "web" for f in found),
+            "pages": len(pages), "pages_read": read, "searched": p["name"], "web_results": results} | out
 
 
 @router.post("/profiles/{profile_id}/customers/collect", status_code=202)

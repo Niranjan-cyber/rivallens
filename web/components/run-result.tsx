@@ -23,8 +23,10 @@ export function RunResult({ profileId }: { profileId: string }) {
   const id = useSearchParams().get("id");
   const [run, setRun] = useState<Run | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [demo, setDemo] = useState(false);
 
   useEffect(() => {
+    api<{ is_demo_data: boolean }>(`/api/v1/profiles/${profileId}`).then((p) => setDemo(p.is_demo_data), () => {}); // badge only
     const runId = id
       ? Promise.resolve(id)
       : api<{ id: string }[]>(`/api/v1/profiles/${profileId}/runs?limit=1`).then((r) => {
@@ -45,15 +47,25 @@ export function RunResult({ profileId }: { profileId: string }) {
     <section data-screen="S-10">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-[32px] leading-tight md:text-[40px]">Monitoring run</h1>
-        <SampleBadge label="Demo data" />
+        {demo && <SampleBadge label="Demo data" />}
       </div>
       <p className="mt-3 max-w-[40rem] text-[17px] text-charcoal">
         {run.kind === "baseline"
           ? `First check on ${when}. Every page is saved as the baseline; changes show up from the next run.`
           : `Checked ${run.counts.sources} pages on ${when} and compared each with its previous check.`}
       </p>
+      {run.kind !== "baseline" && (
+        // "no change", "couldn't check" and "changed" are different answers: say which one this is first
+        <p data-testid="run-verdict" className="mt-4 max-w-[44rem] rounded-btn bg-lifted p-5 text-[17px]">
+          {meaningful.length
+            ? `${meaningful.length} competitor ${meaningful.length === 1 ? "change matters" : "changes matter"}: open each one for its receipt.`
+            : `Nothing that matters changed: no price, plan, feature or headline moved on the ${run.counts.sources - run.failures.length} pages read since the previous check.`}
+          {!meaningful.length && run.ledger.length > 0 && ` ${run.ledger.length} cosmetic ${run.ledger.length === 1 ? "difference was" : "differences were"} ignored (listed below).`}
+          {run.failures.length > 0 && ` ${run.failures.length} ${run.failures.length === 1 ? "page" : "pages"} couldn't be read, so ${run.failures.length === 1 ? "it isn't" : "they aren't"} covered by this answer.`}
+        </p>
+      )}
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+      {run.kind !== "baseline" && <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <div className="rounded-stadium bg-ink p-8 text-canvas">
           <p className="text-[72px] font-medium leading-none tracking-[-0.04em]">{meaningful.length}</p>
           <p className="mt-3 text-[20px]">meaningful {meaningful.length === 1 ? "change" : "changes"}</p>
@@ -64,7 +76,7 @@ export function RunResult({ profileId }: { profileId: string }) {
           <p className="mt-3 text-[20px]">differences ignored</p>
           <p className="mt-1 text-[15px] text-slate">Each one is listed below with the rule that ignored it</p>
         </div>
-      </div>
+      </div>}
 
       {meaningful.length > 0 && (
         <>

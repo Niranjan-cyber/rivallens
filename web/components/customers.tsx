@@ -11,6 +11,7 @@ type Data = {
   sources: { source: string; source_type: string; rows: number }[]; recent: Omit<Quote, "id">[];
   metrics: { metric: string; source: string; first: number; last: number; first_date: string; last_date: string; points: number }[];
 };
+type Collected = { own_site: number; web: number; pages: number; pages_read: number; searched: string; web_results: number };
 type Preview = { filename: string; headers: string[]; rows: number; kind: "reviews" | "metrics"; mapping: Record<string, string>; metrics: string[];
   sample: { text: string; rating: number | null; date: string | null }[] };
 
@@ -35,16 +36,19 @@ export function Customers({ profileId }: { profileId: string }) {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [collected, setCollected] = useState<string | null>(null);
   const load = useCallback(() => api<Data>(`/api/v1/profiles/${profileId}/customers`).then((d) => (setError(null), setData(d)), (e: Error) => setError(e.message)), [profileId]);
   useEffect(() => { load(); }, [load]);
 
   async function collect() {
     setStatus("Starting…");
     setActionError(null);
+    setCollected(null);
     try {
       const { job_id } = await api<{ job_id: string }>(`/api/v1/profiles/${profileId}/customers/collect`, { method: "POST" });
       const job = await waitFor(job_id, setStatus);
       if (job?.status === "failed" || job?.status === "stale") setActionError(job.error?.message ?? "Collecting stopped early. Try again.");
+      else if (job?.status === "done") setCollected(collectNote(job.result as unknown as Collected));
     } catch (e) {
       setActionError((e as Error).message);
     }
@@ -159,6 +163,7 @@ export function Customers({ profileId }: { profileId: string }) {
             {status ?? "Collect mentions"}
           </button>
           {actionError && <p role="alert" className="mt-3 text-[14px] text-charcoal">{actionError}</p>}
+          {collected && <p role="status" data-testid="collect-note" className="mt-3 rounded-[14px] bg-white p-3 text-[14px]">{collected}</p>}
           {data.sources.length > 0 && (
             <ul className="mt-4 grid gap-1 text-[14px]">
               {data.sources.map((x) => (
@@ -173,6 +178,17 @@ export function Customers({ profileId }: { profileId: string }) {
       </div>
     </section>
   );
+}
+
+// Says what a collect read and why it may have found nothing, so 0 never looks like a broken button.
+function collectNote(r: Collected): string {
+  const own = r.pages
+    ? `Read ${r.pages_read} of ${r.pages} product page${r.pages === 1 ? "" : "s"}: ${r.own_site} review${r.own_site === 1 ? "" : "s"}${r.own_site ? "" : " published on them"}.`
+    : "No product page links saved, so there were no reviews on your own pages to read: add a product by its page link on Products.";
+  const web = `Searched the web for “${r.searched}”: ${r.web} customer mention${r.web === 1 ? "" : "s"}`
+    + (r.web_results === 0 ? " (the search returned nothing; it may be busy, so try later)."
+      : r.web ? "." : ` in ${r.web_results} results (pages that don't quote customers, your own site and social networks are skipped).`);
+  return `${own} ${web}${r.own_site + r.web === 0 ? " Uploading a reviews or comments export works for any business." : ""}`;
 }
 
 function Upload({ profileId, onDone }: { profileId: string; onDone: () => void }) {

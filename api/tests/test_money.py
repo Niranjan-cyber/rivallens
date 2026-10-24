@@ -85,3 +85,18 @@ def test_bank_settlements_are_not_double_counted_with_order_exports():
         {"date": date(2026, 2, 9), "kind": "sale", "amount": 5000, "product": None, "quantity": None},           # no orders this month
     ]
     assert [m["revenue"] for m in metrics(txs, cash=None)["months"]] == [4000, 5000]
+
+
+def test_csv_with_commas_inside_quoted_descriptions_is_read():
+    # Excel on Windows saves CRLF: csv.Sniffer's quote pattern then misses a quoted last column, lines hold 4 or 5 commas,
+    # and it gave up ("Could not determine delimiter"), so the upload was rejected as unreadable
+    lines = [b"date,type,amount,product,description", b'2026-04-28,sale,588690,dosa tawa,"Online orders, 310 units"',
+             b"2026-04-29,expense,120000,,Rent", b'2026-04-30,sale,99000,skillet,"Marketplace, 40 units"', b"2026-05-01,expense,5000,,Packaging (boxes)"]
+    headers, rows = parse_table("ledger.csv", b"\r\n".join(lines) + b"\r\n")
+    assert headers == ["date", "type", "amount", "product", "description"]
+    assert [r["description"] for r in rows] == ["Online orders, 310 units", "Rent", "Marketplace, 40 units", "Packaging (boxes)"]
+
+
+def test_semicolon_csv_is_still_detected():
+    headers, rows = parse_table("bank.csv", b"Date;Amount;Narration\n01/04/2026;1200;UPI\n")
+    assert headers == ["Date", "Amount", "Narration"] and rows[0]["Amount"] == "1200"

@@ -162,3 +162,22 @@ def test_recommendation_maximises_gross_profit_when_unit_cost_is_known():
 def test_your_price_replaces_a_proposed_option_within_5_percent():
     opts = propose_options(130, planned=110)
     assert [o["price_inr"] for o in opts] == [110, 129, 149] and opts[0]["origin"] == "your planned price"
+
+
+from app.modules.simulator.service import assumption_rows
+
+
+def test_every_shown_assumption_says_what_it_means():
+    a = DEFAULTS | {"segment_size": 4549}
+    rows = assumption_rows(a, {k: "default" for k in DEFAULTS} | {"segment_size": "your sales"}, existing=True, calibrated=True)
+    assert [r["key"] for r in rows] == ["segment_size", "base_conversion", "elasticity_expected"]  # launch costs hidden for products already selling
+    assert all(r["help"] for r in rows)
+
+
+def test_conversion_has_no_effect_once_calibrated_to_real_sales():
+    # reachable customers are solved from units sold at today's price, so segment × conversion is fixed: editing conversion changed nothing
+    rows = {r["key"]: r for r in assumption_rows(DEFAULTS, {k: "default" for k in DEFAULTS}, existing=True, calibrated=True)}
+    assert rows["base_conversion"]["applies"] is False and "sales" in rows["base_conversion"]["note"]
+    assert rows["elasticity_expected"]["applies"] is True
+    new = {r["key"]: r for r in assumption_rows(DEFAULTS, {k: "default" for k in DEFAULTS}, existing=False, calibrated=False)}
+    assert new["base_conversion"]["applies"] is True and "upfront_cost" in new

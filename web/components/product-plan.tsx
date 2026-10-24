@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LoadError } from "@/components/ui";
 import { api } from "@/lib/api";
 
@@ -10,7 +10,7 @@ type Option = {
   id: string; price_inr: number; origin: string; scenarios: Record<"best" | "expected" | "worst", Scenario>;
   unit_margin_inr?: number; gross_profit_12m_inr?: number | null; after_runway: boolean; runway_months?: number | null; cash_out_month?: number | null;
 };
-type Assumption = { key: string; label: string; value: number; origin: "default" | "yours" | "your sales" | "estimate" };
+type Assumption = { key: string; label: string; value: number; origin: "default" | "yours" | "your sales" | "estimate"; help: string; applies: boolean; note?: string };
 type Sens = { assumption: string; change: string; recommended_price_inr: number; gross_profit_12m_inr: number; same_recommendation: boolean };
 type Saved = { id: string; created_at: string; recommended_price_inr: number; reason: string; flags: string[]; changes: string[] };
 export type Kind = "observed" | "yours" | "estimate";
@@ -33,8 +33,10 @@ export function ProductPlan({ productId, profileId, version }: { productId: stri
   const [seg, setSeg] = useState<Segment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const latest = useRef(0);
   useEffect(() => {
-    api<Sim>(`/api/v1/products/${productId}/simulation`).then((s) => { setSim(s); setError(null); }, (e: Error) => setError(e.message));
+    const n = ++latest.current; // a load that lands after an edit must not put the old numbers back
+    api<Sim>(`/api/v1/products/${productId}/simulation`).then((s) => { if (n === latest.current) { setSim(s); setError(null); } }, (e: Error) => setError(e.message));
     api<Segment>(`/api/v1/products/${productId}/segment`).then(setSeg, (e: Error) => setSeg({ segment: null, why: [], evidence_ids: [], evidence: [], message: `Couldn't load the segment: ${e.message}` }));
   }, [productId, version, attempt]);
   const href = (link: string | null) => (link === "product-detail" ? `/app/${profileId}/product-detail?id=${productId}` : `/app/${profileId}/${link}`);
@@ -63,10 +65,18 @@ export function ProductPlan({ productId, profileId, version }: { productId: stri
           <p className="text-[12px] text-slate">{sim?.label ?? "Scenario model, not a forecast"}</p>
         </div>
         {error && <div className="mt-3"><LoadError what="the simulator" message={error} onRetry={() => { setError(null); setAttempt((a) => a + 1); }} /></div>}
-        {sim && <SimBody sim={sim} href={href} productId={productId} onChange={setSim} />}
+        {sim && <SimBody sim={sim} href={href} productId={productId} onChange={(s) => { latest.current++; setSim(s); }} />}
       </div>
     </div>
   );
+}
+
+// After an edit, say what moved, so a change never looks like nothing happened.
+function whatChanged(before: Sim, after: Sim, money: string): string {
+  const pick = (s: Sim) => s.options.find((o) => o.id === s.recommended_option)!;
+  const b = pick(before), a = pick(after), gp = (o: Option) => o.gross_profit_12m_inr ?? o.scenarios.expected.revenue_12m_inr;
+  const price = b.price_inr === a.price_inr ? `Recommended price stays ${inr(a.price_inr)}${after.price_unit}` : `Recommended price ${inr(b.price_inr)} → ${inr(a.price_inr)}${after.price_unit}`;
+  return gp(b) === gp(a) ? `${price}; ${money.toLowerCase()} unchanged.` : `${price}; ${money.toLowerCase()} ${inr(gp(b))} → ${inr(gp(a))}.`;
 }
 
 // The simulator's results, its assumptions (editable), sensitivity and saved scenarios.
@@ -74,12 +84,14 @@ function SimBody({ sim, href, productId, onChange }: { sim: Sim; href: (l: strin
   const [saved, setSaved] = useState<Saved[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
+  const [changed, setChanged] = useState<string | null>(null);
   const fail = (e: Error) => setFailed(e.message);
   useEffect(() => { api<Saved[]>(`/api/v1/products/${productId}/scenarios`).then(setSaved, () => setSaved([])); }, [productId]);
   const money = sim.basis === "gross profit" ? "12-month gross profit" : "12-month revenue";
   async function setAssumption(key: string, value: number | null) {
     setBusy(true);
-    await api<Sim>(`/api/v1/products/${productId}/assumptions`, { method: "PUT", body: JSON.stringify({ assumptions: { [key]: value } }) }).then((s) => (setFailed(null), onChange(s)), fail);
+    await api<Sim>(`/api/v1/products/${productId}/assumptions`, { method: "PUT", body: JSON.stringify({ assumptions: { [key]: value } }) })
+      .then((s) => (setFailed(null), setChanged(whatChanged(sim, s, money)), onChange(s)), fail);
     setBusy(false);
   }
   async function save() {
@@ -99,6 +111,7 @@ function SimBody({ sim, href, productId, onChange }: { sim: Sim; href: (l: strin
         ))}
       </ul>
       {failed && <p role="alert" className="mt-3 rounded-btn bg-white p-3 text-[14px]">Not saved: {failed}</p>}
+      {changed && <p role="status" data-testid="sim-changed" className="mt-3 rounded-btn bg-white p-3 text-[14px]">{changed}</p>}
       {sim.viability_flags.map((f) => (
         <p key={f.code} role="note" data-flag={f.code} className={`mt-3 rounded-btn p-3 text-[14px] ${f.severity === "high" ? "bg-ink text-canvas" : "bg-white"}`}>{f.text}</p>
       ))}
@@ -134,15 +147,16 @@ function SimBody({ sim, href, productId, onChange }: { sim: Sim; href: (l: strin
         <ul className="mt-3 grid gap-2 text-[14px]">
           {sim.assumption_list.map((x) => (
             <li key={x.key} className="flex flex-wrap items-center gap-2">
-              <span className="min-w-[12rem]">{x.label}</span>
+              <span className="min-w-[12rem] max-w-[22rem]">{x.label}<span className="block text-[12px] text-slate">{x.help}</span></span>
               <form key={`${x.key}-${x.value}`} className="flex items-center gap-2" onSubmit={(e) => {
                 e.preventDefault();
                 setAssumption(x.key, Number(new FormData(e.currentTarget).get("v")));
               }}>
-                <input name="v" type="number" step="any" min={0} defaultValue={x.value} aria-label={x.label} className="w-28 rounded-[10px] border border-ink/30 px-2 py-1" />
-                <button disabled={busy} className="rounded-btn border border-ink px-3 py-1 text-[13px]">Set</button>
+                <input name="v" type="number" step="any" min={0} defaultValue={x.value} aria-label={x.label} disabled={!x.applies} className="w-28 rounded-[10px] border border-ink/30 px-2 py-1 disabled:opacity-50" />
+                <button disabled={busy || !x.applies} className="rounded-btn border border-ink px-3 py-1 text-[13px] disabled:opacity-50">Set</button>
               </form>
               <span className="text-[12px] text-slate">{ORIGIN[x.origin]}</span>
+              {!x.applies && <span className="w-full text-[12px] text-charcoal">{x.note}</span>}
               {x.origin === "yours" && <button type="button" disabled={busy} onClick={() => setAssumption(x.key, null)} className="text-[12px] underline">Reset</button>}
             </li>
           ))}

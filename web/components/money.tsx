@@ -225,7 +225,7 @@ function Upload({ profileId, onDone }: { profileId: string; onDone: () => void }
     fd.append("mapping", JSON.stringify(mapping));
     setBusy(true);
     await api<{ imported: number; skipped: number }>(`/api/v1/profiles/${profileId}/money/import`, { method: "POST", body: fd }).then(
-      (r) => (setMsg(`Imported ${r.imported} transactions${r.skipped ? `; skipped ${r.skipped} rows without a date or amount` : ""}.`), setPreview(null), onDone()),
+      (r) => (setMsg(`Imported ${r.imported} transactions${r.skipped ? `; skipped ${r.skipped} rows without a date or amount` : ""}. Revenue, margin, burn and runway above now include them.`), setPreview(null), onDone()),
       (err: Error) => setMsg(err.message),
     );
     setBusy(false);
@@ -251,9 +251,15 @@ function Upload({ profileId, onDone }: { profileId: string; onDone: () => void }
             </label>
           ))}
           {preview.parsed_sample.length > 0 && (
-            <div className="rounded-[14px] bg-white p-3 text-[13px]">
+            <div className="overflow-x-auto rounded-[14px] bg-white p-3 text-[13px]">
               <p className="font-medium">First rows as we read them</p>
-              {preview.parsed_sample.slice(0, 4).map((t, i) => <p key={i}>{t.date} · {t.kind} · {inr(t.amount)} · {t.product ?? t.description ?? ""}</p>)}
+              <table className="mt-2 w-full text-left">
+                <thead className="text-slate"><tr><th className="py-1 pr-3 font-medium">Date</th><th className="py-1 pr-3 font-medium">Type</th><th className="py-1 pr-3 text-right font-medium">Amount</th><th className="py-1 font-medium">Product / description</th></tr></thead>
+                <tbody>{preview.parsed_sample.slice(0, 5).map((t, i) => (
+                  <tr key={i} className="border-t border-ink/10"><td className="py-1 pr-3">{t.date}</td><td className="py-1 pr-3 capitalize">{t.kind}</td>
+                    <td className="py-1 pr-3 text-right tabular-nums">{inr(t.amount)}</td><td className="py-1">{[t.product, t.description].filter(Boolean).join(" · ") || "—"}</td></tr>
+                ))}</tbody>
+              </table>
             </div>
           )}
           <button disabled={busy} className="inline-flex min-h-11 w-fit items-center rounded-btn border-[1.5px] border-ink bg-ink px-6 text-[16px] font-medium text-canvas disabled:opacity-60">Import {preview.rows} rows</button>

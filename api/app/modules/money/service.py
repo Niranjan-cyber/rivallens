@@ -63,8 +63,12 @@ def parse_table(filename: str, data: bytes) -> tuple[list[str], list[dict]]:
         headers = [str(h).strip() if h is not None else f"Column {i + 1}" for i, h in enumerate(next(it))]
         rows = [dict(zip(headers, r)) for r, _ in zip(it, range(MAX_ROWS)) if any(c is not None for c in r)]
         return headers, rows
-    text = data.decode("utf-8-sig", errors="replace")
-    dialect = csv.Sniffer().sniff(text[:4096], delimiters=",;\t") if text.strip() else csv.excel
+    text = data.decode("utf-8-sig", errors="replace").replace("\r\n", "\n")  # Excel's CRLF hid quoted last columns from the sniffer
+    try:
+        dialect = csv.Sniffer().sniff(text[:4096], delimiters=",;\t") if text.strip() else csv.excel
+    except csv.Error:  # the header line still says which separator the file uses
+        header = text.split("\n", 1)[0]
+        dialect = type("Guessed", (csv.excel,), {"delimiter": max(",;\t", key=header.count)})
     reader = csv.DictReader(io.StringIO(text), dialect=dialect)
     headers = [h.strip() for h in reader.fieldnames or []]
     rows = [{k.strip(): v for k, v in r.items() if k} for r, _ in zip(reader, range(MAX_ROWS))]

@@ -57,7 +57,7 @@ function ActionControl({ profileId, action, primary, onDone }: { profileId: stri
         <label className="sr-only" htmlFor={`price-${action.product_id}`}>Price of {action.product} in rupees</label>
         <span className="text-[17px]">₹</span>
         <input id={`price-${action.product_id}`} type="number" min={1} required value={price} onChange={(e) => setPrice(e.target.value)}
-          className="w-32 rounded-[14px] border border-ink/30 bg-white px-4 py-2.5 text-[16px]" />
+          className="w-32 rounded-[14px] border border-ink/30 bg-white px-4 py-2.5 text-[16px] text-ink" />
         <span className="text-[15px] text-slate">{action.unit && action.unit !== "one_time" ? `per ${action.unit}` : "each"}</span>
         <button disabled={busy !== null || !price} className={cls}>{busy ?? "Save price"}</button>
         {error && <p role="alert" className="w-full text-[15px] text-charcoal">{error}</p>}

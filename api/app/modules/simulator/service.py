@@ -192,6 +192,31 @@ ASSUMPTION_LABEL = {"segment_size": "Reachable customers", "base_conversion": "C
                     "monthly_cost": "Monthly running cost", "elasticity_best": "Price sensitivity (best case)", "elasticity_worst": "Price sensitivity (worst case)"}
 
 
+ASSUMPTION_HELP = {
+    "segment_size": "People who could buy this in a month if they saw it.",
+    "base_conversion": "Share of those people who buy when your price equals the market median.",
+    "elasticity_expected": "How strongly sales react to price: at 1.2, pricing 10% above the median loses about 11% of buyers; 10% below gains about 13%.",
+    "ramp_months": "Months a new product takes to reach full sales.",
+    "upfront_cost": "One-off cost to launch: stock, design, setup.",
+    "monthly_cost": "Extra cost each month to run it: ads, staff, hosting.",
+}
+SHOWN = ("segment_size", "base_conversion", "elasticity_expected", "ramp_months", "upfront_cost", "monthly_cost")
+
+
+def assumption_rows(a: dict, origin: dict, existing: bool, calibrated: bool) -> list[dict]:
+    """The editable assumptions with what each means. Calibrated to real sales, reachable customers are solved from units sold
+    at today's price, so segment × conversion is fixed and conversion stops mattering: say so instead of a field that does nothing."""
+    rows = []
+    for k in SHOWN:
+        if existing and k in ("upfront_cost", "monthly_cost", "ramp_months"):  # already selling: its costs are in Finance
+            continue
+        row = {"key": k, "label": ASSUMPTION_LABEL[k], "value": a[k], "origin": origin[k], "help": ASSUMPTION_HELP[k], "applies": True}
+        if calibrated and k == "base_conversion":
+            row |= {"applies": False, "note": "No effect here: your sales already fix how many people buy at today's price. Change price sensitivity instead."}
+        rows.append(row)
+    return rows
+
+
 def _headline(sim: dict) -> tuple[int, int | None]:
     chosen = next(o for o in sim["options"] if o["id"] == sim["recommended_option"])
     e = chosen["scenarios"]["expected"]

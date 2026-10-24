@@ -11,7 +11,7 @@ from app.db import ConnDep
 from app.modules.comparison.router import competitor_cells
 from app.modules.discovery.pipeline import card_value
 from app.llm.gateway import LLMUnavailable, complete_json
-from app.modules.simulator.service import (ASSUMPTION_LABEL, DEFAULTS, calibrate_segment, checked_segment, conversion, feature_coverage, inr,
+from app.modules.simulator.service import (DEFAULTS, assumption_rows, calibrate_segment, checked_segment, conversion, feature_coverage, inr,
                                            launch_cash_months, request_boost, runway_flag, runway_with, scenario_diff, sensitivity,
                                            sentiment_shift, simulate, unit_cost, viability_flags)
 
@@ -186,9 +186,6 @@ def _units_per_month(conn: Connection, profile_id, name: str) -> float | None:
     return round(v, 1) if v else None
 
 
-SHOWN = ("segment_size", "base_conversion", "elasticity_expected", "ramp_months", "upfront_cost", "monthly_cost")
-
-
 def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
     """Workstream 4: unit cost → gross profit → break-even and runway, calibrated to real sales when Finance has them.
     Every input and assumption says where it comes from; the founder can override any assumption for this product."""
@@ -247,7 +244,8 @@ def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
     # Calibrate to real sales: the segment that makes today's price sell what Finance says it sold
     units = _units_per_month(conn, pid, p["name"]) if existing and price else None
     seg = calibrate_segment(units, conversion(price, m, f, a["base_conversion"], a["elasticity_expected"], a["coverage_weight"])) if units else None
-    if seg and "segment_size" not in mine:
+    calibrated = bool(seg) and "segment_size" not in mine
+    if calibrated:
         a["segment_size"], origin["segment_size"] = seg, "your sales"
         inputs.append(_in("Units sold a month", f"{units:g} (last 3 months of sales)", "money"))
     else:  # real sales already reflect what customers think; only an uncalibrated model is nudged by sentiment
@@ -295,8 +293,7 @@ def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
     if uc is not None and chosen["unit_margin_inr"] <= 0:
         flags.append({"code": "negative_unit_margin", "severity": "high", "evidence_ids": [], "assumption_keys": [],
                       "text": f"At {inr(chosen['price_inr'])} each unit costs more than it sells for ({inr(uc)})."})
-    assumptions = [{"key": k, "label": ASSUMPTION_LABEL[k], "value": a[k], "origin": origin[k]}
-                   for k in SHOWN if not (existing and k in ("upfront_cost", "monthly_cost", "ramp_months"))]
+    assumptions = assumption_rows(a, origin, existing, calibrated)
     return sim | {"assumptions": a, "assumption_list": assumptions, "inputs": inputs, "viability_flags": flags,
                   "sensitivity": sensitivity(m, f, a, uc, price), "existing": existing, "current_price_inr": price,
                   "runway_now_months": runway, "basis": "gross profit" if uc is not None else "revenue",
