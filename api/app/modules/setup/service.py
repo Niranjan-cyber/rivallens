@@ -119,12 +119,12 @@ def _findings(s: dict, base: str) -> list[dict]:
     out = []
     m = s["money"]
     if m["has_costs"] and m["runway_months"] is not None and m["runway_months"] < SHORT_RUNWAY:
-        out.append({"kind": "runway", "text": f"{m['runway_months']:g} months of runway at your current burn.",
+        out.append({"kind": "runway", "basis": "yours", "text": f"{m['runway_months']:g} months of runway at your current burn.",
                     "evidence": {"label": "Your uploaded sales and costs", "href": f"{base}/finance"},
                     "action": _act("See which price raises margin", f"{base}/product")})
     r = s["receipt"]
     if r:
-        out.append({"kind": "receipt", "text": f"{r['text']} (seen {r['observed_at']}).",
+        out.append({"kind": "receipt", "basis": "observed", "text": f"{r['text']} (seen {r['observed_at']}).",
                     "evidence": {"label": "Receipt: the page before and after", "href": f"{base}/receipt?id={r['id']}"},
                     "action": _act("Check your price against it", f"{base}/product")})
     for p in s["products"]:
@@ -133,7 +133,7 @@ def _findings(s: dict, base: str) -> list[dict]:
             continue
         pct, href = pos["pct_vs_median"], f"{base}/product-detail?id={p['id']}"
         if abs(pct) > SUSPECT_GAP:  # a slice against whole cakes, a sample against a pack: not a pricing conclusion
-            out.append({"kind": "check", "text": f"{p['name']} at {_inr(p['price'])} is far from the median {_inr(pos['median'])} of "
+            out.append({"kind": "check", "basis": "observed", "text": f"{p['name']} at {_inr(p['price'])} is far from the median {_inr(pos['median'])} of "
                                                  f"{p['like_for_like']} similar products. They may be a different size or pack, so we draw no conclusion yet.",
                         "evidence": {"label": "The products compared, each with its page", "href": href},
                         "action": _act("Check the products compared", href)})
@@ -141,12 +141,12 @@ def _findings(s: dict, base: str) -> list[dict]:
         where = "in line with" if abs(pct) < 10 else f"{abs(pct)}% {'below' if pct < 0 else 'above'}"
         action = (_act("Test a higher price in its simulator", href) if pct <= -15 else
                   _act("See what the premium products include", href) if pct >= 15 else _act("Watch for competitor price moves", f"{base}/dashboard"))
-        out.append({"kind": "price", "text": f"{p['name']} at {_inr(p['price'])} is {where} the median {_inr(pos['median'])} of "
+        out.append({"kind": "price", "basis": "observed", "text": f"{p['name']} at {_inr(p['price'])} is {where} the median {_inr(pos['median'])} of "
                                              f"{p['like_for_like']} like-for-like products ({', '.join(p['sources'][:3])}, seen {p['seen']}).",
                     "evidence": {"label": "The products compared, each with its page", "href": href}, "action": action})
     c = s["customers"]["complaint"]
     if c:
-        out.append({"kind": "complaint", "text": f"Most common complaint: {c['label']} ({c['count']} mentions).",
+        out.append({"kind": "complaint", "basis": "yours", "text": f"Most common complaint: {c['label']} ({c['count']} mentions).",
                     "evidence": {"label": "The quotes", "href": f"{base}/customers"}, "action": _act("Read what they say", f"{base}/customers")})
     return out
 

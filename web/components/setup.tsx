@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { KIND_LABEL, type Kind } from "@/components/product-plan";
 import { api, type Job } from "@/lib/api";
 
 export type Action = { label: string; href: string | null; kind: "link" | "price" | "discover" | "comparables" | "monitor" | "wait"; product_id?: string; product?: string; unit?: string; key?: string; why?: string };
 type Step = { key: string; title: string; status: "done" | "todo" | "running" | "blocked" | "optional"; detail: string; action: Action | null };
-export type Finding = { kind: string; text: string; evidence: { label: string; href: string }; action: Action };
+export type Finding = { kind: string; basis: Kind; text: string; evidence: { label: string; href: string }; action: Action };
 export type Coverage = { area: string; status: "ok" | "missing" | "failed"; detail: string };
 export type Setup = { steps: Step[]; findings: Finding[]; coverage: Coverage[]; next_action: Action; complete: boolean };
 
@@ -107,7 +108,7 @@ export function Findings({ findings }: { findings: Finding[] }) {
     <ul data-testid="findings" className="grid gap-3">
       {findings.map((f, i) => (
         <li key={i} className="rounded-btn bg-lifted p-5">
-          <p className="text-[17px]">{f.text}</p>
+          <p className="text-[17px]"><span className="mr-2 rounded-pill bg-white px-2 py-0.5 text-[12px] font-medium">{KIND_LABEL[f.basis]}</span>{f.text}</p>
           <p className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[15px]">
             <Link href={f.evidence.href} className="text-link underline">Evidence: {f.evidence.label}</Link>
             {f.action.href && <Link href={f.action.href} className="font-medium underline">Next: {f.action.label}</Link>}

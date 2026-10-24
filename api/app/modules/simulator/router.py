@@ -161,8 +161,12 @@ def add_option(profile_id: UUID, body: OptionIn, user: UserDep, conn: ConnDep) -
 LINKS = {"market": "dashboard", "money": "finance", "customers": "customers", "product": "product-detail", "default": None}
 
 
-def _in(label: str, value: str, source: str, evidence_id: str | None = None) -> dict:
-    return {"label": label, "value": value, "source": source, "link": LINKS[source], "evidence_id": evidence_id}
+KIND = {"market": "observed", "money": "yours", "customers": "yours", "product": "yours", "default": "estimate"}
+
+
+def _in(label: str, value: str, source: str, evidence_id: str | None = None, kind: str | None = None) -> dict:
+    """kind: observed (read from a public page), yours (entered or uploaded), estimate (benchmark or derived)."""
+    return {"label": label, "value": value, "source": source, "link": LINKS[source], "evidence_id": evidence_id, "kind": kind or KIND[source]}
 
 
 def _product(conn: Connection, product_id: UUID, user_id: UUID) -> tuple[dict, dict, dict]:
@@ -177,7 +181,7 @@ def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
     from app.modules.money.router import money_summary
     pid, pos, inputs = p["profile_id"], comp["position"], []
     price = float(p["price"]) if p["price"] is not None else None
-    if pos["n"] >= 2:
+    if pos["n"] >= 3:  # like-for-like only, the same bar as the product page and setup
         m = pos["median"]
         basis = "same-niche" if comp["basis"] == "niche" else "same-category"
         inputs.append(_in("Market price (median)", f"{inr(m)} across {pos['n']} {basis} products", "market"))
@@ -188,7 +192,7 @@ def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
             inputs.append(_in("Market price (median)", f"{inr(m)} across {len(priced)} monitored competitors", "market"))
         elif price:
             m = price
-            inputs.append(_in("Market price", f"{inr(m)}: your own price, no market prices yet", "product"))
+            inputs.append(_in("Market price", f"{inr(m)}: your own price, no market prices yet", "product", kind="estimate"))
         else:
             raise HTTPException(409, {"code": "insufficient_price_data", "message": "Find comparable products or set this product's price first."})
     receipt = conn.execute(text("""select e.id, c.name, e.delta_pct from change_events e join competitors c on c.id = e.competitor_id
@@ -208,7 +212,7 @@ def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
     if uc is not None:
         inputs.append(_in("Unit cost", f"{inr(uc)} (yours)" if uc_source == "product" else
                           f"{inr(uc)}: {bench['industry']} gross margin {bench['gross_margin']:.1%}, Damodaran India",
-                          "product" if uc_source == "product" else "money"))
+                          "product" if uc_source == "product" else "money", kind="yours" if uc_source == "product" else "estimate"))
     if met["operating_margin"] is not None:
         inputs.append(_in("Your operating margin", f"{met['operating_margin']:.1%}", "money"))
     inputs.append(_in("Runway", f"{runway:g} months" if runway is not None else
@@ -219,10 +223,10 @@ def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
     if shift is not None:
         a["base_conversion"] = round(a["base_conversion"] * (1 + shift), 4)
         sp = cs["sentiment"]
-        inputs.append(_in("Customer sentiment", f"{sp.get('positive', 0)} positive, {sp.get('negative', 0)} negative → conversion {shift:+.0%}", "customers"))
+        inputs.append(_in("Customer sentiment", f"{sp.get('positive', 0)} positive, {sp.get('negative', 0)} negative → conversion {shift:+.0%}", "customers", kind="estimate"))
     features = [str(x) for x in p["features"] or []]
     f, covered = request_boost(feature_coverage(features, [r["features"] or [] for r in comp["rows"]]), features, cs["themes"])
-    inputs.append(_in("Feature coverage", f"{f:.0%} of comparables' features", "market"))
+    inputs.append(_in("Feature coverage", f"{f:.0%} of comparables' features", "market", kind="estimate"))
     if covered:
         inputs.append(_in("Customer requests you answer", ", ".join(covered[:3]), "customers"))
     sim = simulate(m, f, a, planned=price)

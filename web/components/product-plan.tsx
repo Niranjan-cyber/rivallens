@@ -9,7 +9,9 @@ type Option = {
   id: string; price_inr: number; origin: string; scenarios: Record<"best" | "expected" | "worst", Scenario>;
   unit_margin_inr?: number; gross_profit_12m_inr?: number; after_runway: boolean;
 };
-type Input = { label: string; value: string; source: "market" | "money" | "customers" | "product"; link: string | null; evidence_id: string | null };
+export type Kind = "observed" | "yours" | "estimate";
+export const KIND_LABEL: Record<Kind, string> = { observed: "Observed", yours: "Your data", estimate: "Estimate" };
+type Input = { label: string; value: string; source: "market" | "money" | "customers" | "product"; link: string | null; evidence_id: string | null; kind: Kind };
 type Sim = {
   label: string; options: Option[]; recommended_option: string; reason: string; price_unit: string; inputs: Input[];
   viability_flags: { code: string; severity: string; text: string }[];
@@ -61,7 +63,7 @@ export function ProductPlan({ productId, profileId, version }: { productId: stri
                 <li key={i.label}>
                   <Link href={href(i.link)} className="inline-block rounded-pill border border-ink/20 bg-white px-3 py-1 text-[13px] hover:border-ink"
                     data-source={i.source}>
-                    <span className="text-slate">{i.label}:</span> {i.value} <span className="font-medium">· {SOURCE[i.source]} →</span>
+                    <span className="text-slate">{i.label}:</span> {i.value} <span className="text-slate">({KIND_LABEL[i.kind] ?? i.kind})</span> <span className="font-medium">· {SOURCE[i.source]} →</span>
                   </Link>
                 </li>
               ))}
