@@ -96,7 +96,7 @@ def verify(c: dict, ctext: str) -> dict:
     return {**out, "status": "verified" if ok else "rejected", "reasons": reasons, "signals": signals, "similarity": sim, "page": (url, page_type)}
 
 
-def discover(job: Job, profile_id: UUID) -> dict:
+def discover(job: Job, profile_id: UUID, search: bool = True) -> dict:
     with engine.begin() as conn:
         card = conn.execute(text("select card from profiles where id = :p"), {"p": profile_id}).scalar() or {}
         existing = {d for (d,) in conn.execute(text("select domain from competitors where profile_id = :p"), {"p": profile_id})}
@@ -119,7 +119,7 @@ def discover(job: Job, profile_id: UUID) -> dict:
             for c in gen.candidates[:10] if c.domain}
     category = card_value(card, "category") or ctext[:60]
     queries = [f"{category} India pricing ₹ per month", *gen.queries][:3]
-    if TAVILY_KEY:
+    if TAVILY_KEY and search:
         found = 0
         for q in queries:
             for r in _tavily(q):
@@ -129,7 +129,8 @@ def discover(job: Job, profile_id: UUID) -> dict:
                     found += 1
         job.step("search", "done", found, f"{found} more from {len(queries)} web searches")
     else:
-        job.step("search", "skipped", 0, "Web search unavailable; using AI suggestions only")
+        job.step("search", "skipped", 0, "Today's shared web-search budget is used up; using AI suggestions only (each still verified)"
+                 if TAVILY_KEY else "Web search unavailable; using AI suggestions only")
 
     cands = [c for d, c in pool.items() if d != own and d not in existing and not blocked(f"https://{d}")][:12]
     job.step("verify", "running", len(cands), "Checking robots.txt, reachability and India signals")

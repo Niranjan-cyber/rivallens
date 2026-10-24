@@ -16,7 +16,7 @@ from app.modules.discovery.pipeline import card_text, discover
 from app.modules.discovery.service import india_signals, registrable_domain, similarity
 
 router = APIRouter(prefix="/api/v1", tags=["discovery"])
-GUEST_PER_DAY, GLOBAL_PER_DAY = 2, 20
+USER_PER_DAY, GLOBAL_SEARCH_PER_DAY = 5, 10  # 3 web searches a run; the free search plan is ~1,000 a month, shared by everyone
 MOCK_NAMES = {"nimbusdeploy": "NimbusDeploy (demo)", "kitehost": "KiteHost (demo)", "orbitly": "Orbitly Cloud (demo)",
               "zephyrpace": "ZephyrPace (demo)", "monsoonmiles": "Monsoon Miles (demo)"}
 
@@ -77,13 +77,12 @@ def _bump(conn: Connection, scope: str) -> int:
 def start_discovery(profile_id: UUID, user: UserDep, background: BackgroundTasks) -> JobAccepted:
     with engine.begin() as conn:
         _own(conn, profile_id, user.id)
-        if user.is_anonymous and _bump(conn, f"user:{user.id}") > GUEST_PER_DAY:
-            raise HTTPException(429, {"code": "discovery_limit", "message": f"Demo accounts can run discovery {GUEST_PER_DAY} times a day. "
-                                      "The StackNest demo already has its competitors; log in with email for more."})
-        if _bump(conn, "global") > GLOBAL_PER_DAY:
-            raise HTTPException(429, {"code": "discovery_limit", "message": "Today's discovery budget is used up. Add competitors by URL instead."})
+        if _bump(conn, f"user:{user.id}") > USER_PER_DAY:  # per account, so one account can't spend everyone's budget
+            raise HTTPException(429, {"code": "discovery_limit", "message": f"You can search for competitors {USER_PER_DAY} times a day. "
+                                      "Add one you know by URL, or try again tomorrow."})
+        search = _bump(conn, "global") <= GLOBAL_SEARCH_PER_DAY  # past it, discovery still runs on AI suggestions, each verified live
     job_id = jobs.create(user.id, profile_id, "discovery")
-    background.add_task(jobs.run, job_id, lambda job: discover(job, profile_id))
+    background.add_task(jobs.run, job_id, lambda job: discover(job, profile_id, search))
     return JobAccepted(job_id=job_id, status="queued")
 
 
