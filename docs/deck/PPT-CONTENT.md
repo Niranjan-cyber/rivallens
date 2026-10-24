@@ -2,16 +2,18 @@
 
 Content for the official 10-slide template (`HACKNOVA26_Final_Round_Presentation_Template.pptx`). Delete slide 11 (the instructions slide) before submitting.
 
+**Updated 24 Oct 2026** for the final working version: phase two (Getting started, unified overview, data quality, decision engine, production hardening) is built and live. For the full technical and non-technical write-up, see `finalVersion.md` at the repository root.
+
 Each slide below gives:
 - the text to put on the slide
-- the diagram, as Mermaid plus a layout note, so it can be redrawn in PowerPoint or Claude chat
+- the diagram, as Mermaid plus a layout note, so it can be redrawn in PowerPoint
 - icon suggestions (names from the free [Lucide](https://lucide.dev) set)
-- the screenshots to use
+- the screenshots to use (all in `docs/screenshots/`)
 - speaker notes
 
 **Labels used throughout:**
 - **✅ Built**: works today on the live URL.
-- **🛠 Planned**: being built tonight or later.
+- **🛠 Future**: not built; listed as future scope.
 
 Every slide must keep these two apart (template rule 10).
 
@@ -23,10 +25,10 @@ Placeholders to fill in: `[PRODUCT NAME]` (RivalLens is a working name; a live p
 
 | Field | Value |
 |---|---|
-| Project / Solution Title | **[PRODUCT NAME]: evidence-backed business intelligence for Indian startups and small businesses** |
+| Project / Solution Title | **[PRODUCT NAME]: evidence-backed market intelligence for Indian startups and small businesses** |
 | Problem Statement Title | `[PS TITLE]` (official title: Competitor Intelligence & Market Monitoring Agent; confirm the exact wording) |
 | GitHub Repository Link | https://github.com/Niranjan-cyber/rivallens (**make it public before submitting**) |
-| Live Prototype / Demo Link | https://rivallens-eight.vercel.app (click **Try demo account**, no sign-up; demo business sign-ins are listed in the README once B14j ships) |
+| Live Prototype / Demo Link | https://rivallens-eight.vercel.app (create an account, or open a demo business from the login page: Stride & Co., Kesar Bakehouse, StackNest, QuickKart) |
 | Figma / Design Link | Delete the row (there's no Figma file; the design system is `web/DESIGN.md` in the repo) |
 | Team Name / Leader / Members | `[TEAM]` |
 
@@ -42,7 +44,7 @@ Speaker notes: none, since this slide is read, not presented.
 - **2.23 lakh** DPIIT-recognised startups in India as of 31 Mar 2026, with **55,200** added in FY26 alone ([Inc42](https://inc42.com/buzz/centre-recognises-record-55200-startups-in-fy26/)).
 - **7.83 crore** enterprises registered on Udyam as of 28 Feb 2026 ([IBEF, citing the Ministry of MSME](https://www.ibef.org/news/over-7-83-crore-enterprises-registered-on-udyam-platforms-indicating-strong-msme-formalisation-growth)).
 
-**Who is affected:** first-time founders, D2C sellers (for example a shoe brand), SaaS teams and local business owners. None of them has a market-research team.
+**Who is affected:** first-time founders, D2C sellers, SaaS teams, local shops and service businesses. None of them has a market-research team.
 
 **Existing challenges** (4 cards, one icon each):
 
@@ -50,26 +52,30 @@ Speaker notes: none, since this slide is read, not presented.
 |---|---|---|
 | `eye-off` | **Competitor moves go unnoticed.** Nobody has time to check 8 or more competitors' pricing pages every week. | The problem statement asks for continuous monitoring with history |
 | `bell-ring` | **Monitoring tools cry wolf.** A changed banner or reordered menu triggers an alert, so people stop trusting them. | False alerts are the top con for Visualping on G2 (30 mentions) ([G2](https://www.g2.com/products/visualping)) |
-| `file-question` | **AI reports have no memory or proof.** A one-off "competitor analysis" can't say when a price changed or show the page it came from. | No source and no date means no way to check it |
-| `puzzle` | **Business data is scattered.** Sales sit in Excel or payment exports, reviews on the website, social numbers in separate apps, and none of it reaches the pricing decision. | Enterprise tools (Crayon, Klue) are built and priced for large sales teams |
+| `file-question` | **AI reports guess.** A one-off "competitor analysis" can't say when a price changed, compares unlike products, and states conclusions without enough data. | In our own tests a category-only match "priced" filter coffee powder against café cappuccinos (L-23) |
+| `puzzle` | **Business data is scattered.** Sales sit in Excel or payment exports, reviews elsewhere, and none of it reaches the pricing decision. | Enterprise tools (Crayon, Klue) are built and priced for large sales teams |
 
 **Diagram:** none. Use the two stat callouts on top and the 4 challenge cards below.
 
-**Speaker notes (20 s):** "India adds about 150 startups a day. Each of them launches into a market that someone else is already moving in. Today they either check competitor sites by hand or use a page-watcher that alerts on every banner change. Neither tells them what actually changed, or what to do about it."
+**Speaker notes (20 s):** "India adds about 150 startups a day. Each launches into a market someone else is already moving in. Today they check competitor sites by hand, or use a page-watcher that alerts on every banner change, or ask an AI that compares the wrong products. None of these says what actually changed, whether it's comparable, or what to do next."
 
 ---
 
 ## Slide 3: Proposed solution
 
-**Headline:** One workspace that watches your market, proves every claim, and turns your money, market and customer data into product decisions.
+**Headline:** Sign up, describe your business, and leave with trustworthy market intelligence and one concrete next step, all without help.
 
-**How a user moves through it:**
+**How a founder moves through it:**
 
 ```mermaid
 flowchart LR
-  A[Sign up<br/>email + password] --> B[Onboarding<br/>business details]
-  B --> C[Business card<br/>AI draft, you confirm]
-  C --> D[Main dashboard]
+  A[Sign up<br/>email + password] --> B[Onboarding<br/>2 short steps]
+  B --> C[Getting started<br/>guided setup]
+  C --> C1[Prices]
+  C1 --> C2[Competitors found<br/>and verified]
+  C2 --> C3[Like-for-like<br/>products]
+  C3 --> C4[First check of<br/>pricing pages]
+  C4 --> D[Overview<br/>next step · findings ·<br/>since last visit]
   D --> P[Product]
   D --> M[Finance]
   D --> K[Market]
@@ -79,100 +85,92 @@ flowchart LR
   U -.feeds.-> P
 ```
 
-Layout note: a left-to-right flow. Draw the four dashboards as four tiles, with dotted arrows from Finance, Market and Customers into Product, since Product is the main layer.
+Layout note: top row is the guided flow (Getting started); bottom row is the Overview with the four dashboard tiles, with dotted arrows from Finance, Market and Customers into Product, since the price decision is made there.
 
-**The four dashboards** (4 tiles):
+**What the founder gets** (4 tiles):
 
-| Icon | Dashboard | What it shows | Status |
+| Icon | Area | What it shows | Status |
 |---|---|---|---|
-| `package` | **Product** (main layer) | Existing and new products, each in an exact market category (a football is compared only with footballs). Comparisons on price, revenue, features and add-ons. Premium-market inspirations. A suggested customer segment per product. A launch simulator. | ✅ simulator and comparison per business · 🛠 per-product, category matching, segments |
-| `wallet` | **Finance** | Revenue, funding, profit margin against the Indian industry benchmark, product prices, the transaction log (CSV/Excel upload or manual entry), and runway. | 🛠 |
-| `trending-up` | **Market** | What direct competitors changed (price, plans, features, positioning), each with a dated receipt. Category news and funding. Category price trend. Competitor discovery in India. | ✅ monitoring, receipts, alerts, discovery, comparison, report · 🛠 news, price trend |
-| `messages-square` | **Customers** | Reviews from your own site, web mentions, YouTube comments and uploaded insight exports, with sentiment and the top things customers ask for. | 🛠 |
+| `list-checks` | **Getting started + Overview** | One plan computed from saved data: steps with status, data coverage (Covered / Missing / Check failed / Out of date), findings that cite their evidence, and exactly one next step done in place. "Since your last visit" lists new competitor changes, reviews and failed checks. | ✅ |
+| `package` | **Product** | Each product in one exact category, compared only with like-for-like products (≥3 before a median). Price position, premium examples, brand ranges, a suggested segment that must cite evidence, and a price simulator. | ✅ |
+| `wallet` / `messages-square` | **Finance and Customers** | Revenue, margin, burn and runway from uploads, against India industry margins; competitors' revenue quoted from filings. Reviews and comments turned into sentiment and themes, each opening its quotes. | ✅ |
+| `trending-up` | **Market** | Competitors found and verified for India. Pricing pages watched weekly; real changes get a dated receipt; redesign noise is ignored with the rule shown. Category prices and Indian market news. | ✅ |
 
-**Real data, never made up** (one line under the tiles):
-- Every number is either **entered or uploaded by the business** or **taken from a public source with a link and date**: competitor pages, company filings, news, the Google product taxonomy, Damodaran's India industry margins.
-- Anything else shows as *Unknown*.
-- Demo businesses are built by running the same pipeline on licensed datasets, and are labelled *Demo business, modelled on …*.
+**Trust rules** (one line each under the tiles):
+- Every number is labelled **Observed** (public page, with link and date), **Your data** (uploaded or entered) or **Estimate** (benchmark or model).
+- No conclusion without enough evidence: a market median needs 3 like-for-like prices; a gap over 60% is flagged as a likely size or pack mismatch; stale or failed data is shown as such.
+- Demo businesses are built by running the same app on licensed datasets and are labelled *Demo business, modelled on …*.
 
 **What makes it different** (4 short points with icons):
-- `list-filter` **Noise ledger:** it lists every ignored difference and the rule that ignored it. Nobody else shows this.
+- `list-filter` **Noise ledger:** every ignored difference is listed with the rule that ignored it.
 - `receipt` **Receipts:** every change keeps the saved page before and after, the highlighted value and the date seen.
-- `git-compare` **Like-for-like comparison:** exact categories, and Unknown stays Unknown; it is never guessed or scored.
-- `refresh-cw` **Decisions that update themselves:** a competitor's price cut automatically re-plans your recommended launch price, and links to the receipt that caused it.
+- `git-compare` **Like-for-like or nothing:** every word naming the product type must match; outliers and other currencies are listed but not counted.
+- `calculator` **Decisions tied to cash:** the simulator follows unit cost → gross profit → runway, calibrated to the product's real sales, and says which assumption could change the answer.
 
-**Speaker notes (40 s):** "The core is the monitoring loop the problem statement asks for: detect, prove, alert, report. We built that first and it works today. Around it, the company's own money and customer data feed one place: the product. That's where a founder decides what to sell, to whom, and at what price."
+**Speaker notes (40 s):** "A founder signs up, describes the business, and the Getting started page does the rest with them: prices, competitors verified for India, products that are actually comparable, and a first check of competitors' pricing pages. The overview then says what we found, with evidence, and the one thing to do next. If the data isn't good enough, it says so instead of guessing."
 
 ---
 
 ## Slide 4: Technical approach and system workflow
 
-**Headline:** Rules decide what changed; AI only drafts and summarises.
+**Headline:** Rules decide what changed and what is comparable; AI only drafts, classifies and summarises, and must cite evidence.
 
-**Workflow diagram** (main row = the monitoring loop, which is ✅ built):
+**Row 1, the monitoring loop** (✅ built):
 
 ```mermaid
 flowchart LR
-  S[Public pages<br/>robots.txt checked] --> C[Collect<br/>1 req/s per site, SSRF guard,<br/>3 MB cap, gzip snapshot]
-  C --> X[Split into sections<br/>nav, banner, main blocks<br/>3 hashes each]
-  X --> E[Extract fields<br/>plans, ₹/$ prices, period,<br/>features, headline]
+  S[Public pages<br/>robots.txt checked] --> C[Collect<br/>1 req/s per site, SSRF guard,<br/>3 MB cap, retry on timeout]
+  C --> X[Split into sections<br/>3 hashes each]
+  X --> E[Extract fields<br/>plans, ₹ prices, period,<br/>features, headline]
   E --> N{Noise or change?<br/>7 noise rules}
   N -- noise --> L[Noise ledger<br/>reason per item]
   N -- change --> R[Receipt<br/>before/after, date seen]
-  R --> P[Priority score<br/>0.5·size + 0.35·relevance + 0.15·reliability]
-  P --> A[Alert + email]
-  R --> SIM[Simulator re-plans]
+  R --> P[Priority score]
+  P --> A[Alert]
+  R --> SIM[Simulator input]
   R --> REP[Report, every claim cited]
+  CRON[Daily scheduler<br/>weekly per business] --> C
 ```
 
-Second row: the product layer. Exact category and comparison are ✅ built; Finance and Customers are 🛠 in build tonight.
+**Row 2, like-for-like products** (✅ built):
 
 ```mermaid
 flowchart LR
-  PR[Product: name, description<br/>or its page link ✅] --> CAT[Exact category ✅<br/>Google taxonomy shortlist<br/>→ AI picks one id + niche]
-  CAT --> FIND[Find comparables ✅<br/>competitors' + searched brand stores<br/>schema.org product data, robots.txt]
-  FIND --> SAME{Same taxonomy id? ✅}
-  SAME -- yes --> CMP[Compare ✅<br/>price position vs median,<br/>features, premium, brand ranges]
-  SAME -- no --> DROP[Not compared<br/>says which category it is in]
-  MO[Finance ✅<br/>CSV / Excel / manual] --> MM[Margin vs Damodaran India,<br/>runway ✅]
-  CU[Customers ✅<br/>reviews, mentions, insight CSVs] --> CS[Sentiment + themes, cited ✅]
-  CMP --> SEG[Customer segment + simulator 🛠]
-  MM --> SEG
-  CS --> SEG
+  PR[Your product<br/>name or page link] --> CAT[Exact category<br/>Google taxonomy shortlist<br/>→ AI picks id + niche]
+  CAT --> FIND[Find rivals' products<br/>Shopify catalogue /products.json<br/>picked by title · JSON-LD per page]
+  FIND --> CLS[Classify in batches of 8<br/>unclassified reported]
+  CLS --> LFL{Every niche word<br/>matches?}
+  LFL -- yes --> SCR[Screen prices<br/>₹0 · other currency · 5× outlier<br/>listed with reason, not counted]
+  LFL -- no --> DROP[Shown as same category,<br/>different product]
+  SCR --> MED{≥3 like-for-like?}
+  MED -- yes --> POS[Price position vs median]
+  MED -- no --> NONE[No median yet, says why]
 ```
 
-**Key logic** (bullets beside the diagram):
-- **Noise rules:**
-  - nav/header/footer
-  - promo banner
-  - formatting only
-  - whitespace
-  - reordering
-  - clocks and counters
-  - text outside pricing
-- **Meaningful changes:**
-  - price up or down
-  - plan added or removed
-  - feature added or removed
-  - headline change
-- **Suspicious changes** (a move over 80%, a missing price, a currency switch) are kept for review and never alert.
-- **Simulator:**
-  - Market price M is the median comparable ₹/month price.
-  - Options are 0.85M, M, 1.15M and your own price.
-  - Conversion is `c0·(p/M)^−e`, with break-even checked within 36 months.
-  - It picks the best expected revenue among the options that still break even in the worst case.
-- **Exact category (✅ built):**
-  - The Google product taxonomy (about 5,600 paths) is shortlisted by keywords, with Indian English handled: "football" means a soccer ball.
-  - The AI must pick one id from that shortlist, plus a niche such as "Running shoes".
-  - Live results: football → Soccer Balls; office chair → Office Chairs.
-- **AI, free tier:**
-  - Gemini first, Groq as fallback.
-  - Every answer is cached in Postgres, and tests replay recorded answers.
-  - It is never used to decide whether something changed.
+**Row 3, the decision engine** (✅ built):
 
-Icons: `globe`, `scissors`, `table`, `filter`, `receipt`, `gauge`, `bell`, `calculator`, `file-text`.
+```mermaid
+flowchart LR
+  MK[Market median<br/>Observed] --> SIM[Simulator]
+  FIN[Units sold, cash, burn<br/>Your data] --> SIM
+  UC[Unit cost<br/>yours or Damodaran margin] --> SIM
+  CU[Sentiment, requests<br/>Customers] --> SIM
+  SIM --> GP[Gross profit per price]
+  GP --> RW[Runway at each price<br/>= cash ÷ burn − Δ profit]
+  GP --> SEN[Sensitivity ±20%<br/>does the best price change?]
+  SIM --> SC[Saved scenarios<br/>what changed and why]
+```
 
-**Speaker notes (40 s):** walk the top row left to right using the live example: "A cosmetic redesign gives 0 alerts and 4 ignored items. A 40% price cut gives 1 alert at priority 90, and the simulator moves from ₹999 to ₹899."
+**Key logic** (bullets beside the diagrams):
+- **Noise rules:** nav/header/footer, promo banner, formatting, whitespace, reordering, clocks and counters, text outside pricing. **Meaningful:** price up or down, plan added or removed, feature added or removed, headline change. Suspicious moves (over 80%, missing price, currency switch) are kept for review and never alert.
+- **Like-for-like:** "Filter coffee powder" matches Toffee's and Third Wave's filter coffee, not protein coffee powder, a French press or a café cappuccino.
+- **Simulator:** options at 0.85×, 1× and 1.15× the market median plus your price; conversion `c0·(p/M)^−e`; the best expected 12-month **gross profit** among options that break even in the worst case. An existing product is calibrated so today's price reproduces its real monthly sales.
+- **Setup plan:** a pure function turns saved data into steps, coverage, findings and one next step (14 tests).
+- **AI, free tier:** Gemini first, Groq as fallback; answers cached in Postgres; tests replay recorded answers. Never used to decide whether something changed.
+
+Icons: `globe`, `scissors`, `filter`, `receipt`, `git-compare`, `calculator`, `gauge`, `bell`, `file-text`.
+
+**Speaker notes (45 s):** "Top row: a cosmetic redesign gives 0 alerts and every ignored item is listed; a 40% price cut gives one alert with its receipt. Middle row: we read competitors' real catalogues and keep only products of the same kind; with fewer than three, we don't invent a median. Bottom row: the simulator follows the money. For Stride Runner it reproduces the 157 pairs a month in Finance, and at today's price its runway equals Finance's 19.4 months, which checks the whole chain."
 
 ---
 
@@ -186,37 +184,38 @@ flowchart TB
     U[Founder / shop owner<br/>browser or phone]
   end
   subgraph Web["Next.js 16 on Vercel"]
-    ON[Sign-in → onboarding → business card ✅]
-    OV[Overview ✅]
-    D1[Product ✅]
-    D2[Finance ✅]
-    D3[Market ✅]
-    D4[Customers ✅]
+    AUTHUI[Sign-up · log in · reset password]
+    GS[Getting started + Overview]
+    D1[Product + simulator]
+    D2[Finance]
+    D3[Market]
+    D4[Customers]
   end
   subgraph API["FastAPI modular monolith on Render (Singapore)"]
-    PRD[products ✅<br/>taxonomy · classify · market comparables]
-    MKT[collector · extractor · changes · alerts ·<br/>discovery · comparison · reports ✅]
-    SIM[simulator ✅<br/>re-plans on receipts]
-    MON[money ✅]
-    CUS[customers ✅]
-    JOB[jobs table + background work ✅]
-    GW[LLM gateway ✅<br/>cache · fallback · replay]
+    SET[setup<br/>plan · coverage · findings · next step]
+    PRD[products<br/>taxonomy · classify · catalogue · like-for-like]
+    MKT[collector · extractor · changes · alerts ·<br/>discovery · comparison · reports]
+    SIM[simulator<br/>gross profit · runway · scenarios]
+    MON[money]
+    CUS[customers]
+    JOB[jobs table + background work<br/>cron/checks]
+    GW[LLM gateway<br/>cache · fallback · replay]
   end
   subgraph Data["Supabase (Mumbai)"]
-    AUTH[Auth ✅<br/>email + password, guest demo]
-    DB[(Postgres ✅<br/>profiles · products · market_products ·<br/>snapshots · receipts · alerts · simulations)]
-    ST[(Storage ✅<br/>gzipped page snapshots)]
+    AUTH[Auth<br/>email + password]
+    DB[(Postgres<br/>18 migrations)]
+    ST[(Storage<br/>gzipped page snapshots)]
   end
   subgraph Outside["Free external sources"]
-    PAGES[Public pages ✅<br/>competitor pricing + brand product pages<br/>robots.txt, 1 req/s]
-    TAV[Tavily search ✅]
-    LLMs[Gemini → Groq ✅]
-    MAIL[Resend email ✅]
-    REF[Reference data<br/>Google taxonomy ✅ · Damodaran India ✅]
+    PAGES[Public pages + Shopify catalogues<br/>robots.txt, 1 req/s]
+    TAV[Tavily search]
+    LLMs[Gemini → Groq]
+    REF[Google taxonomy · Damodaran India]
+    GH[GitHub Actions<br/>daily checks · keep-warm]
   end
   U --> Web
   Web -- JWT --> API
-  ON -- sign-in --> AUTH
+  AUTHUI --> AUTH
   API --> DB
   MKT --> ST
   PRD --> PAGES
@@ -224,38 +223,37 @@ flowchart TB
   PRD --> TAV
   MKT --> TAV
   GW --> LLMs
-  MKT --> MAIL
   PRD --> REF
   MON --> SIM
   CUS --> SIM
   PRD --> SIM
-  GH[GitHub Actions keep-warm] --> API
+  SET --> PRD
+  SET --> MON
+  SET --> MKT
+  GH --> JOB
 ```
 
-Layout note:
-- Draw five horizontal bands, top to bottom: Users → Web (the four dashboards as four tiles under Overview) → API (modules grouped by dashboard) → Data → Outside sources.
-- Mark ✅ built and 🛠 in build with two colours.
-- Arrows into **simulator** from products, money and customers show the "every dashboard feeds the product decision" idea.
+Layout note: five horizontal bands: Users → Web → API (modules grouped by area) → Data → Outside sources. Draw the **setup** module above the others with arrows to products, money and market, since it reads all of them.
 
 **Data flow, in 4 numbered callouts:**
-1. **Sign in.** The browser signs in with Supabase (email and password) and sends its JWT to the API on every call. The service key never leaves the server.
-2. **Product.** A product is classified into an exact Google taxonomy id. The API then reads public product pages (schema.org data) and keeps only those in the same id. Each value stores its link and the date it was seen.
-3. **Market.** Competitor pages are fetched, saved as unchangeable snapshots, split into sections and diffed. Noise goes to the ledger; real changes become receipts, alerts and simulator re-plans.
-4. **Display.** The web app only renders the API's JSON. Scraped HTML never runs in the app; "View original" opens a sandboxed iframe through a 5-minute signed link.
+1. **Sign in.** The browser signs in with Supabase and sends its JWT on every API call. The service key never leaves the server. Every query is scoped to the signed-in user; a sweep of all 54 API routes confirms one user can't reach another's data.
+2. **Setup.** `GET /profiles/{id}/setup` reads products, competitors, checks, Finance and Customers and returns steps, coverage, evidence-linked findings and one next step.
+3. **Market and products.** Competitor pages are saved as unchangeable snapshots and diffed; rivals' products come from public catalogues and product pages, each with its link and date.
+4. **Display.** The web app renders the API's JSON only. Scraped HTML never runs in the app; "View original" opens a sandboxed iframe through a 5-minute signed link.
 
-**Module map** (for a small table or legend):
+**Module map:**
 
-| Dashboard | API modules | Main tables |
+| Area | API modules | Main tables |
 |---|---|---|
-| Overview | profiles | profiles |
-| Product ✅ | products (taxonomy, classify, market), simulator | products, market_products, simulations |
-| Finance ✅ | money | transactions, money_settings |
-| Market ✅ | collector, extractor, changes, alerts, discovery, comparison, reports | competitors, sources, snapshots, observations, change_events, alerts, reports |
-| Customers ✅ | customers | customer_mentions, customer_insights, social_metrics |
+| Getting started / Overview | setup, profiles | profiles |
+| Product | products (taxonomy, classify, market), simulator | products, market_products, product_scenarios |
+| Finance | money | transactions, money_settings, money_facts |
+| Market | collector, extractor, changes, alerts, discovery, comparison, reports | competitors, sources, snapshots, observations, change_events, alerts, reports |
+| Customers | customers | customer_mentions, customer_insights, social_metrics |
 
-Icons: `monitor`, `layout-dashboard`, `server`, `database`, `hard-drive`, `sparkles`, `search`, `mail`, `shield-check`, `globe`.
+Icons: `monitor`, `layout-dashboard`, `server`, `database`, `hard-drive`, `sparkles`, `search`, `shield-check`, `globe`, `clock`.
 
-**Speaker notes (30 s):** "One API, one database, all on free tiers. The product layer sits on top of the market engine. Exact categories mean a football is only compared with footballs, and every price on screen links to the page it came from. Jobs are a table plus background work, so a restart marks unfinished work as stale instead of losing it."
+**Speaker notes (30 s):** "One API, one database, free tiers. The setup module sits on top and reads every dashboard to decide the next step. Jobs are a table plus background work, so a restart marks unfinished work as stale instead of losing it, and the setup page shows it."
 
 ---
 
@@ -263,34 +261,32 @@ Icons: `monitor`, `layout-dashboard`, `server`, `database`, `hard-drive`, `spark
 
 | Layer | Technology | Why |
 |---|---|---|
-| Web | Next.js 16 (App Router), React, Tailwind v4, Vercel | Server components, Git auto-deploy, print-to-PDF reports |
-| API | FastAPI, SQLAlchemy 2, psycopg 3, httpx, selectolax (lexbor) | Fast typed routes; a fast HTML parser that fits in 512 MB |
-| Data | Supabase Postgres, Auth (email, Google, anonymous guests) and private Storage | One free provider for the database, sign-in and evidence files |
+| Web | Next.js 16 (App Router), React, Tailwind v4, Vercel | Git auto-deploy, print-to-PDF reports, works on phones |
+| API | FastAPI, SQLAlchemy 2 (sync), psycopg 3, httpx, selectolax (lexbor) | Typed routes; a fast HTML parser that fits in 512 MB |
+| Data | Supabase Postgres, Auth (email and password) and private Storage | One free provider for the database, sign-in and evidence files |
 | AI | Gemini `flash-lite` → Groq `gpt-oss-120b` | Free, with fallback; answers cached and checked against a JSON schema |
 | Search | Tavily (free 1,000 credits a month) | Competitor discovery, category news and funding |
-| Email | Resend | Alert emails |
-| Sign-in | Supabase Auth: email and password (accounts created by the API, signed in at once) | Real accounts, no setup |
-| Reference data | Google product taxonomy ✅ (exact categories); Damodaran India margins, UCI Online Retail II (CC BY), The Bread Basket (CC0) 🛠 | Exact categories, margin benchmarks, demo businesses' transactions |
-| Product data | Brand stores' public product pages (schema.org JSON-LD) ✅ | Real, dated category prices and features |
+| Product data | Shopify public catalogues (`/products.json`) and schema.org JSON-LD on product pages | Real, dated prices and features |
+| Reference data | Google product taxonomy; Damodaran India margins; UCI Online Retail II (CC BY); The Bread Basket (CC0) | Exact categories, margin benchmarks, demo businesses |
+| Scheduling | GitHub Actions (daily checks, keep-warm) | Free; the check endpoint only starts checks that are due, so it needs no secret |
 
-**Database design** (small ER strip): profiles → competitors → sources → snapshots → observations → change_events (receipts) → alerts; simulations (versioned); reports; profiles → products ✅ ↔ market_products ✅ (joined by taxonomy id); plus 🛠 transactions, customer_mentions.
+**Database design** (small ER strip): profiles → competitors → sources → snapshots → observations → change_events (receipts) → alerts; profiles → products ↔ market_products (by taxonomy id and niche); products → product_scenarios; transactions, money_settings, money_facts; customer_mentions, customer_insights; jobs; reports.
 
 **Testing, security and deployment** (3 columns):
 
 - **Testing**
-  - 44 automated tests, run with recorded AI answers (`LLM_MODE=replay`), never live keys. They cover the noise rules, priority, simulator, taxonomy matching, product-page parsing and price position.
-  - A smoke script runs against the live URLs.
-  - The golden path is walked in a browser before every checkpoint.
+  - **92 automated tests** with recorded AI answers (`LLM_MODE=replay`), never live keys: noise rules, priority, taxonomy, like-for-like matching, catalogue picking, price screening, the setup plan, and the decision model against hand-worked numbers.
+  - **Account isolation sweep:** every API route called without a token and as a second user with the first user's ids; all 54 pass.
+  - **Live checks:** smoke script, overview on desktop and phone, simulator change-and-reset, and a brand-new founder walked end to end (`scripts/check-all.sh`).
 - **Security**
-  - robots.txt and rate limits.
-  - An SSRF guard on every redirect.
+  - robots.txt and per-site rate limits; an SSRF guard on every redirect.
   - Scraped HTML is never rendered in the app.
-  - JWT is checked on every API call, and the service key never reaches the browser.
-  - Guests are rate limited.
+  - JWT checked on every call; someone else's ids look like missing ones (404).
+  - Discovery limited per account; shared demo accounts can't change their password.
 - **Deployment**
-  - Git push auto-deploys Vercel and Render.
-  - Database changes are versioned SQL migrations.
-  - A keep-warm ping runs every 10 minutes.
+  - Git push auto-deploys Vercel and Render; versioned SQL migrations (18).
+  - Daily scheduled competitor checks (weekly per business, next day after failed pages).
+  - Reads retry while the free API wakes; failed requests show what failed with Try again.
 
 Icons: `layers`, `test-tube`, `lock`, `rocket`.
 
@@ -300,45 +296,40 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 
 **Live link with a QR code:** https://rivallens-eight.vercel.app. Generate the QR from the link.
 
-**Screenshots:** a 2×2 grid. All 4 are already in the repo at `docs/screenshots/`.
+**Screenshots:** a 2×2 grid, all in `docs/screenshots/`.
 
 | Screenshot | Caption |
 |---|---|
-| `s10-noise-ledger.png` | Cosmetic redesign: **0 meaningful, 4 ignored**, each with a reason |
-| `s11-receipt.png` | Receipt: Pro ₹1,499 → ₹899 (−40%), highlighted before/after, date seen |
-| `s14-simulator-replanned.png` | Simulator re-planned: ₹999 → ₹899, linked to the receipt |
-| `s13-comparison.png` | Comparison: every cell sourced and dated, Unknown never scored |
+| `m1-getting-started.png` | Getting started: every step with its status, one next step, findings and data coverage |
+| `m1-overview-next-step.png` | Overview: "Stride Runner at ₹1,999 is 34% below the median of 9 like-for-like products", labelled Observed, with evidence |
+| `ws4-simulator.png` | Simulator: runway at each price, editable assumptions with their origin, sensitivity, saved scenarios explaining what changed |
+| `b14k-receipt.png` | Receipt: Monsoon Miles Downpour ₹2,999 → ₹1,799 (−40%), page before and after, date seen |
 
-**Built vs planned** (two columns):
+Optional extras: `b14k-noise-ledger.png` (0 meaningful, every ignored item with its rule), `ws2-overview-phone.png` (phone layout), `b14j-bakery-customers.png` (themes with quotes).
 
-| ✅ Built and live | 🛠 Planned (in build) |
-|---|---|
-| Email + password sign-up and sign-in, guest demo | |
-| Onboarding form → AI-drafted business card → Overview | |
-| Finance: CSV/Excel upload with column check, manual entries, revenue, margin vs Damodaran India benchmark, burn, runway, transaction log | |
-| Four-dashboard navigation (Product, Finance, Market, Customers) | |
-| Competitors' revenue and funding from filings and news, each a verbatim quote with its link (e.g. Campus Activewear Q1 FY26 revenue ₹343.3 cr from its press release) | |
-| Products (existing/new) in exact Google-taxonomy categories | |
-| Customers: review/comment/insight uploads, own-page reviews, web mentions → sentiment and themes (requests, complaints, praise), each opening its quotes | |
-| Like-for-like comparison from real brand product pages: price position vs median, features, premium inspirations, brand ranges | |
-| Per product: a suggested customer segment that must cite its evidence (price position, review themes, onboarding answers), and a price simulator whose inputs come from Market (category median, receipts), Finance (unit cost from the Damodaran margin, runway) and Customers (sentiment ±20%, requests), each a chip linking to its dashboard | |
-| Change detection + noise ledger | |
-| Market: "Simulate a competitor move" next to "Check competitors now", category prices now, Indian market news and funding with links | |
-| Receipts with frozen evidence | |
-| Four demo sign-ins (Stride & Co. running shoes, Kesar Bakehouse, StackNest SaaS, QuickKart) built by calling the live API on licensed datasets (UCI Online Retail II, The Bread Basket, Amazon Fine Food reviews) and public pages; one click each on the login page | |
-| Alerts (bell + email), alert rules | |
-| Competitor discovery in India | |
-| Sourced comparison matrix | |
-| Launch simulator that re-plans on a receipt | |
-| Evidence-linked report + PDF | |
-| Competitor history timeline | |
+**Built** (everything below is live):
 
+| ✅ Built and live |
+|---|
+| Email + password accounts; forgot password and change password; log out and back in keeps everything |
+| Onboarding (2 steps) → **Getting started**: prices, competitors, like-for-like products and the first check done in place, with one next step and reasons whenever something can't be done |
+| **Overview**: next step, top findings with evidence, "since your last visit", a status per dashboard |
+| Add a product or service by name or page link, with an optional "who it's for" |
+| Products in exact Google-taxonomy categories; services compared through competitors' pricing pages |
+| Like-for-like comparison from real store catalogues and product pages; median only with ≥3; outliers and other currencies listed with the reason |
+| Every number labelled Observed, Your data or Estimate; stale (14/30/90 days) and failed data flagged |
+| Simulator: gross-profit break-even, calibration to real sales, runway at each price, launch cash path, editable assumptions, sensitivity, dated scenarios |
+| Suggested customer segment that must cite its evidence |
+| Finance: CSV/Excel uploads, revenue, margin vs Damodaran India, burn, runway; competitors' revenue quoted from filings |
+| Customers: review and comment uploads → sentiment and themes with quotes |
+| Market: competitor discovery verified for India; change detection, noise ledger, receipts, alerts; category prices; Indian market news |
+| Daily scheduled competitor checks, with retry |
+| Evidence-linked report + PDF; competitor history timeline |
+| Four demo businesses built through the live app from licensed datasets and public pages |
 
-**Screenshots (final, from the live app):** `docs/screenshots/b14k-overview.png`, `b14k-product.png` (price position, segment, simulator inputs incl. the competitor receipt), `b14k-money.png` (runway 19.4 months, margin −23.3% vs 8.3% for Shoe in India), `b14k-noise-ledger.png`, `b14k-receipt.png`, `b14j-bakery-customers.png`.
+**🛠 Future** (not built): see slide 9.
 
-> If the deck can be resubmitted at 08:00, move the items finished overnight into the left column and replace one screenshot with the Product dashboard.
-
-**Speaker notes (30 s):** "Everything on the left works now on the link. Scan the code and open a demo business from the login page. The right column is what we're building next."
+**Speaker notes (30 s):** "Everything here works on the link now. Create an account with your own business, or open Stride & Co. from the login page, change an assumption in the simulator, and watch the recommendation and the runway move."
 
 ---
 
@@ -348,67 +339,72 @@ Icons: `layers`, `test-tube`, `lock`, `rocket`.
 
 | Service | Free limit | How we stay within it |
 |---|---|---|
-| Gemini / Groq | Low requests per minute | Answers cached in Postgres; fallback model; empty answers never cached |
-| Tavily | 1,000 credits a month | 3 searches per discovery; guests limited to 2 a day, 20 a day across the app |
-| Render | Sleeps after 15 min, 512 MB | Keep-warm ping; no headless browser |
+| Gemini / Groq | Low requests per minute | Answers cached in Postgres; fallback model; batches of 8; empty answers never cached |
+| Tavily | 1,000 credits a month | 3 searches per discovery; 5 discoveries per account a day; past the shared budget, discovery runs on AI suggestions, each still verified |
+| Render | Sleeps after 15 min, 512 MB | Keep-warm ping; reads retry while it wakes; no headless browser |
 | Supabase | 500 MB database, 1 GB storage | Snapshots gzipped |
 
-**Operational feasibility:** a founder signs up, fills one form and gets a usable dashboard. No integrations are needed, because files can be uploaded instead.
+**Operational feasibility:** a founder signs up, answers two short steps and follows one next step at a time. No integrations are needed; files can be uploaded instead.
 
-**Risks and mitigations** (3 rows):
+**Risks and mitigations:**
 
 | Risk | Mitigation |
 |---|---|
-| Sites block or change layout | robots.txt respected; failures shown as "Failed (not a change)"; Unknown, never guessed |
-| AI is wrong | Rules decide changes; AI only drafts and summarises, and its suggestions must cite evidence |
-| Data trust | Every number is cited or entered by the user; demo data always labelled |
+| Sites block or change layout | robots.txt respected; failures shown as "Check failed", never as "no change"; retried the next day |
+| Wrong comparisons | Every niche word must match; ≥3 prices for a median; big gaps flagged as size or pack mismatch |
+| AI is wrong | Rules decide changes; AI suggestions must cite evidence or are dropped |
+| Data trust | Every number labelled Observed / Your data / Estimate; demo data always labelled |
 
 **Measured results from our own runs** (real, not projected):
-- A cosmetic redesign produced **0 false alerts** (4 differences ignored, each with its reason).
-- A 40% price cut was detected in **1 run** and alerted at priority **90**, and the simulator re-planned automatically.
-- Live discovery verified **5 Indian providers** (ESDS, Yotta, Tata Communications, E2E Networks, CtrlS) in **53 s**.
-- 33 automated tests pass; the API health check answered in **0.34 s** when warm.
+- A cosmetic redesign produced **0 false alerts**; a 40% price cut was detected in **1 check** with its receipt.
+- **5 brand-new businesses** walked live end to end (coffee roaster, wedding photographer, GST billing SaaS, sweets shop, gym): all reached a next step, all identical after logout and login.
+- Real comparisons found live: cold brew bags against **12** real cold brew packs (Blue Tokai, Third Wave, Sleepy Owl); motichoor ladoo **11% below** the median (Bikanervala and others).
+- The simulator reproduces Stride Runner's real **157 pairs a month**, and its runway at today's price equals Finance's **19.4 months**.
+- **92** automated tests; **54** API routes pass the isolation sweep.
 
-**Target users and benefits:** founders, D2C sellers, local shops and SaaS teams. They save the weekly manual checks, get fewer and truer alerts, have proof they can show investors, and make pricing decisions tied to evidence.
+**Target users and benefits:** founders, D2C sellers, local shops, services and SaaS teams. They save weekly manual checks, get fewer and truer alerts, see only fair comparisons, and make price decisions tied to cash and runway.
 
 Icons: `indian-rupee`, `shield-alert`, `users`, `timer`.
 
 ---
 
-## Slide 9: Extra slide, data sources and future scope
+## Slide 9: Extra slide, data sources, limits and future scope
 
 **Left half: the free, real data we use**
 
 | Source | Used for | Licence or terms |
 |---|---|---|
 | Competitors' public pages | Prices, plans, features, history | robots.txt respected, 1 request/s |
-| [Google product taxonomy](https://support.google.com/merchants/answer/6324436) (~5,500 categories) | Exact product category | Free to use |
-| [Damodaran, margins by industry, India](https://pages.stern.nyu.edu/~adamodar/pc/datasets/marginIndia.xls) (NYU Stern, Jan 2026) | Margin benchmarks on Finance | Public academic data, with credit |
-| Brand stores' public product pages (schema.org Product data; e.g. Puma India, Brooks India, Campus, Nivia, Neemans) | Category prices, ratings and stated features, each with its link and date | Public pages; robots.txt respected, 1 request/s |
-| [UCI Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii) | Transaction pattern for the footwear demo business, and the sample upload file | CC BY 4.0 |
-| [The Bread Basket](https://api.openml.org/d/43422) (20,507 real bakery sales) | Transactions for the bakery demo business | CC0 |
-| Listed companies' results (e.g. [Campus Activewear FY26](https://apparelresources.com/business-news/retail/campus-activewear-q4-pat-rises-us-5-2-million-ebitda-fy-26-reaches-us-37-million/): ASP ₹683, gross margin 53.5%) | Competitor revenue and margins; unit economics for the footwear demo business | Public filings and press coverage, cited |
-| Tavily search | Discovery, category news, funding (each with a link) | Free tier |
-| YouTube Data API | Comments on the company's videos | Free quota |
-| The company's own exports (bank, Razorpay, Shopify, Meta Business Suite, LinkedIn) | Transactions, social metrics | The company's own data |
+| Shopify public catalogues and schema.org product data | Like-for-like product prices and features, with link and date | Public pages; robots.txt respected |
+| [Google product taxonomy](https://support.google.com/merchants/answer/6324436) | Exact product category | Free to use |
+| [Damodaran, margins by industry, India](https://pages.stern.nyu.edu/~adamodar/pc/datasets/marginIndia.xls) (NYU Stern, Jan 2026) | Margin benchmarks; estimated unit cost | Public academic data, with credit |
+| [UCI Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii) | Footwear demo business transactions | CC BY 4.0 |
+| [The Bread Basket](https://api.openml.org/d/43422) | Bakery demo business transactions | CC0 |
+| Listed companies' results (e.g. Campus Activewear FY26) | Competitor revenue and margins, quoted | Public filings and press, cited |
+| Tavily search | Discovery, news, funding (each with a link) | Free tier |
+| The company's own exports | Sales, costs, reviews | The company's own data |
 
-**Right half: future scope** (paid or needs approval):
-- X (Twitter) API: pay-per-use, about $0.005 per post read ([source](https://www.postproxy.dev/blog/x-api-pricing-2026/)).
-- Instagram and Facebook Graph API: needs Meta app review.
-- Live Razorpay / Shopify / Tally sync.
-- Phone OTP sign-in (paid SMS).
-- A verified email domain.
-- Always-on monitoring on a schedule (paid hosting with no sleep).
-- Licensed marketplace data (Amazon/Flipkart APIs).
-- Team workspaces and roles.
-- Database row-level security on every table.
+**Honest limits today** (one line each):
+- Price sensitivity is a default (1.2); the sensitivity check shows how much the answer depends on it.
+- Services don't fit Google's product categories; they're compared through pricing pages.
+- JavaScript-only or bot-blocking sites (quick commerce) can't be watched.
+- Password reset emails need an SMTP sender (owner configuration).
+- Pack size isn't normalised yet; large gaps are flagged instead.
 
-Icons: `database`, `scale` (licences), `telescope`.
+**Right half: future scope** (🛠, paid or needs approval):
+- Pack-size and unit normalisation (₹ per kg vs ₹ per box).
+- Estimating price sensitivity from a founder's own price changes.
+- Live Razorpay / Shopify / Tally sync; a verified email domain for alerts and resets.
+- A headless browser for JavaScript-heavy pages; LLM help for pricing extraction.
+- Instagram, Facebook and X data (app review or paid APIs).
+- Team workspaces and roles; billing and plans; error tracking and uptime monitoring.
+
+Icons: `database`, `scale` (licences), `triangle-alert` (limits), `telescope`.
 
 ---
 
 ## Slide 10: Thank you
 
 - "Thank you! Questions & discussion" (keep the template text).
-- Add: the live link and QR, the GitHub link, and one line: **"Ignore the noise. Prove the change. Plan the product."**
-- Speaker notes: invite judges to run the Demo Lab themselves, since each judge gets a private copy.
+- Add: the live link and QR, the GitHub link, and one line: **"Ignore the noise. Compare like for like. Leave with one next step."**
+- Speaker notes: invite judges to create an account with any real Indian business and follow Getting started, or open a demo business from the login page.
