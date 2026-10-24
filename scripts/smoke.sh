@@ -19,7 +19,7 @@ if [[ -n "${BACKEND_URL:-}" ]]; then
   check "$BACKEND_URL/healthz" '"ok"'
   code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$BACKEND_URL/api/v1/profiles")
   [[ "$code" == 401 ]] && echo "ok   $BACKEND_URL/api/v1/profiles (401 without token)" || { echo "FAIL profiles without token returned $code"; exit 1; }
-  for path in api/v1/demo/mocks api/v1/products/00000000-0000-0000-0000-000000000000/simulation               api/v1/products/00000000-0000-0000-0000-000000000000/segment api/v1/profiles/00000000-0000-0000-0000-000000000000/money; do
+  for path in api/v1/demo/mocks api/v1/products/00000000-0000-0000-0000-000000000000/simulation               api/v1/products/00000000-0000-0000-0000-000000000000/segment api/v1/profiles/00000000-0000-0000-0000-000000000000/money api/v1/profiles/00000000-0000-0000-0000-000000000000/setup; do
     code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$BACKEND_URL/$path")
     [[ "$code" == 401 ]] && echo "ok   $BACKEND_URL/$path (401 without token)" || { echo "FAIL $path without token returned $code"; exit 1; }
   done

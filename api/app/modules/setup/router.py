@@ -28,11 +28,16 @@ def _day(ts) -> str | None:
 
 
 def _products(conn: Connection, profile_id: UUID) -> list[dict]:
+    searched = {}  # product id -> its latest comparables search (finished or not)
+    for j in conn.execute(text("""select status, result from jobs where profile_id = :p and kind = 'comparables' and result ? 'product_id'
+                                  order by created_at"""), {"p": profile_id}).mappings():
+        searched[j["result"]["product_id"]] = {"stores": len(j["result"].get("stores", [])), "pages_read": j["result"].get("pages_read", 0)}
     out = []
     for p in conn.execute(text(f"select {COLS} from products where profile_id = :p order by stage, created_at"), {"p": profile_id}).mappings():
         p = dict(p)
         row = {"id": str(p["id"]), "name": p["name"], "price": float(p["price"]) if p["price"] is not None else None, "unit": p["unit"],
-               "category_path": p["category_path"], "niche": p["niche"], "like_for_like": 0, "broad": 0, "position": None, "sources": [], "seen": None}
+               "category_path": p["category_path"], "niche": p["niche"], "like_for_like": 0, "broad": 0, "position": None, "sources": [], "seen": None,
+               "searched": searched.get(str(p["id"]))}
         if p["taxonomy_id"]:
             c = comparison_data(conn, p)
             priced = [r for r in c["rows"] if r["price"] is not None]

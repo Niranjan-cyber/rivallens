@@ -90,3 +90,12 @@ def test_a_huge_gap_is_flagged_for_checking_not_concluded():
     s["products"][0] |= {"price": 155, "like_for_like": 10, "position": {"median": 549, "pct_vs_median": -72, "n": 10}, "sources": ["winni.in"], "seen": "x"}
     f = plan(s, BASE)["findings"][0]
     assert f["kind"] == "check" and "below" not in f["text"] and "no conclusion" in f["text"]
+
+
+def test_after_searching_every_product_the_step_explains_and_moves_on():
+    s = state(competitors={"selected": 2, "total": 2})
+    s["products"][0] |= {"price": 450, "broad": 6, "searched": {"stores": 5, "pages_read": 12}}
+    p = plan(s, BASE)
+    c = step(p, "comparables")
+    assert c["status"] == "blocked" and "12 product pages from 5 stores" in c["detail"]
+    assert p["next_action"]["kind"] == "monitor"

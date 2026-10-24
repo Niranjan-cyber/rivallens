@@ -69,12 +69,21 @@ def _steps(s: dict, base: str) -> list[dict]:
         st = {"status": "done", "detail": "; ".join(f"{p['name']}: {p['like_for_like']} like-for-like products" for p in good) + ".",
               "action": _act("Compare", f"{base}/product-detail?id={good[0]['id']}")}
     else:
-        p = cat[0]
-        leaf = p["category_path"].split(" > ")[-1]
-        why = (f"{p['broad']} products share the broad category {leaf}, but not {p['niche'] or p['name']}, so we won't compare prices yet. "
-               if p["broad"] else "")
-        st = {"status": "todo", "detail": f"{why}We read Indian stores' product pages and keep only {(p['niche'] or p['name']).lower()}.",
-              "action": _act(f"Find products like {p['name']}", kind="comparables", product_id=p["id"])}
+        tried = [p for p in cat if p.get("searched")]
+        notes = " ".join(f"For {p['name']} we read {p['searched']['pages_read']} product pages from {p['searched']['stores']} stores; "
+                         f"none was {(p['niche'] or p['name']).lower()} with a readable price." for p in tried)
+        fresh = [p for p in cat if not p.get("searched")]
+        if fresh:
+            p = fresh[0]
+            leaf = p["category_path"].split(" > ")[-1]
+            why = (f"{p['broad']} products share the broad category {leaf}, but not {p['niche'] or p['name']}, so we won't compare prices yet. "
+                   if p["broad"] else "")
+            st = {"status": "todo", "detail": f"{notes + ' ' if notes else ''}{why}We read Indian stores' product pages and keep only "
+                                              f"{(p['niche'] or p['name']).lower()}.",
+                  "action": _act(f"Find products like {p['name']}", kind="comparables", product_id=p["id"])}
+        else:  # searched every product and found nothing like-for-like: say so and move on, don't loop on the same button
+            st = {"status": "blocked", "detail": f"{notes} Paste the page of a product you compete with and we'll add it if it matches.",
+                  "action": _act("Paste a rival product page", f"{base}/product-detail?id={tried[0]['id']}")}
     out.append({"key": "comparables", "title": "Like-for-like products"} | st)
 
     failed = f" Couldn't read: {', '.join(mon['failed'])} (not counted as changes)." if mon["failed"] else ""

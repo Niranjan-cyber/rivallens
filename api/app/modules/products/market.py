@@ -148,4 +148,4 @@ def find_comparables(job: Job, product_id) -> dict:
                    "niche": f["cat"]["niche"], "name": f["name"][:200], "brand": f["brand"], "desc": (f["description"] or "")[:600],
                    "price": inr, "cur": f["currency"], "rating": f["rating"], "rc": f["review_count"],
                    "feat": json.dumps(f.get("features") or []), "at": now})
-    return {"stores": stores, "pages_read": len(found), "same_category": len(same)}
+    return {"product_id": str(product_id), "stores": stores, "pages_read": len(found), "same_category": len(same)}
