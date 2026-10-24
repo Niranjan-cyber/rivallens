@@ -195,7 +195,10 @@ def fetch(url: str) -> dict:
     try:
         if not allowed_by_robots(url):
             return {"status": "blocked_robots", "http_status": None, "html": None, "bytes": 0}
-        code, ctype, body, size = _get(url)
+        try:
+            code, ctype, body, size = _get(url)
+        except httpx.TimeoutException:  # one retry: slow sites often answer the second time; a second timeout is reported
+            code, ctype, body, size = _get(url)
     except Blocked:
         return {"status": "failed_http", "http_status": None, "html": None, "bytes": 0}
     except OverflowError:

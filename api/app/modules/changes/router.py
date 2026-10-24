@@ -109,6 +109,32 @@ def create_run(profile_id: UUID, user: UserDep, background: BackgroundTasks) -> 
     return JobAccepted(job_id=job_id, status="queued")
 
 
+DUE_SQL = """
+    select p.id, p.user_id from profiles p
+    where not p.is_demo_data
+      and exists (select 1 from competitors c where c.profile_id = p.id and c.selected)
+      and exists (select 1 from runs r where r.profile_id = p.id and r.kind = 'baseline' and r.status = 'done')
+      and not exists (select 1 from runs r where r.profile_id = p.id and r.status = 'running' and r.started_at > now() - interval '10 minutes')
+      and (select max(started_at) from runs r where r.profile_id = p.id) < now() - case
+            when exists (select 1 from snapshots sn join runs r on r.id = sn.run_id where r.profile_id = p.id and sn.status <> 'ok'
+                         and r.started_at = (select max(started_at) from runs where profile_id = p.id))
+            then interval '1 day' else interval '7 days' end  -- a check with failed pages is retried the next day
+    order by (select max(started_at) from runs r where r.profile_id = p.id) limit :n"""
+
+
+@router.post("/cron/checks", status_code=202)
+def scheduled_checks(background: BackgroundTasks) -> dict:
+    """Workstream 5: weekly competitor checks for real businesses, called daily by a scheduler (.github/workflows/scheduled-checks.yml).
+    No secret: it can only start checks that are already due (a week since the last, a day if pages failed), at most 3 a call."""
+    with engine.begin() as conn:
+        due = conn.execute(text(DUE_SQL), {"n": 3}).all()
+    for profile_id, user_id in due:
+        job_id = jobs.create(user_id, profile_id, "run")
+        run_id = start_run(profile_id, job_id)
+        background.add_task(jobs.run, job_id, lambda job, p=profile_id, r=run_id: monitor(job, p, r))
+    return {"started": len(due)}
+
+
 @router.get("/profiles/{profile_id}/runs")
 def list_runs(profile_id: UUID, user: UserDep, conn: ConnDep, limit: int = 20) -> list[RunSummary]:
     _own_profile(conn, profile_id, user.id)

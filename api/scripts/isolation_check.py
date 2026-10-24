@@ -18,7 +18,8 @@ from app.main import app
 
 API = os.getenv("API_URL", "https://rivallens-api.onrender.com")
 SUPABASE_URL, ANON = os.environ["SUPABASE_URL"], os.environ["SUPABASE_ANON_KEY"]
-PUBLIC = {("POST", "/api/v1/accounts"), ("GET", "/api/v1/taxonomy"), ("GET", "/healthz"), ("GET", "/api/v1/mock/{instance}/{slug}")}
+PUBLIC = {("POST", "/api/v1/accounts"), ("GET", "/api/v1/taxonomy"), ("GET", "/healthz"), ("GET", "/api/v1/mock/{instance}/{slug}"),
+          ("POST", "/api/v1/cron/checks")}  # only starts checks already due
 
 
 def token(email: str, password: str) -> str:

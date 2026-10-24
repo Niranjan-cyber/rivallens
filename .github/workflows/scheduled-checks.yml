@@ -1,0 +1,15 @@
+# Workstream 5: weekly competitor checks for real businesses. The endpoint starts only checks that are due
+# (7 days since the last, 1 day if pages failed), at most 3 a call, so it needs no secret. Daily; a few calls in case one lands while the API wakes.
+name: scheduled-checks
+on:
+  schedule:
+    - cron: "30 3 * * *"   # 09:00 IST
+  workflow_dispatch:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          curl -fsS --max-time 90 https://rivallens-api.onrender.com/healthz
+          for i in 1 2 3; do curl -fsS --max-time 60 -X POST https://rivallens-api.onrender.com/api/v1/cron/checks; echo; sleep 20; done
