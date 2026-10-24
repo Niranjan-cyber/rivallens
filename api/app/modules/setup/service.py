@@ -65,8 +65,11 @@ def _steps(s: dict, base: str) -> list[dict]:
 
     cat = [p for p in products if p["category_path"]]
     good = [p for p in cat if p["like_for_like"] >= LIKE_FOR_LIKE]
-    if not cat:
-        st = {"status": "blocked", "detail": "Needs a product with a category first.", "action": None}
+    if not cat and products:  # services, plans, memberships: Google's product categories cover physical goods
+        st = {"status": "blocked", "detail": "Your offer doesn't fit a product category (services and plans usually don't), so instead of product "
+                                              "pages we compare you through competitors' pricing pages in the next step.", "action": None}
+    elif not cat:
+        st = {"status": "blocked", "detail": "Needs a product first.", "action": None}
     elif good:
         st = {"status": "done", "detail": "; ".join(f"{p['name']}: {p['like_for_like']} like-for-like products" for p in good) + ".",
               "action": _act("Compare", f"{base}/product-detail?id={good[0]['id']}")}

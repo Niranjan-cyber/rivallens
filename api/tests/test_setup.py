@@ -121,3 +121,12 @@ def test_a_failed_or_running_search_is_shown():
     assert c["status"] == "todo" and "Search service unavailable" in c["detail"]
     s["products"][0]["searched"] = {"status": "running", "error": None, "stores": 0, "pages_read": 0}
     assert step(plan(s, BASE), "comparables")["status"] == "running"
+
+
+def test_services_without_a_product_category_are_compared_through_competitors():
+    s = state(competitors={"selected": 2, "total": 2})
+    s["products"][0] |= {"name": "QuickKart Pass", "price": 99, "category_path": None, "niche": None}
+    p = plan(s, BASE)
+    c = step(p, "comparables")
+    assert c["status"] == "blocked" and "pricing pages" in c["detail"]
+    assert step(p, "products")["status"] == "done" and p["next_action"]["kind"] == "monitor"

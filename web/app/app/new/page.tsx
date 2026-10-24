@@ -10,7 +10,7 @@ type Card = Record<string, Field>;
 type Kind = "business" | "idea";
 
 const LIST_FIELDS = new Set(["india_markets", "attributes", "planned_features"]);
-const STEPS = ["Basics", "Offering", "Priorities"] as const;
+const STEPS = ["Basics", "Offering"] as const; // what to watch defaults to everything; change it in Settings
 const WATCH = [
   { key: "price", label: "Price changes" },
   { key: "plan", label: "Plans added or dropped" },
@@ -249,26 +249,14 @@ export default function NewProfile() {
             </div>
           </>
         )}
-        {step === 2 && (
-          <fieldset>
-            <legend className="text-[15px] font-medium">Changes to watch</legend>
-            {WATCH.map((w) => (
-              <label key={w.key} className="flex min-h-11 items-center gap-3 text-[17px]">
-                <input type="checkbox" className="size-5 accent-ink" checked={watch.includes(w.key)}
-                  onChange={(e) => setCard((c) => ({ ...c, watch: { value: e.target.checked ? [...watch, w.key] : watch.filter((x) => x !== w.key), origin: "user" } }))} />
-                {w.label}
-              </label>
-            ))}
-          </fieldset>
-        )}
       </div>
       {error && <p className="mt-4 rounded-btn bg-lifted p-4 text-charcoal">{error}</p>}
       <div className="mt-6 flex gap-3">
         <button type="button" onClick={() => (step === 0 ? setCard(null) : setStep(step - 1))}
           className="inline-flex min-h-11 items-center rounded-btn border-[1.5px] border-ink bg-white px-6 text-[16px] font-medium">Back</button>
-        <button type="button" onClick={() => (step < 2 ? setStep(step + 1) : finish())}
+        <button type="button" onClick={() => (step < STEPS.length - 1 ? setStep(step + 1) : finish())}
           className="inline-flex min-h-11 items-center rounded-btn border-[1.5px] border-ink bg-ink px-6 text-[16px] font-medium text-canvas">
-          {step < 2 ? "Next" : "Finish"}
+          {step < STEPS.length - 1 ? "Next" : "Finish"}
         </button>
       </div>
     </section>

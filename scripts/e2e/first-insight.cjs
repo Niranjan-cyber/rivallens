@@ -5,6 +5,8 @@ const { chromium } = require(process.argv[2]);
 const OUT = process.argv[3], BASE = process.env.BASE ?? "https://rivallens-eight.vercel.app";
 const flat = (s, n = 900) => s.replace(/\s+/g, " ").slice(0, n);
 const email = `founder-${Date.now()}@rivallens.test`, password = "Founder-test-2026";
+// A different business: BIZ="name|kind|city|what you do|products, comma-separated|customers|price1,price2" (defaults: a coffee roaster)
+const [NAME, KIND, CITY, WHAT, PRODUCTS, WHO, PRICES] = (process.env.BIZ ?? "Hillcrest Roasters|D2C brand|Bengaluru|Specialty coffee beans and South Indian filter coffee powder, roasted in Bengaluru and sold online|Filter coffee powder, Cold brew coffee bags|Home coffee drinkers aged 25-45 in Indian metros|450,650").split("|");
 (async () => {
   const browser = await chromium.launch({ executablePath: process.argv[4] });
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
@@ -32,16 +34,16 @@ const email = `founder-${Date.now()}@rivallens.test`, password = "Founder-test-2
     await page.getByRole("button", { name: "Create account" }).click();
     await page.locator("[data-screen=S-20]").waitFor();
     console.log("1 SIGNED UP", email);
-    await page.getByLabel("Business name").fill("Hillcrest Roasters");
-    await page.getByLabel("What kind of business is it?").selectOption("D2C brand");
-    await page.getByLabel("City").fill("Bengaluru");
-    await page.getByLabel("What you do, in one line").fill("Specialty coffee beans and South Indian filter coffee powder, roasted in Bengaluru and sold online");
-    await page.getByLabel(/Your main products/).fill("Filter coffee powder, Cold brew coffee bags");
+    await page.getByLabel("Business name").fill(NAME);
+    await page.getByLabel("What kind of business is it?").selectOption(KIND);
+    await page.getByLabel("City").fill(CITY);
+    await page.getByLabel("What you do, in one line").fill(WHAT);
+    await page.getByLabel(/Your main products/).fill(PRODUCTS);
     await page.getByRole("button", { name: "Next" }).click();
-    await page.getByLabel(/Who are your customers/).fill("Home coffee drinkers aged 25-45 in Indian metros");
+    await page.getByLabel(/Who are your customers/).fill(WHO);
     await page.getByRole("button", { name: "Draft my business card" }).click();
     await page.locator("[data-screen=S-05]").waitFor();
-    for (let i = 0; i < 2; i++) await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Next" }).click();
     await page.getByRole("button", { name: "Finish" }).click();
     await page.locator("[data-screen=S-27]").waitFor();
     const setupUrl = page.url();
@@ -52,9 +54,10 @@ const email = `founder-${Date.now()}@rivallens.test`, password = "Founder-test-2
     console.log("2 SETUP", setupUrl, "\n ", await steps(), "\n  NEXT:", flat(await next.innerText(), 300));
     await shot("first-insight-setup-start");
 
+    let priced = 0;
     for (let i = 0; i < 8; i++) {
       const kind = flat(await next.innerText(), 200);
-      if (/Add the price/.test(kind)) await doNext(/Cold brew/.test(kind) ? "650" : "450");
+      if (/Add the price/.test(kind)) await doNext(PRICES.split(",")[priced++ % 2]);
       else if (/Find competitors|Find products like|Start watching/.test(kind)) await doNext();
       else break;
     }

@@ -115,6 +115,7 @@ export type Product = {
   stage: "existing" | "new";
   description: string | null;
   url: string | null;
+  target_customer?: string | null;
   taxonomy_id: number | null;
   category_path: string | null;
   niche: string | null;

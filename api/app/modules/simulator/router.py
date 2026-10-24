@@ -269,7 +269,9 @@ def get_segment(product_id: UUID, user: UserDep, conn: ConnDep) -> dict:
     themes = customer_summary(conn, p["profile_id"])["themes"][:6]
     for i, t in enumerate(themes, 1):
         evidence[f"T{i}"] = {"text": f"Customer {t['kind']}: {t['label']} ({t['count']} mentions)", "source": "customers"}
-    if tc := card_value(card, "target_customer"):
+    if p.get("target_customer"):
+        evidence["C1"] = {"text": f"Who this product is for, in your words: {p['target_customer']}", "source": "product"}
+    elif tc := card_value(card, "target_customer"):
         evidence["C1"] = {"text": f"Target customer named at onboarding: {tc}", "source": "profile"}
     if cities := card_value(card, "india_markets"):
         evidence["C2"] = {"text": "Where it sells: " + ", ".join(cities if isinstance(cities, list) else [str(cities)]), "source": "profile"}

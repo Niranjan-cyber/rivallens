@@ -132,6 +132,40 @@ export function CoverageStrip({ coverage }: { coverage: Coverage[] }) {
   );
 }
 
+// Add a product or service by name or by its page (the page's name, price and description are read from it, robots.txt respected).
+function AddProduct({ profileId, onDone }: { profileId: string; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const field = "mt-1 w-full rounded-[14px] border border-ink/30 bg-white px-4 py-2.5 text-[16px]";
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const f = new FormData(form);
+    const what = String(f.get("what")).trim();
+    const isUrl = /^https?:\/\//.test(what);
+    setBusy(true);
+    setMessage(null);
+    await api<{ name: string; category_path: string | null }>(`/api/v1/profiles/${profileId}/products`, {
+      method: "POST",
+      body: JSON.stringify({ ...(isUrl ? { url: what } : { name: what }), target_customer: String(f.get("who")).trim() || null }),
+    }).then((p) => (form.reset(), setMessage(`${p.name} added${p.category_path ? ` in ${p.category_path.split(" > ").pop()}` : ", without a product category"}.`)),
+      (err: Error) => setMessage(err.message));
+    setBusy(false);
+    onDone();
+  }
+  return (
+    <details className="rounded-btn bg-lifted p-5">
+      <summary className="cursor-pointer text-[17px] font-medium">Add a product or service</summary>
+      <form onSubmit={submit} className="mt-4 grid gap-3 md:grid-cols-[1.4fr_1fr_auto] md:items-end">
+        <label className="text-[15px] font-medium">Name, or the link to its page<input name="what" required className={field} placeholder="Cold brew concentrate, or https://…" /></label>
+        <label className="text-[15px] font-medium">Who it&apos;s for <span className="font-normal text-slate">(optional)</span><input name="who" className={field} placeholder="If different from your business" /></label>
+        <button disabled={busy} className={`${btn} bg-ink text-canvas`}>{busy ? "Adding…" : "Add"}</button>
+      </form>
+      {message && <p role="status" className="mt-3 text-[15px] text-charcoal">{message}</p>}
+    </details>
+  );
+}
+
 // S-27: guided setup after onboarding. Every step reads from saved data, so it survives refresh, logout and login.
 export function SetupView({ profileId }: { profileId: string }) {
   const { data, error, load } = useSetup(profileId);
@@ -164,6 +198,8 @@ export function SetupView({ profileId }: { profileId: string }) {
           </li>
         ))}
       </ol>
+
+      <AddProduct profileId={profileId} onDone={load} />
 
       <div>
         <h2 className="text-[24px] font-medium tracking-[-0.02em]">What we found</h2>

@@ -68,6 +68,13 @@ export function ProductDetail() {
     load();
   }
 
+  async function setWho(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const who = String(new FormData(e.currentTarget).get("who")).trim();
+    await api(`/api/v1/products/${id}`, { method: "PATCH", body: JSON.stringify({ target_customer: who || null }) });
+    load();
+  }
+
   if (!id) return <p className="rounded-btn bg-lifted p-4">Pick a product from Products.</p>;
   if (!data) return <div className="h-40 rounded-stadium bg-lifted" aria-busy="true">{note}</div>;
   const { product: p, position: pos } = data;
@@ -79,6 +86,11 @@ export function ProductDetail() {
       <p className="text-[14px] text-slate">{path.join(" › ") || "No category yet"} · Google product taxonomy</p>
       <h1 className="mt-1 text-[32px] leading-tight md:text-[40px]">{p.name}</h1>
       {p.niche && <p className="mt-1 text-[18px] text-charcoal">{p.niche}</p>}
+      <form onSubmit={setWho} key={p.target_customer ?? ""} className="mt-3 flex max-w-[36rem] flex-wrap items-center gap-2 text-[15px]">
+        <label htmlFor="who" className="font-medium">Who it&apos;s for</label>
+        <input id="who" name="who" defaultValue={p.target_customer ?? ""} placeholder="Same as your business" className="min-w-0 flex-1 rounded-[14px] border border-ink/30 bg-white px-3 py-1.5" />
+        <button className="rounded-btn border-[1.5px] border-ink px-4 py-1.5 font-medium">Save</button>
+      </form>
 
       <div className="mt-6 grid gap-4 md:grid-cols-[1.4fr_1fr]">
         <div className="rounded-stadium bg-ink p-7 text-canvas">

@@ -26,7 +26,7 @@ from app.modules.products.taxonomy import candidates, path_of
 router = APIRouter(prefix="/api/v1", tags=["products"])
 log = logging.getLogger(__name__)
 COLS = ("id, profile_id, name, stage, description, url, taxonomy_id, category_path, niche, category_source, price, currency, unit, "
-        "unit_cost, features, add_ons, source, is_demo_data, created_at")
+        "unit_cost, features, add_ons, source, is_demo_data, created_at, target_customer")
 Unit = Literal["one_time", "month", "year", "hour", "user"]
 
 
@@ -50,6 +50,7 @@ class Product(BaseModel):
     source: dict | None
     is_demo_data: bool
     created_at: datetime
+    target_customer: str | None = None
 
 
 class ProductIn(BaseModel):
@@ -61,6 +62,7 @@ class ProductIn(BaseModel):
     unit: Unit = "one_time"
     features: list[str] = Field(default_factory=list, max_length=30)
     add_ons: list[str] = Field(default_factory=list, max_length=30)
+    target_customer: str | None = Field(None, max_length=200)
 
 
 class ProductPatch(BaseModel):
@@ -74,6 +76,7 @@ class ProductPatch(BaseModel):
     add_ons: list[str] | None = Field(None, max_length=30)
     taxonomy_id: int | None = None
     niche: str | None = Field(None, max_length=60)
+    target_customer: str | None = Field(None, max_length=200)
 
 
 def _own(conn: Connection, profile_id: UUID, user_id: UUID) -> dict:
@@ -108,13 +111,13 @@ def insert_product(conn: Connection, profile_id, profile: dict, body: ProductIn,
     cat = cat or classify(name, description or "", _business(profile))
     return dict(conn.execute(text(f"""
         insert into products (profile_id, name, stage, description, url, taxonomy_id, category_path, niche, category_source,
-                              price, unit, features, add_ons, source, is_demo_data)
-        values (:p, :n, :s, :d, :url, :t, :path, :niche, :cs, :price, :unit, cast(:f as jsonb), cast(:a as jsonb), cast(:src as jsonb), :demo)
+                              price, unit, features, add_ons, source, is_demo_data, target_customer)
+        values (:p, :n, :s, :d, :url, :t, :path, :niche, :cs, :price, :unit, cast(:f as jsonb), cast(:a as jsonb), cast(:src as jsonb), :demo, :tc)
         returning {COLS}
     """), {"p": profile_id, "n": name[:160], "s": body.stage, "d": description, "url": body.url, "t": cat["taxonomy_id"],
            "path": cat["path"], "niche": cat["niche"], "cs": cat["source"], "price": price, "unit": body.unit,
            "f": json.dumps(body.features), "a": json.dumps(body.add_ons), "src": json.dumps(source) if source else None,
-           "demo": is_demo}).mappings().one())
+           "demo": is_demo, "tc": body.target_customer}).mappings().one())
 
 
 @router.get("/profiles/{profile_id}/products")
