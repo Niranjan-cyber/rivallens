@@ -52,7 +52,7 @@ const email = `founder-${Date.now()}@rivallens.test`, password = "Founder-test-2
     console.log("2 SETUP", setupUrl, "\n ", await steps(), "\n  NEXT:", flat(await next.innerText(), 300));
     await shot("first-insight-setup-start");
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
       const kind = flat(await next.innerText(), 200);
       if (/Add the price/.test(kind)) await doNext(/Cold brew/.test(kind) ? "650" : "450");
       else if (/Find competitors|Find products like|Start watching/.test(kind)) await doNext();

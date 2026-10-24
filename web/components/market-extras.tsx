@@ -96,8 +96,8 @@ export function MarketPulse({ profileId }: { profileId: string }) {
                 <p className="text-[14px] text-slate">{c.category_path?.split(" > ").slice(-2).join(" › ") ?? "No category"}{c.niche ? ` · ${c.niche}` : ""}</p>
                 <p className="mt-1 text-[17px] font-medium">{c.product}</p>
                 {c.n > 0 ? (
-                  <p className="mt-1 text-[15px] text-charcoal">Median {rupees(c.median)} across {c.n} priced products; range {rupees(c.min)}–{rupees(c.max)}{c.seen ? `, seen ${new Date(c.seen).toLocaleDateString("en-IN", { dateStyle: "medium" })}` : ""}.</p>
-                ) : <p className="mt-1 text-[15px] text-slate">No priced products in this category yet.</p>}
+                  <p className="mt-1 text-[15px] text-charcoal">Median {rupees(c.median)} across {c.n} like-for-like products; range {rupees(c.min)}–{rupees(c.max)}{c.seen ? `, seen ${new Date(c.seen).toLocaleDateString("en-IN", { dateStyle: "medium" })}` : ""}.</p>
+                ) : <p className="mt-1 text-[15px] text-slate">Not enough like-for-like prices yet (we need 3).</p>}
                 <Link href={`/app/${profileId}/product-detail?id=${c.product_id}`} className="mt-2 inline-block text-[14px] underline">{c.n > 0 ? "Compare" : "Find comparable products"}</Link>
               </li>
             ))}

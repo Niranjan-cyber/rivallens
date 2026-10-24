@@ -157,7 +157,8 @@ export function SetupView({ profileId }: { profileId: string }) {
               </p>
               <p className="mt-1 text-[15px] text-charcoal">{s.detail}</p>
             </div>
-            {s.action && s.status !== "done" && <ActionControl key={s.action.label} profileId={profileId} action={s.action} onDone={load} />}
+            {s.key === data.next_action.key && <span className="text-[15px] text-slate">Your next step, above</span>}
+            {s.action && s.status !== "done" && s.key !== data.next_action.key && <ActionControl key={s.action.label} profileId={profileId} action={s.action} onDone={load} />}
             {s.action && s.status === "done" && s.action.href && <Link href={s.action.href} className="text-[15px] underline">{s.action.label}</Link>}
           </li>
         ))}

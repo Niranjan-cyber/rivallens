@@ -89,7 +89,12 @@ export function ProductDetail() {
               <button className="rounded-btn border-[1.5px] border-canvas px-5 font-medium">Save</button>
             </form>
           ) : pos.n === 0 ? (
-            <p className="mt-2 text-[20px]">{rupees(p.price, p.unit)}. No priced products in this category yet: find some below.</p>
+            <p className="mt-2 text-[20px]">
+              {rupees(p.price, p.unit)}.{" "}
+              {data.rows.some((r) => r.price != null)
+                ? `Fewer than 3 of the products found are ${(p.niche ?? p.name).toLowerCase()}, so there is no like-for-like median yet. Find more below, or paste a rival's product page.`
+                : "No priced products in this category yet: find some below."}
+            </p>
           ) : (
             <>
               <p className="mt-2 text-[28px] font-medium leading-tight tracking-[-0.02em]">

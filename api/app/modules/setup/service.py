@@ -31,7 +31,7 @@ def _steps(s: dict, base: str) -> list[dict]:
         st = {"status": "todo", "detail": "Add what you sell, so it can be compared with the same products.", "action": _act("Add a product", f"{base}/product")}
     elif unpriced:
         p = unpriced[0]
-        st = {"status": "todo", "detail": f"Add the price of {p['name']}: without it we can't place it against the market.",
+        st = {"status": "todo", "detail": f"Without the price of {p['name']} we can't place it against the market.",
               "action": _act(f"Add the price of {p['name']}", kind="price", product_id=p["id"], product=p["name"], unit=p["unit"])}
     elif uncategorised:
         p = uncategorised[0]

@@ -266,7 +266,8 @@ def comparison_data(conn: Connection, p: dict) -> dict:
         r["same_niche"] = niche_overlap(p["niche"], f"{r['niche']} {r['name']}", leaf)
     niche_rows = [r for r in rows if r["same_niche"]]
     basis = niche_rows if sum(r["price"] is not None for r in niche_rows) >= 3 else rows
-    prices = [float(r["price"]) for r in basis if r["price"] is not None]
+    # Only like-for-like prices make a median: a French press is in "Coffee" but says nothing about the price of coffee powder (L-23)
+    prices = [float(r["price"]) for r in basis if r["price"] is not None] if basis is niche_rows else []
     pos = price_position(float(p["price"]) if p["price"] is not None else None, prices)
     premium = sorted((r for r in basis if r["price"] is not None and pos["q75"] and r["price"] >= pos["q75"]), key=lambda r: -r["price"])[:5]
     brands: dict[str, dict] = {}
@@ -294,15 +295,12 @@ def comparison_data(conn: Connection, p: dict) -> dict:
 def market_overview(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict:
     _own(conn, profile_id, user.id)
     news = conn.execute(text("select items, queries, fetched_at from market_news where profile_id = :p"), {"p": profile_id}).mappings().first()
-    cats = [dict(r) for r in conn.execute(text("""
-        select pr.category_path, pr.niche, pr.name as product, pr.id as product_id, count(mp.id) as n,
-               percentile_cont(0.5) within group (order by mp.price)::float as median, min(mp.price)::float as min, max(mp.price)::float as max,
-               max(mp.observed_at) as seen
-        from products pr left join market_products mp on (mp.taxonomy_id = pr.taxonomy_id or mp.category_path like pr.category_path || ' > %')
-          and mp.price is not null
-        where pr.profile_id = :p group by pr.id order by pr.created_at"""), {"p": profile_id}).mappings()]
-    for c in cats:
-        c["seen"] = c["seen"].isoformat() if c["seen"] else None
+    cats = []  # like-for-like prices only, the same basis as the product page (L-23)
+    for p in conn.execute(text(f"select {COLS} from products where profile_id = :p order by created_at"), {"p": profile_id}).mappings():
+        c = comparison_data(conn, dict(p)) if p["taxonomy_id"] else {"position": {"n": 0, "median": None, "min": None, "max": None}, "rows": []}
+        pos, seen = c["position"], max((r["observed_at"] for r in c["rows"] if r["same_niche"]), default=None)
+        cats.append({"category_path": p["category_path"], "niche": p["niche"], "product": p["name"], "product_id": p["id"], "n": pos["n"],
+                     "median": pos["median"], "min": pos["min"], "max": pos["max"], "seen": seen.isoformat() if seen and pos["n"] else None})
     return {"news": news["items"] if news else [], "queries": news["queries"] if news else [],
             "news_fetched_at": news["fetched_at"].isoformat() if news else None, "categories": cats}
 

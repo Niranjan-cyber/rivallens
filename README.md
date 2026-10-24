@@ -43,6 +43,16 @@ The simulator on each product takes its inputs from the other three: the categor
 | **Noise ignored, each with its rule** | **Finance against the India benchmark** |
 | ![Noise ledger](docs/screenshots/b14k-noise-ledger.png) | ![Finance](docs/screenshots/b14k-money.png) |
 
+## A new business, without help (Getting started)
+
+Create an account, describe the business, and **Finish** lands on **Getting started**: one plan computed from what has been collected so far.
+- Steps with their status: target market, product prices, competitors (discovered and verified for India, or the reasons none passed), like-for-like products, the first check of competitors' pricing pages. Finance and Customers uploads are optional.
+- **Your next step:** exactly one, done in place (enter a price, find competitors, find products like yours, start watching).
+- **What we found:** only what the data supports, each with its evidence: a price position needs at least 3 like-for-like prices; a gap of more than 60% from the median is flagged as a likely size or pack mismatch, not a conclusion.
+- **Data coverage:** what is covered, missing or failed for Market, Products, Finance and Customers.
+
+The overview shows the same next step, findings and coverage. Everything is read from saved data, so it survives refresh, logout and login. `node scripts/e2e/first-insight.cjs <playwright-core> <out-dir> <chrome>` walks it on the live URL as a brand-new founder.
+
 ## How change detection works
 
 Detection is rules-first, so the core demo never depends on an LLM.
