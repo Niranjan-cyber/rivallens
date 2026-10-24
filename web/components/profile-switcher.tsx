@@ -29,6 +29,7 @@ export function ProfileSwitcher() {
           <Link key={p.id} href={`/app/${p.id}/home`} className="block rounded-pill px-4 py-2 hover:bg-canvas">{p.name}</Link>
         ))}
         <Link href="/app/new" className="block rounded-pill px-4 py-2 hover:bg-canvas">Add a business</Link>
+        {!isGuest && <Link href="/reset" className="block rounded-pill px-4 py-2 hover:bg-canvas">Change password</Link>}
         <button type="button" onClick={() => supabase.auth.signOut()} className="mt-1 block w-full rounded-pill px-4 py-2 text-left text-slate hover:bg-canvas">
           {isGuest ? "Leave demo" : "Log out"}
         </button>

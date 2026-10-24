@@ -6,7 +6,7 @@ import { Logo } from "@/components/ui";
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 
-type Mode = "login" | "signup";
+type Mode = "login" | "signup" | "forgot";
 const DEMO_PASSWORD = "RivalLens-demo-2026";
 const DEMOS = [
   { email: "stride@rivallens.demo", name: "Stride & Co.", what: "Running shoes, Pune" },
@@ -30,6 +30,13 @@ export default function Login() {
     const password = String(f.get("password"));
     setBusy("form");
     setMessage(null);
+    if (mode === "forgot") {  // never says whether the address has an account
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset` });
+      setBusy(null);
+      return setMessage(error && !/rate|limit/i.test(error.message) ? error.message
+        : error ? "Too many requests. Wait a few minutes and try again."
+        : "If that email has an account, a link to set a new password is on its way. It works for one hour; check spam too.");
+    }
     if (mode === "signup") {
       try {
         await api("/api/v1/accounts", { method: "POST", body: JSON.stringify({ email, password, name: String(f.get("name") ?? "") }) });
@@ -64,6 +71,9 @@ export default function Login() {
     <main data-screen="S-02" className="mx-auto flex w-full max-w-[440px] flex-1 flex-col justify-center px-4 py-16">
       <Logo />
       <div className="mt-10 rounded-stadium bg-white p-8 shadow-lift-2">
+        {mode === "forgot" ? (
+          <p className="text-[15px] font-medium">Reset your password</p>
+        ) : (
         <div role="tablist" className="flex gap-2 rounded-pill bg-canvas p-1">
           {(["login", "signup"] as const).map((m) => (
             <button key={m} role="tab" aria-selected={mode === m} type="button" onClick={() => { setMode(m); setMessage(null); }}
@@ -72,19 +82,27 @@ export default function Login() {
             </button>
           ))}
         </div>
+        )}
         <form onSubmit={submit} className="mt-6 space-y-4">
           {mode === "signup" && (
             <label className="block text-[14px] text-charcoal">Name<input name="name" autoComplete="name" className={field} /></label>
           )}
           <label className="block text-[14px] text-charcoal">Email<input name="email" type="email" required autoComplete="email" className={field} /></label>
+          {mode !== "forgot" && (
           <label className="block text-[14px] text-charcoal">
             Password
             <input name="password" type="password" required minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} className={field} />
           </label>
+          )}
           <button disabled={busy !== null} className="min-h-11 w-full rounded-btn border-[1.5px] border-ink bg-ink text-[16px] font-medium text-canvas disabled:opacity-60">
-            {busy === "form" ? "Working…" : mode === "login" ? "Log in" : "Create account"}
+            {busy === "form" ? "Working…" : mode === "login" ? "Log in" : mode === "signup" ? "Create account" : "Send reset link"}
           </button>
         </form>
+        {mode !== "signup" && (
+          <button type="button" onClick={() => { setMode(mode === "forgot" ? "login" : "forgot"); setMessage(null); }} className="mt-3 text-[14px] underline">
+            {mode === "forgot" ? "Back to log in" : "Forgot password?"}
+          </button>
+        )}
         {message && (
           <p role="alert" className="mt-4 rounded-btn bg-canvas p-4 text-[14px]">
             {message}

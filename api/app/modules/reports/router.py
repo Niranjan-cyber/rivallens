@@ -152,6 +152,8 @@ def get_report(report_id: UUID, user: UserDep, conn: ConnDep) -> dict:
 
 @router.get("/profiles/{profile_id}/reports/latest")
 def latest_report(profile_id: UUID, user: UserDep, conn: ConnDep) -> dict | None:
+    if not conn.execute(text("select 1 from profiles where id = :p and user_id = :u"), {"p": profile_id, "u": user.id}).first():
+        raise HTTPException(404, {"code": "not_found", "message": "Profile not found."})  # someone else's business looks missing, like everywhere else
     rid = conn.execute(text("""select r.id from reports r join profiles p on p.id = r.profile_id
         where r.profile_id = :p and p.user_id = :u order by r.created_at desc limit 1"""), {"p": profile_id, "u": user.id}).scalar()
     return get_report(rid, user, conn) if rid else None
