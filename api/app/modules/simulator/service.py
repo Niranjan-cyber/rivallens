@@ -29,8 +29,8 @@ def propose_options(m: float, planned: float | None = None, extra: float | None 
             near.update(price_inr=planned, origin="your planned price")
         else:
             opts.append({"id": "P", "price_inr": planned, "origin": "your planned price"})
-    if extra:
-        opts.append({"id": "U", "price_inr": extra, "origin": "user"})
+    if extra and all(o["price_inr"] != extra for o in opts):  # a price already in the table needs no second row
+        opts.append({"id": "U", "price_inr": extra, "origin": "your test price"})
     return opts
 
 

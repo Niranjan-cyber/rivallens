@@ -1,8 +1,9 @@
 import json
 import statistics
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import Connection, text
 
@@ -186,7 +187,7 @@ def _units_per_month(conn: Connection, profile_id, name: str) -> float | None:
     return round(v, 1) if v else None
 
 
-def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
+def product_sim(conn: Connection, p: dict, card: dict, comp: dict, test_price: float | None = None) -> dict:
     """Workstream 4: unit cost → gross profit → break-even and runway, calibrated to real sales when Finance has them.
     Every input and assumption says where it comes from; the founder can override any assumption for this product."""
     from app.modules.customers.router import customer_summary
@@ -258,7 +259,7 @@ def product_sim(conn: Connection, p: dict, card: dict, comp: dict) -> dict:
     if existing:
         inputs.append(_in("Launch and running costs", "₹0: already selling, its costs are in your Finance numbers", "product"))
 
-    sim = simulate(m, f, a, planned=price, unit_cost=uc)
+    sim = simulate(m, f, a, planned=price, extra=test_price, unit_cost=uc)
     flags = []
     now_gp = None
     if existing and price and uc is not None:  # today's monthly gross profit, the baseline every option's runway moves from
@@ -347,8 +348,9 @@ def list_scenarios(product_id: UUID, user: UserDep, conn: ConnDep) -> list[dict]
 
 
 @router.get("/products/{product_id}/simulation")
-def get_product_simulation(product_id: UUID, user: UserDep, conn: ConnDep) -> dict:
-    return product_sim(conn, *_product(conn, product_id, user.id))
+def get_product_simulation(product_id: UUID, user: UserDep, conn: ConnDep, test_price: Annotated[float | None, Query(gt=0, le=1e9)] = None) -> dict:
+    """test_price: "what if I charge ₹X?", one extra row computed like the others; not saved."""
+    return product_sim(conn, *_product(conn, product_id, user.id), test_price=test_price)
 
 
 class Segment(BaseModel):

@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LoadError } from "@/components/ui";
 import { api } from "@/lib/api";
 
-type Scenario = { conversion: number; customers_m12: number; revenue_12m_inr: number; break_even_month: number | null };
+type Scenario = { conversion: number; customers_m12: number; revenue_12m_inr: number; gross_profit_12m_inr: number | null; break_even_month: number | null };
 type Option = {
   id: string; price_inr: number; origin: string; scenarios: Record<"best" | "expected" | "worst", Scenario>;
   unit_margin_inr?: number; gross_profit_12m_inr?: number | null; after_runway: boolean; runway_months?: number | null; cash_out_month?: number | null;
@@ -19,7 +19,7 @@ type Input = { label: string; value: string; source: "market" | "money" | "custo
 type Sim = {
   label: string; options: Option[]; recommended_option: string; reason: string; price_unit: string; inputs: Input[];
   viability_flags: { code: string; severity: string; text: string }[]; assumption_list: Assumption[]; sensitivity: Sens[];
-  existing: boolean; basis: "gross profit" | "revenue"; runway_now_months: number | null;
+  existing: boolean; basis: "gross profit" | "revenue"; runway_now_months: number | null; assumptions: Record<string, number>;
 };
 const ORIGIN: Record<Assumption["origin"], string> = { default: "Default", yours: "Yours", "your sales": "From your sales", estimate: "Estimate" };
 type Segment = { segment: string | null; why: string[]; evidence_ids: string[]; evidence: { id: string; text: string; source: string }[]; message?: string };
@@ -33,12 +33,20 @@ export function ProductPlan({ productId, profileId, version }: { productId: stri
   const [seg, setSeg] = useState<Segment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [testPrice, setTestPrice] = useState<number | null>(null);
+  const [run, setRun] = useState(0); // each new result replays the grid
+  const [pending, setPending] = useState(true); // set by clicks, cleared when their result lands
   const latest = useRef(0);
-  useEffect(() => {
+  const load = useCallback((test: number | null) => {
     const n = ++latest.current; // a load that lands after an edit must not put the old numbers back
-    api<Sim>(`/api/v1/products/${productId}/simulation`).then((s) => { if (n === latest.current) { setSim(s); setError(null); } }, (e: Error) => setError(e.message));
+    api<Sim>(`/api/v1/products/${productId}/simulation${test ? `?test_price=${test}` : ""}`)
+      .then((s) => { if (n === latest.current) { setSim(s); setRun((r) => r + 1); setError(null); } }, (e: Error) => setError(e.message))
+      .finally(() => { if (n === latest.current) setPending(false); });
+  }, [productId]);
+  useEffect(() => { load(testPrice); }, [load, testPrice, version, attempt]);
+  useEffect(() => {
     api<Segment>(`/api/v1/products/${productId}/segment`).then(setSeg, (e: Error) => setSeg({ segment: null, why: [], evidence_ids: [], evidence: [], message: `Couldn't load the segment: ${e.message}` }));
-  }, [productId, version, attempt]);
+  }, [productId, version]);
   const href = (link: string | null) => (link === "product-detail" ? `/app/${profileId}/product-detail?id=${productId}` : `/app/${profileId}/${link}`);
 
   return (
@@ -65,7 +73,9 @@ export function ProductPlan({ productId, profileId, version }: { productId: stri
           <p className="text-[12px] text-slate">{sim?.label ?? "Scenario model, not a forecast"}</p>
         </div>
         {error && <div className="mt-3"><LoadError what="the simulator" message={error} onRetry={() => { setError(null); setAttempt((a) => a + 1); }} /></div>}
-        {sim && <SimBody sim={sim} href={href} productId={productId} onChange={(s) => { latest.current++; setSim(s); }} />}
+        {sim && <SimBody sim={sim} run={run} pending={pending} testPrice={testPrice} href={href} productId={productId} onRerun={() => { setPending(true); load(testPrice); }}
+          onTest={(v) => { setPending(true); if (v === testPrice) load(v); else setTestPrice(v); }}
+          onChange={(s) => { latest.current++; setSim(s); setRun((r) => r + 1); if (testPrice) load(testPrice); }} />}
       </div>
     </div>
   );
@@ -79,8 +89,34 @@ function whatChanged(before: Sim, after: Sim, money: string): string {
   return gp(b) === gp(a) ? `${price}; ${money.toLowerCase()} unchanged.` : `${price}; ${money.toLowerCase()} ${inr(gp(b))} → ${inr(gp(a))}.`;
 }
 
+const STEP = 110, SETTLE = 650; // ms between rows, and how long a cell scrambles before showing its value
+const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// A computed value "decoding" into place: digits scramble briefly, then the real number. Purely visual; the numbers are already final.
+function Scramble({ text, delay }: { text: string; delay: number }) {
+  const [shown, setShown] = useState(() => (reducedMotion() ? text : text.replace(/\d/g, "0")));
+  useEffect(() => {
+    if (reducedMotion()) return;
+    const start = performance.now();
+    const t = setInterval(() => {
+      if (performance.now() - start >= delay + SETTLE) { setShown(text); clearInterval(t); }
+      else setShown(text.replace(/\d/g, () => String(Math.floor(Math.random() * 10))));
+    }, 45);
+    return () => clearInterval(t);
+  }, [text, delay]);
+  return <span className="tabular-nums">{shown}</span>;
+}
+
 // The simulator's results, its assumptions (editable), sensitivity and saved scenarios.
-function SimBody({ sim, href, productId, onChange }: { sim: Sim; href: (l: string | null) => string; productId: string; onChange: (s: Sim) => void }) {
+function SimBody({ sim, run, pending, testPrice, href, productId, onChange, onRerun, onTest }: {
+  sim: Sim; run: number; pending: boolean; testPrice: number | null; href: (l: string | null) => string; productId: string;
+  onChange: (s: Sim) => void; onRerun: () => void; onTest: (p: number | null) => void;
+}) {
+  const [done, setDone] = useState(0);
+  const total = reducedMotion() ? 0 : (sim.options.length - 1) * STEP + 2 * 40 + SETTLE + 100;
+  useEffect(() => { const t = setTimeout(() => setDone(run), total); return () => clearTimeout(t); }, [run, total]);
+  const running = pending || done !== run;
+  const best = sim.options.find((o) => o.id === sim.recommended_option)!;
   const [saved, setSaved] = useState<Saved[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
@@ -115,25 +151,43 @@ function SimBody({ sim, href, productId, onChange }: { sim: Sim; href: (l: strin
       {sim.viability_flags.map((f) => (
         <p key={f.code} role="note" data-flag={f.code} className={`mt-3 rounded-btn p-3 text-[14px] ${f.severity === "high" ? "bg-ink text-canvas" : "bg-white"}`}>{f.text}</p>
       ))}
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[520px] text-left text-[14px]">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button type="button" onClick={onRerun} disabled={running} data-testid="sim-run"
+          className="inline-flex min-h-10 items-center rounded-btn border-[1.5px] border-ink bg-ink px-4 text-[14px] font-medium text-canvas disabled:opacity-60">
+          {running ? "Simulating…" : "Run simulation again"}
+        </button>
+        <p aria-live="polite" data-testid="sim-status" className="text-[13px] text-charcoal">
+          {running ? `Testing ${sim.options.length} prices × 3 levels of price sensitivity…`
+            : `${sim.options.length * 3} scenarios run. Best: ${inr(best.price_inr)}${sim.price_unit}.`}
+        </p>
+      </div>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[620px] text-left text-[14px]" data-testid="sim-grid">
           <thead className="text-[12px] text-slate">
-            <tr><th className="p-2 font-medium">Price</th><th className="p-2 font-medium">Sold a month</th><th className="p-2 font-medium">{money}</th>
-              <th className="p-2 font-medium">{sim.existing ? "Runway at this price" : "Break-even"}</th>
-              {!sim.existing && <th className="p-2 font-medium">Cash runs out</th>}</tr>
+            <tr><th className="p-2 font-medium" rowSpan={2}>Price</th><th className="p-2 font-medium" rowSpan={2}>Sold a month</th>
+              <th className="p-2 text-center font-medium" colSpan={3}>{money}</th>
+              <th className="p-2 font-medium" rowSpan={2}>{sim.existing ? "Runway at this price" : "Break-even"}</th>
+              {!sim.existing && <th className="p-2 font-medium" rowSpan={2}>Cash runs out</th>}</tr>
+            <tr><th className="p-2 text-right font-normal">Buyers less price-sensitive ({sim.assumptions.elasticity_best})</th>
+              <th className="p-2 text-right font-medium">Expected ({sim.assumptions.elasticity_expected})</th>
+              <th className="p-2 text-right font-normal">More price-sensitive ({sim.assumptions.elasticity_worst})</th></tr>
           </thead>
           <tbody>
-            {sim.options.map((o) => {
-              const e = o.scenarios.expected;
+            {sim.options.map((o, i) => {
+              const e = o.scenarios.expected, rec = !running && o.id === sim.recommended_option;
+              const val = (s: Scenario) => inr(s.gross_profit_12m_inr ?? s.revenue_12m_inr);
+              const cell = (t: string, j: number) => <Scramble key={`${run}-${t}`} text={t} delay={i * STEP + j * 40} />;
               return (
-                <tr key={o.id} className={`border-t border-ink/10 ${o.id === sim.recommended_option ? "bg-white font-medium" : ""}`}>
-                  <td className="p-2">{inr(o.price_inr)}{sim.price_unit} <span className="block text-[12px] font-normal text-slate">{o.id === sim.recommended_option ? `Recommended${o.origin.startsWith("your") ? ` · ${o.origin}` : ""}` : o.origin}</span></td>
-                  <td className="p-2">{e.customers_m12.toLocaleString("en-IN")}</td>
-                  <td className="p-2">{inr(o.gross_profit_12m_inr ?? e.revenue_12m_inr)}</td>
+                <tr key={o.id} data-option={o.id} className={`border-t border-ink/10 transition-colors duration-300 ${rec ? "bg-white font-medium" : ""}`}>
+                  <td className="p-2">{inr(o.price_inr)}{sim.price_unit} <span className="block text-[12px] font-normal text-slate">{rec ? `Recommended${o.origin.startsWith("your") ? ` · ${o.origin}` : ""}` : o.origin}</span></td>
+                  <td className="p-2">{cell(e.customers_m12.toLocaleString("en-IN"), 0)}</td>
+                  <td className="p-2 text-right text-charcoal">{cell(val(o.scenarios.best), 0)}</td>
+                  <td className="p-2 text-right">{cell(val(e), 1)}</td>
+                  <td className="p-2 text-right text-charcoal">{cell(val(o.scenarios.worst), 2)}</td>
                   {sim.existing
-                    ? <td className="p-2">{o.runway_months != null ? `${o.runway_months} months` : <span className="text-slate">{sim.runway_now_months == null ? "Unknown: add costs and cash" : "Not burning cash"}</span>}</td>
-                    : <td className="p-2">{e.break_even_month ? `Month ${e.break_even_month}` : "Not in 36 months"}</td>}
-                  {!sim.existing && <td className="p-2">{o.cash_out_month ? `Month ${o.cash_out_month}` : <span className="text-slate">Not within 36 months, or unknown</span>}</td>}
+                    ? <td className="p-2">{o.runway_months != null ? cell(`${o.runway_months} months`, 2) : <span className="text-slate">{sim.runway_now_months == null ? "Unknown: add costs and cash" : "Not burning cash"}</span>}</td>
+                    : <td className="p-2">{e.break_even_month ? cell(`Month ${e.break_even_month}`, 2) : "Not in 36 months"}</td>}
+                  {!sim.existing && <td className="p-2">{o.cash_out_month ? cell(`Month ${o.cash_out_month}`, 2) : <span className="text-slate">Not within 36 months, or unknown</span>}</td>}
                 </tr>
               );
             })}
@@ -141,6 +195,17 @@ function SimBody({ sim, href, productId, onChange }: { sim: Sim; href: (l: strin
         </table>
       </div>
       <p className="mt-3 text-[13px] text-charcoal">{sim.reason}</p>
+      <form className="mt-3 flex flex-wrap items-center gap-2 text-[14px]" key={testPrice ?? "none"} onSubmit={(e) => {
+        e.preventDefault();
+        const v = Number(new FormData(e.currentTarget).get("test"));
+        if (v > 0) onTest(v);
+      }}>
+        <label htmlFor="test-price" className="font-medium">What if I charge</label>
+        <span>₹</span>
+        <input id="test-price" name="test" type="number" min={1} step="any" required defaultValue={testPrice ?? ""} className="w-28 rounded-[10px] border border-ink/30 bg-white px-2 py-1" />
+        <button disabled={running} className="rounded-btn border border-ink bg-white px-3 py-1 text-[13px] font-medium">Test this price</button>
+        {testPrice && <button type="button" onClick={() => onTest(null)} className="text-[13px] underline">Remove ₹{testPrice.toLocaleString("en-IN")}</button>}
+      </form>
 
       <details className="mt-4 rounded-btn bg-white p-4" data-testid="assumptions">
         <summary className="cursor-pointer text-[14px] font-medium">Assumptions ({sim.assumption_list.filter((x) => x.origin === "default").length} still default)</summary>

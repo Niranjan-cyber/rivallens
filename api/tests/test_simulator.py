@@ -181,3 +181,11 @@ def test_conversion_has_no_effect_once_calibrated_to_real_sales():
     assert rows["elasticity_expected"]["applies"] is True
     new = {r["key"]: r for r in assumption_rows(DEFAULTS, {k: "default" for k in DEFAULTS}, existing=False, calibrated=False)}
     assert new["base_conversion"]["applies"] is True and "upfront_cost" in new
+
+
+def test_a_test_price_is_its_own_row_and_never_a_duplicate():
+    opts = propose_options(1000, planned=1999, extra=1499)
+    assert [(o["id"], o["price_inr"], o["origin"]) for o in opts if o["id"] == "U"] == [("U", 1499, "your test price")]
+    assert not [o for o in propose_options(1000, planned=1999, extra=1999) if o["id"] == "U"]  # already a row: no second ₹1,999
+    sim = simulate(1000, 0.5, DEFAULTS, planned=1999, extra=1499, unit_cost=400)
+    assert next(o for o in sim["options"] if o["id"] == "U")["scenarios"]["worst"]["gross_profit_12m_inr"] is not None

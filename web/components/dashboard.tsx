@@ -6,7 +6,6 @@ import { MarketPulse, SimulateMove } from "@/components/market-extras";
 import { RunMonitorButton } from "@/components/run-monitor";
 import { LoadError, SampleBadge } from "@/components/ui";
 import { api, type ProfileSummary } from "@/lib/api";
-import type { Simulation } from "@/components/simulator";
 
 type RunSummary = { id: string; kind: string; started_at: string; counts: { sources?: number; meaningful?: number; ignored?: number } };
 
@@ -15,7 +14,6 @@ export function Dashboard({ profileId }: { profileId: string }) {
   const [profile, setProfile] = useState<ProfileSummary | null>(null);
   const [runs, setRuns] = useState<RunSummary[] | null>(null);
   const [unread, setUnread] = useState<number | null>(null);
-  const [sim, setSim] = useState<Simulation | null>(null);
   const [failedAreas, setFailed] = useState<string[]>([]);
   const [attempt, setAttempt] = useState(0);
 
@@ -25,7 +23,6 @@ export function Dashboard({ profileId }: { profileId: string }) {
     api<ProfileSummary[]>("/api/v1/profiles").then((ps) => setProfile(ps.find((p) => p.id === profileId) ?? null), failed("competitors"));
     api<RunSummary[]>(`/api/v1/profiles/${profileId}/runs?limit=5`).then(setRuns, failed("recent checks"));
     api<{ id: string }[]>(`/api/v1/alerts?profile_id=${profileId}&unread=true`).then((a) => setUnread(a.length), failed("alerts"));
-    api<Simulation>(`/api/v1/profiles/${profileId}/simulation`).then(setSim, () => {}); // optional card: hidden when unavailable
   }, [profileId, attempt]);
 
   const when = (ts: string) => new Date(ts).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
@@ -58,14 +55,10 @@ export function Dashboard({ profileId }: { profileId: string }) {
         </Link>
       </div>
 
-      {sim && (
-        <Link href={`/app/${profileId}/simulator`} className="mt-4 block rounded-stadium bg-ink p-7 text-canvas hover:shadow-lift-2">
-          <p className="text-[15px] text-dust">Launch simulator · scenario model, not a forecast</p>
-          <p className="mt-1 text-[28px] font-medium tracking-[-0.02em]">Recommended ₹{sim.recommended_price_inr.toLocaleString("en-IN")}{sim.price_unit ?? "/month"}</p>
-          {sim.replanned && <p className="mt-1 text-[15px] text-signal-light">{sim.replanned.summary}</p>}
-          {sim.viability_flags.length > 0 && <p className="mt-1 text-[15px] text-dust">{sim.viability_flags.length} viability flag{sim.viability_flags.length > 1 ? "s" : ""}</p>}
-        </Link>
-      )}
+      <Link href={`/app/${profileId}/simulator`} className="mt-4 block rounded-stadium bg-ink p-7 text-canvas hover:shadow-lift-2">
+        <p className="text-[15px] text-dust">Price simulator · scenario model, not a forecast</p>
+        <p className="mt-1 text-[24px] font-medium tracking-[-0.02em]">One per product: competitor price changes found here feed it</p>
+      </Link>
 
       <h2 className="mt-10 text-[24px] font-medium tracking-[-0.02em]">Recent checks</h2>
       {runs == null ? (
