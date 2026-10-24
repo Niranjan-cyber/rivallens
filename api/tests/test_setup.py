@@ -99,3 +99,25 @@ def test_after_searching_every_product_the_step_explains_and_moves_on():
     c = step(p, "comparables")
     assert c["status"] == "blocked" and "12 product pages from 5 stores and found no filter coffee powder" in c["detail"]
     assert p["next_action"]["kind"] == "monitor"
+
+
+def test_stale_checks_and_prices_are_flagged_not_trusted():
+    s = state(competitors={"selected": 3, "total": 3},
+              monitoring={"baseline_at": "1 Sep 2026", "last_run_at": "1 Sep 2026", "last_run_days": 40, "failed": []})
+    s["products"][0] |= {"price": 300, "like_for_like": 5, "position": {"median": 500, "pct_vs_median": -40, "n": 5}, "sources": ["a.com"],
+                         "seen": "1 Aug 2026", "seen_days": 45}
+    p = plan(s, BASE)
+    assert step(p, "monitoring")["status"] == "todo" and p["next_action"]["kind"] == "monitor" and "40 days" in p["next_action"]["why"]
+    assert "may have changed" in p["findings"][0]["text"]
+    assert {c["area"]: c["status"] for c in p["coverage"]}["Market"] == "stale"
+    s["products"][0]["seen_days"] = 120
+    assert not any(f["kind"] == "price" for f in plan(s, BASE)["findings"])
+
+
+def test_a_failed_or_running_search_is_shown():
+    s = state()
+    s["products"][0] |= {"price": 450, "searched": {"status": "failed", "error": "Search service unavailable", "stores": 0, "pages_read": 0}}
+    c = step(plan(s, BASE), "comparables")
+    assert c["status"] == "todo" and "Search service unavailable" in c["detail"]
+    s["products"][0]["searched"] = {"status": "running", "error": None, "stores": 0, "pages_read": 0}
+    assert step(plan(s, BASE), "comparables")["status"] == "running"

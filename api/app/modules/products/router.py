@@ -213,7 +213,7 @@ def find_comparable_products(product_id: UUID, user: UserDep, conn: ConnDep, bac
     p = _owned_product(conn, product_id, user.id)
     if not p["taxonomy_id"]:
         raise HTTPException(409, {"code": "no_category", "message": "Set the product's category first."})
-    job_id = jobs.create(user.id, p["profile_id"], "comparables")
+    job_id = jobs.create(user.id, p["profile_id"], "comparables", {"product_id": str(product_id)})
     background.add_task(jobs.run, job_id, lambda job: find_comparables(job, product_id))  # own connections; never touches this request's rows
     return {"job_id": job_id, "status": "queued"}
 

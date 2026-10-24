@@ -31,10 +31,11 @@ class Job:
         self._update("status = 'failed', error = cast(:e as jsonb)", e=json.dumps({"code": code, "message": message}))
 
 
-def create(user_id: UUID, profile_id: UUID | None, kind: str) -> UUID:
+def create(user_id: UUID, profile_id: UUID | None, kind: str, result: dict | None = None) -> UUID:
+    """result: what the job is about (e.g. its product), kept if the job fails; a successful run replaces it."""
     with engine.begin() as conn:
-        return conn.execute(text("insert into jobs (user_id, profile_id, kind) values (:u, :p, :k) returning id"),
-                            {"u": user_id, "p": profile_id, "k": kind}).scalar()
+        return conn.execute(text("insert into jobs (user_id, profile_id, kind, result) values (:u, :p, :k, cast(:r as jsonb)) returning id"),
+                            {"u": user_id, "p": profile_id, "k": kind, "r": json.dumps(result) if result else None}).scalar()
 
 
 def run(job_id: UUID, fn: Callable[[Job], dict]) -> None:

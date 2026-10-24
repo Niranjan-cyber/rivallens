@@ -8,12 +8,12 @@ import { api, type Job } from "@/lib/api";
 export type Action = { label: string; href: string | null; kind: "link" | "price" | "discover" | "comparables" | "monitor" | "wait"; product_id?: string; product?: string; unit?: string; key?: string; why?: string };
 type Step = { key: string; title: string; status: "done" | "todo" | "running" | "blocked" | "optional"; detail: string; action: Action | null };
 export type Finding = { kind: string; basis: Kind; text: string; evidence: { label: string; href: string }; action: Action };
-export type Coverage = { area: string; status: "ok" | "missing" | "failed"; detail: string };
+export type Coverage = { area: string; status: "ok" | "missing" | "failed" | "stale"; detail: string };
 export type Setup = { steps: Step[]; findings: Finding[]; coverage: Coverage[]; next_action: Action; complete: boolean };
 
 const btn = "inline-flex min-h-11 items-center rounded-btn border-[1.5px] border-ink px-5 text-[16px] font-medium disabled:opacity-50";
 const CHIP: Record<Step["status"], string> = { done: "Done", todo: "To do", running: "Working", blocked: "Blocked", optional: "Optional" };
-const COV: Record<Coverage["status"], string> = { ok: "bg-ghost", missing: "bg-lifted text-slate", failed: "bg-signal/15 text-ink" };
+const COV: Record<Coverage["status"], string> = { ok: "bg-ghost", missing: "bg-lifted text-slate", failed: "bg-signal/15 text-ink", stale: "bg-signal/10 text-ink" };
 
 async function runJob(path: string, onNote: (s: string) => void): Promise<void> {
   const { job_id } = await api<{ job_id: string }>(path, { method: "POST", body: "{}" });
@@ -124,7 +124,7 @@ export function CoverageStrip({ coverage }: { coverage: Coverage[] }) {
     <ul data-testid="coverage" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
       {coverage.map((c) => (
         <li key={c.area} className={`rounded-btn p-4 ${COV[c.status]}`}>
-          <p className="text-[14px] font-medium">{c.area} · {c.status === "ok" ? "Covered" : c.status === "failed" ? "Check failed" : "Missing"}</p>
+          <p className="text-[14px] font-medium">{c.area} · {c.status === "ok" ? "Covered" : c.status === "failed" ? "Check failed" : c.status === "stale" ? "Out of date" : "Missing"}</p>
           <p className="mt-1 text-[14px]">{c.detail}</p>
         </li>
       ))}

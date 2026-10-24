@@ -27,12 +27,17 @@ def _day(ts) -> str | None:
     return f"{ts.day} {ts.strftime('%b %Y')}" if ts else None
 
 
+def _days(ts) -> int | None:
+    return (datetime.now(UTC) - ts).days if ts else None
+
+
 def _products(conn: Connection, profile_id: UUID) -> list[dict]:
     searched = {}  # product id -> its latest comparables search (finished or not)
-    for j in conn.execute(text("""select status, result from jobs where profile_id = :p and kind = 'comparables' and result ? 'product_id'
+    for j in conn.execute(text("""select status, result, error from jobs where profile_id = :p and kind = 'comparables' and result ? 'product_id'
                                   order by created_at"""), {"p": profile_id}).mappings():
-        searched[j["result"]["product_id"]] = {"stores": len(j["result"].get("stores", [])), "pages_read": j["result"].get("pages_read", 0),
-                                             "unclassified": j["result"].get("unclassified", 0)}
+        r = j["result"]
+        searched[r["product_id"]] = {"status": j["status"], "error": (j["error"] or {}).get("message"), "stores": len(r.get("stores", [])),
+                                     "pages_read": r.get("pages_read", 0), "unclassified": r.get("unclassified", 0)}
     out = []
     for p in conn.execute(text(f"select {COLS} from products where profile_id = :p order by stage, created_at"), {"p": profile_id}).mappings():
         p = dict(p)
@@ -45,7 +50,7 @@ def _products(conn: Connection, profile_id: UUID) -> list[dict]:
             like = [r for r in priced if r["same_niche"]]
             row |= {"like_for_like": len(like), "broad": len(priced), "sources": list(dict.fromkeys(r["domain"] for r in like)),
                     "position": c["position"] if c["basis"] == "niche" else None,
-                    "seen": _day(max((r["observed_at"] for r in like), default=None))}
+                    "seen": _day(seen := max((r["observed_at"] for r in like), default=None)), "seen_days": _days(seen)}
         out.append(row)
     return out
 
@@ -70,7 +75,7 @@ def _monitoring(conn: Connection, profile_id: UUID) -> dict:
         select distinct c.name from competitors c join sources s on s.competitor_id = c.id
         join lateral (select status from snapshots where source_id = s.id order by observed_at desc limit 1) sn on true
         where c.profile_id = :p and c.selected and sn.status <> 'ok'"""), {"p": profile_id})]
-    return {"baseline_at": _day(runs["baseline"]), "last_run_at": _day(runs["last"]), "failed": failed}
+    return {"baseline_at": _day(runs["baseline"]), "last_run_at": _day(runs["last"]), "last_run_days": _days(runs["last"]), "failed": failed}
 
 
 def _receipt(conn: Connection, profile_id: UUID) -> dict | None:

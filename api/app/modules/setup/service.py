@@ -4,6 +4,8 @@ the findings the data actually supports (each with its evidence) and the one nex
 LIKE_FOR_LIKE = 3  # fewer comparable prices than this is not a market median
 SHORT_RUNWAY = 6   # months
 SUSPECT_GAP = 60   # % from the median: more likely a different size or pack than a real price gap
+STALE_CHECK = 14   # days since competitors' pages were last checked
+STALE_PRICES, TOO_OLD = 30, 90  # days since comparable prices were seen: flag, then stop concluding
 
 
 def _inr(x: float) -> str:
@@ -69,17 +71,23 @@ def _steps(s: dict, base: str) -> list[dict]:
         st = {"status": "done", "detail": "; ".join(f"{p['name']}: {p['like_for_like']} like-for-like products" for p in good) + ".",
               "action": _act("Compare", f"{base}/product-detail?id={good[0]['id']}")}
     else:
-        tried = [p for p in cat if p.get("searched")]
+        search = lambda p: p.get("searched") or {}
+        running = next((p for p in cat if search(p).get("status") in ("queued", "running")), None)
+        tried = [p for p in cat if search(p) and search(p).get("status", "done") == "done"]
         notes = " ".join(f"For {p['name']} we read {p['searched']['pages_read']} product pages from {p['searched']['stores']} stores and found "
                          f"{p['like_for_like'] or 'no'} {(p['niche'] or p['name']).lower()} with a price (we need {LIKE_FOR_LIKE})"
                          + (f"; {p['searched']['unclassified']} pages couldn't be classified, so weren't counted." if p["searched"].get("unclassified") else ".")
                          for p in tried)
-        fresh = [p for p in cat if not p.get("searched")]
-        if fresh:
+        fresh = [p for p in cat if p not in tried]
+        if running:
+            st = {"status": "running", "detail": f"Reading stores for products like {running['name']}…", "action": _act("Searching", kind="wait")}
+        elif fresh:
             p = fresh[0]
             leaf = p["category_path"].split(" > ")[-1]
             why = (f"{p['broad']} products share the broad category {leaf}, but not {p['niche'] or p['name']}, so we won't compare prices yet. "
                    if p["broad"] else "")
+            if search(p).get("status") in ("failed", "stale"):  # a search that died says so, instead of looking untried
+                why = f"The last search stopped: {search(p).get('error') or 'it timed out'}. Try again. "
             st = {"status": "todo", "detail": f"{notes + ' ' if notes else ''}{why}We read Indian stores' product pages and keep only "
                                               f"{(p['niche'] or p['name']).lower()}.",
                   "action": _act(f"Find products like {p['name']}", kind="comparables", product_id=p["id"])}
@@ -91,6 +99,9 @@ def _steps(s: dict, base: str) -> list[dict]:
     failed = f" Couldn't read: {', '.join(mon['failed'])} (not counted as changes)." if mon["failed"] else ""
     if not comp["selected"]:
         st = {"status": "blocked", "detail": "Needs at least one competitor.", "action": None}
+    elif mon["baseline_at"] and (mon.get("last_run_days") or 0) > STALE_CHECK:
+        st = {"status": "todo", "detail": f"Last checked {mon['last_run_days']} days ago, so changes since then are unknown.{failed}",
+              "action": _act("Check competitors again", kind="monitor")}
     elif mon["baseline_at"]:
         st = {"status": "done", "detail": f"Watching since {mon['baseline_at']}; last checked {mon['last_run_at']}.{failed}",
               "action": _act("Open market", f"{base}/dashboard")}
@@ -131,6 +142,10 @@ def _findings(s: dict, base: str) -> list[dict]:
         pos = p["position"]
         if p["price"] is None or p["like_for_like"] < LIKE_FOR_LIKE or not pos or pos.get("pct_vs_median") is None:
             continue
+        age = p.get("seen_days") or 0
+        if age > TOO_OLD:  # too old to conclude anything; coverage says so
+            continue
+        dated = f" Prices seen {age} days ago; they may have changed." if age > STALE_PRICES else ""
         pct, href = pos["pct_vs_median"], f"{base}/product-detail?id={p['id']}"
         if abs(pct) > SUSPECT_GAP:  # a slice against whole cakes, a sample against a pack: not a pricing conclusion
             out.append({"kind": "check", "basis": "observed", "text": f"{p['name']} at {_inr(p['price'])} is far from the median {_inr(pos['median'])} of "
@@ -142,7 +157,7 @@ def _findings(s: dict, base: str) -> list[dict]:
         action = (_act("Test a higher price in its simulator", href) if pct <= -15 else
                   _act("See what the premium products include", href) if pct >= 15 else _act("Watch for competitor price moves", f"{base}/dashboard"))
         out.append({"kind": "price", "basis": "observed", "text": f"{p['name']} at {_inr(p['price'])} is {where} the median {_inr(pos['median'])} of "
-                                             f"{p['like_for_like']} like-for-like products ({', '.join(p['sources'][:3])}, seen {p['seen']}).",
+                                             f"{p['like_for_like']} like-for-like products ({', '.join(p['sources'][:3])}, seen {p['seen']}).{dated}",
                     "evidence": {"label": "The products compared, each with its page", "href": href}, "action": action})
     c = s["customers"]["complaint"]
     if c:
@@ -153,11 +168,14 @@ def _findings(s: dict, base: str) -> list[dict]:
 
 def _coverage(s: dict) -> list[dict]:
     mon, comp = s["monitoring"], s["competitors"]
-    market = ("failed", f"{len(mon['failed'])} page{'s' if len(mon['failed']) > 1 else ''} couldn't be read") if mon["failed"] else \
+    market = ("stale", f"Last checked {mon['last_run_days']} days ago") if (mon.get("last_run_days") or 0) > STALE_CHECK else \
+             ("failed", f"{len(mon['failed'])} page{'s' if len(mon['failed']) > 1 else ''} couldn't be read") if mon["failed"] else \
              ("ok", f"{comp['selected']} watched, last checked {mon['last_run_at']}") if mon["baseline_at"] else \
              ("missing", "No competitor pages watched yet")
     good = [p for p in s["products"] if p["like_for_like"] >= LIKE_FOR_LIKE]
-    products = ("ok", f"{len(good)} of {len(s['products'])} products have like-for-like prices") if good else \
+    old = [p["name"] for p in good if (p.get("seen_days") or 0) > STALE_PRICES]
+    products = ("stale", f"Prices for {', '.join(old)} are over {STALE_PRICES} days old") if old else \
+               ("ok", f"{len(good)} of {len(s['products'])} products have like-for-like prices") if good else \
                ("missing", "No product has enough like-for-like prices for a market median")
     m = s["money"]
     finance = ("ok", f"{m['transactions']} transactions") if m["has_costs"] else \
