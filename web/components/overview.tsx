@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { inr } from "@/components/money";
 import { COV_LABEL, Findings, NextAction, SinceLastVisit, useSetup, type Coverage } from "@/components/setup";
-import { SampleBadge } from "@/components/ui";
+import { LoadError, SampleBadge } from "@/components/ui";
 import { api, type Product, type ProfileSummary } from "@/lib/api";
 
 type Card = Record<string, { value: unknown } | undefined>;
@@ -20,6 +20,7 @@ export function Overview({ profileId }: { profileId: string }) {
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [items, setItems] = useState<Product[] | null>(null);
   const [customers, setCustomers] = useState<Customers | null>(null);
+  const [failedAreas, setFailed] = useState<string[]>([]);
   // The viewer's last visit, kept only in this browser (a convenience; storage can be missing, so every access is guarded)
   const [lastVisit] = useState<string | null>(() => {
     try { return typeof window === "undefined" ? null : localStorage.getItem(`rl-visit-${profileId}`); } catch { return null; }
@@ -32,11 +33,13 @@ export function Overview({ profileId }: { profileId: string }) {
   const [money, setMoney] = useState<{ transactions_count: number; metrics: { monthly_revenue: number; operating_margin: number | null; runway_months: number | null; monthly_burn: number | null }; benchmark: { industry: string; operating_margin: number | null } | null } | null>(null);
 
   useEffect(() => {
-    api<Profile>(`/api/v1/profiles/${profileId}`).then(setProfile, () => {});
-    api<Product[]>(`/api/v1/profiles/${profileId}/products`).then(setItems, () => {});
-    api<NonNullable<typeof money>>(`/api/v1/profiles/${profileId}/money`).then(setMoney, () => {});
-    api<ProfileSummary[]>("/api/v1/profiles").then((ps) => setSummary(ps.find((p) => p.id === profileId) ?? null), () => {});
-    api<Customers>(`/api/v1/profiles/${profileId}/customers`).then(setCustomers, () => {});
+    // a failed request is named, never shown as "nothing uploaded"
+    const failed = (area: string) => () => setFailed((f) => (f.includes(area) ? f : [...f, area]));
+    api<Profile>(`/api/v1/profiles/${profileId}`).then(setProfile, failed("your business"));
+    api<Product[]>(`/api/v1/profiles/${profileId}/products`).then(setItems, failed("products"));
+    api<NonNullable<typeof money>>(`/api/v1/profiles/${profileId}/money`).then(setMoney, failed("finance"));
+    api<ProfileSummary[]>("/api/v1/profiles").then((ps) => setSummary(ps.find((p) => p.id === profileId) ?? null), failed("market"));
+    api<Customers>(`/api/v1/profiles/${profileId}/customers`).then(setCustomers, failed("customers"));
   }, [profileId]);
 
   const card = profile?.card ?? {};
@@ -56,6 +59,10 @@ export function Overview({ profileId }: { profileId: string }) {
         {setup.data && !setup.data.complete && <> · <Link href={`/app/${profileId}/setup`} className="underline">Finish setting up</Link></>}
       </p>
 
+      {(failedAreas.length > 0 || setup.error) && (
+        <div className="mt-6"><LoadError what={[...failedAreas, ...(setup.error ? ["your next step"] : [])].join(", ")}
+          message="The server may be waking up. The other numbers on this page are current." onRetry={() => window.location.reload()} /></div>
+      )}
       {setup.data && (
         <div className="mt-8 grid gap-6">
           <NextAction profileId={profileId} action={setup.data.next_action} onDone={setup.load} />

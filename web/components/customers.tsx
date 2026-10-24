@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { LoadError } from "@/components/ui";
 import { api, type Job } from "@/lib/api";
 
 type Quote = { id: string; text: string; rating: number | null; date: string | null; author: string | null; url: string | null; source: string; source_type: string; sentiment: string | null };
@@ -32,17 +33,23 @@ async function waitFor(jobId: string, onStep: (s: string) => void) {
 export function Customers({ profileId }: { profileId: string }) {
   const [data, setData] = useState<Data | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const load = useCallback(() => api<Data>(`/api/v1/profiles/${profileId}/customers`).then(setData, () => {}), [profileId]);
+  const [error, setError] = useState<string | null>(null);
+  const load = useCallback(() => api<Data>(`/api/v1/profiles/${profileId}/customers`).then((d) => (setError(null), setData(d)), (e: Error) => setError(e.message)), [profileId]);
   useEffect(() => { load(); }, [load]);
 
   async function collect() {
     setStatus("Starting…");
-    const { job_id } = await api<{ job_id: string }>(`/api/v1/profiles/${profileId}/customers/collect`, { method: "POST" });
-    await waitFor(job_id, setStatus);
-    setStatus(null);
+    try {
+      const { job_id } = await api<{ job_id: string }>(`/api/v1/profiles/${profileId}/customers/collect`, { method: "POST" });
+      await waitFor(job_id, setStatus);
+      setStatus(null);
+    } catch (e) {
+      setStatus((e as Error).message);
+    }
     load();
   }
 
+  if (error && !data) return <LoadError what="customer data" message={error} onRetry={load} />;
   if (!data) return <div className="h-40 rounded-stadium bg-lifted" aria-busy="true" />;
   const s = data.sentiment;
   const judged = (s.positive ?? 0) + (s.neutral ?? 0) + (s.negative ?? 0);

@@ -22,6 +22,17 @@ export function Eyebrow({ children }: { children: ReactNode }) {
   );
 }
 
+// A request that failed: say what, and let the founder try again (never an endless loading box or a fake empty state).
+export function LoadError({ what, message, onRetry }: { what: string; message: string; onRetry: () => void }) {
+  return (
+    <div role="alert" className="rounded-btn bg-lifted p-5 text-[15px]">
+      <p className="font-medium">Couldn&apos;t load {what}.</p>
+      <p className="mt-1 text-charcoal">{message}</p>
+      <button type="button" onClick={onRetry} className="mt-3 rounded-btn border-[1.5px] border-ink bg-white px-4 py-1.5 font-medium">Try again</button>
+    </div>
+  );
+}
+
 export function SampleBadge({ label = "Sample data" }: { label?: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-pill border border-ink/40 bg-white px-3 py-1 text-[13px] text-charcoal">

@@ -33,7 +33,7 @@ export function ProductPlan({ productId, profileId, version }: { productId: stri
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     api<Sim>(`/api/v1/products/${productId}/simulation`).then((s) => { setSim(s); setError(null); }, (e: Error) => setError(e.message));
-    api<Segment>(`/api/v1/products/${productId}/segment`).then(setSeg, () => {});
+    api<Segment>(`/api/v1/products/${productId}/segment`).then(setSeg, (e: Error) => setSeg({ segment: null, why: [], evidence_ids: [], evidence: [], message: `Couldn't load the segment: ${e.message}` }));
   }, [productId, version]);
   const href = (link: string | null) => (link === "product-detail" ? `/app/${profileId}/product-detail?id=${productId}` : `/app/${profileId}/${link}`);
 
@@ -71,16 +71,18 @@ export function ProductPlan({ productId, profileId, version }: { productId: stri
 function SimBody({ sim, href, productId, onChange }: { sim: Sim; href: (l: string | null) => string; productId: string; onChange: (s: Sim) => void }) {
   const [saved, setSaved] = useState<Saved[] | null>(null);
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
+  const fail = (e: Error) => setFailed(e.message);
   useEffect(() => { api<Saved[]>(`/api/v1/products/${productId}/scenarios`).then(setSaved, () => setSaved([])); }, [productId]);
   const money = sim.basis === "gross profit" ? "12-month gross profit" : "12-month revenue";
   async function setAssumption(key: string, value: number | null) {
     setBusy(true);
-    await api<Sim>(`/api/v1/products/${productId}/assumptions`, { method: "PUT", body: JSON.stringify({ assumptions: { [key]: value } }) }).then(onChange, () => {});
+    await api<Sim>(`/api/v1/products/${productId}/assumptions`, { method: "PUT", body: JSON.stringify({ assumptions: { [key]: value } }) }).then((s) => (setFailed(null), onChange(s)), fail);
     setBusy(false);
   }
   async function save() {
     setBusy(true);
-    await api<Saved[]>(`/api/v1/products/${productId}/scenarios`, { method: "POST", body: "{}" }).then(setSaved, () => {});
+    await api<Saved[]>(`/api/v1/products/${productId}/scenarios`, { method: "POST", body: "{}" }).then((s) => (setFailed(null), setSaved(s)), fail);
     setBusy(false);
   }
   return (
@@ -94,6 +96,7 @@ function SimBody({ sim, href, productId, onChange }: { sim: Sim; href: (l: strin
           </li>
         ))}
       </ul>
+      {failed && <p role="alert" className="mt-3 rounded-btn bg-white p-3 text-[14px]">Not saved: {failed}</p>}
       {sim.viability_flags.map((f) => (
         <p key={f.code} role="note" data-flag={f.code} className={`mt-3 rounded-btn p-3 text-[14px] ${f.severity === "high" ? "bg-ink text-canvas" : "bg-white"}`}>{f.text}</p>
       ))}

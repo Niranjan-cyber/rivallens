@@ -9,7 +9,22 @@ export class ApiError extends Error {
   }
 }
 
+const WAKE_RETRIES = [3000, 8000]; // the free API sleeps; a read that hits it waking gets two more tries
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const read = !init?.method || init.method === "GET";
+  for (const wait of read ? WAKE_RETRIES : []) {
+    try {
+      return await once<T>(path, init);
+    } catch (e) {
+      if (!(e instanceof ApiError) || ![0, 502, 503, 504].includes(e.status)) throw e;
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+  return once<T>(path, init);
+}
+
+async function once<T>(path: string, init?: RequestInit): Promise<T> {
   const { data } = await supabase.auth.getSession();
   const auth: Record<string, string> = data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {};
   let res: Response;

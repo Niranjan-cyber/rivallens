@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { rupees } from "@/components/products";
+import { LoadError } from "@/components/ui";
 import { api, type Mock } from "@/lib/api";
 
 const MOVES = [
@@ -72,7 +73,8 @@ export function MarketPulse({ profileId }: { profileId: string }) {
   const [data, setData] = useState<Market | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const load = useCallback(() => api<Market>(`/api/v1/profiles/${profileId}/market`).then(setData, () => {}), [profileId]);
+  const [error, setError] = useState<string | null>(null);
+  const load = useCallback(() => api<Market>(`/api/v1/profiles/${profileId}/market`).then((d) => (setError(null), setData(d)), (e: Error) => setError(e.message)), [profileId]);
   useEffect(() => { load(); }, [load]);
 
   async function refresh() {
@@ -84,6 +86,7 @@ export function MarketPulse({ profileId }: { profileId: string }) {
     load();
   }
 
+  if (error && !data) return <div className="mt-10"><LoadError what="market prices and news" message={error} onRetry={load} /></div>;
   if (!data) return null;
   return (
     <>
