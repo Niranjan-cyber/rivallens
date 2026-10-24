@@ -4,6 +4,9 @@
     "design@knowledge-work-plugins": false
   },
   "permissions": {
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ],
     "deny": [
       "Read(./fixtures/pricing-pages/**)"
     ]

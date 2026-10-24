@@ -4,8 +4,10 @@ set -euo pipefail
 AGENTS="-a claude-code -a codex"
 npx -y skills add supabase/agent-skills --skill supabase --skill supabase-postgres-best-practices $AGENTS --copy -y
 npx -y skills add fastapi/fastapi --skill fastapi $AGENTS --copy -y
-npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices $AGENTS --copy -y
+npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices --skill web-design-guidelines --skill writing-guidelines $AGENTS --copy -y
 npx -y skills add render-oss/skills --skill render-deploy --skill render-debug $AGENTS --copy -y
 npx -y skills add anthropics/skills --skill frontend-design $AGENTS --copy -y
 npx -y skills add DietrichGebert/ponytail --skill ponytail $AGENTS --copy -y
+# Codex only: Claude Code gets these from the global Matt Pocock plugin
+npx -y skills add mattpocock/skills --skill tdd --skill diagnosing-bugs -a codex --copy -y
 echo "Done. Manual first-run steps are listed in SKILLS.md."

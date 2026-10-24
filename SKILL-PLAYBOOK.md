@@ -1,6 +1,7 @@
 # Skill playbook
 
-> Made by skill-conductor on 2026-10-23 (16:50). Build mode: **Sprint** (solo, deployed by ~21:00), with a **token-minimizing** policy. Agents: Claude Code (primary), Codex.
+> Made by skill-conductor on 2026-10-23 (16:50); updated 2026-10-24 for **Phase 5: Improve** (live product: reliability, data quality, UI polish). Token-minimizing policy. Agents: Claude Code (primary), Codex.
+> Phases 0–4 below are the finished hackathon build, kept as history.
 > The routing summary lives in AGENTS.md; this file is the full version. Update both together.
 
 ## Project in one line
@@ -27,7 +28,7 @@ Load cost is the approximate size of `SKILL.md` only.
 | spec | none (`hacknova26-competitor-intel-specs.md` is the spec) | — | — | Don't write new specs; edit that file if a contract changes |
 | plan | `prototype-build-planner` (once) | `build-hackathon` (not used; scope is already done) | — | Produces `BUILD-PLAN.md` + per-step prompts |
 | build | stack skill for the layer touched (below) + `ponytail` | — | — | |
-| ui | `frontend-design` | `vercel-react-best-practices` (only for data fetching or caching code) | ~2.4k tok | Set the visual direction **once** (tokens, type, layout) in the first UI step; later UI steps reuse it without reloading |
+| ui | `frontend-design` | `vercel-react-best-practices` (only for data fetching or caching code); `web-design-guidelines` (audit changed files after) | ~2.4k tok | Set the visual direction **once** (tokens, type, layout) in the first UI step; later UI steps reuse it without reloading |
 | backend: API | `fastapi` | — | ~2.8k tok | Specs win: sync SQLAlchemy 2 + psycopg 3, not SQLModel or uv |
 | backend: Supabase | `supabase` | `supabase-postgres-best-practices` (schema and migration steps only) | ~3.6k / ~0.8k tok | Auth (anonymous), `@supabase/ssr`, JWT verification, Storage signed URLs |
 | debug: app logic | `mattpocock-skills:diagnosing-bugs` | — | plugin | Reproduce → root cause → regression test |
@@ -35,9 +36,11 @@ Load cost is the approximate size of `SKILL.md` only.
 | debug: Supabase | `supabase` | — | (loaded) | Auth, RLS, permission or storage errors |
 | test | `mattpocock-skills:tdd` | — | plugin | **Only** for pipeline logic: section splitter, price rules, noise rules, diff, priority score, simulator, SSRF guard |
 | review | built-in `/code-review low` | `simplify` (only if a file clearly bloats) | — | At checkpoints only, not per slice |
-| qa | Playwright MCP (golden path on the public URL) | `run` (launch locally if needed) | — | No skill load; follow §7 of the journeys doc |
+| qa | `scripts/check-all.sh` and `scripts/e2e/*.cjs` (standalone playwright-core on the live URL) | Playwright MCP (often locked), `run` | — | No skill load |
+| ui audit | `web-design-guidelines` | — | small (fetches rules from GitHub) | Accessibility, focus, forms, loading/empty/error states; output `file:line` |
+| copy / docs | `writing-guidelines` | — | small (fetches rules from GitHub) | On-screen text, README, `finalVersion.md`, deck content |
 | perf/security | none | — | — | Security rules are in specs §6 (SSRF guard, sandboxed evidence, JWT) |
-| docs/deliverables | `anthropic-skills:hackathon-demo-submission` → `anthropic-skills:pptx` | — | — | Final phase only: README, demo script, PPT |
+| docs/deliverables | `anthropic-skills:pptx` | `writing-guidelines` | — | Deck from `docs/deck/PPT-CONTENT.md` |
 | ship: API | `render-deploy` (first deploy only), then Render MCP | `render-debug` | ~4.2k tok | Render Free, Singapore |
 | ship: web | Vercel MCP / Git auto-deploy | — | — | No skill needed |
 
@@ -81,6 +84,14 @@ Load cost is the approximate size of `SKILL.md` only.
 - **Chain:** `hackathon-demo-submission` (README, demo script, judge Q&A) → `pptx` (PPT from those).
 - **Skip:** a demo video unless the organizers require one.
 
+### Phase 5: Improve (current, from 24 Oct)
+- **Goal:** a more reliable, more accurate, easier product on the same stack. No new dashboards unless asked.
+- **Exit check per slice:** `LLM_MODE=replay` tests pass; the matching live check (`scripts/check-all.sh` or one `scripts/e2e/*.cjs`) passes on the public URL after `/healthz` shows the new sha; a D-xx/L-xx row; `finalVersion.md` updated if behaviour or limits changed.
+- **Chain per slice:** read the `finalVersion.md` section for the area → stack skill for the layer → `tdd` (start from the real failing case as a fixture) → push → live check → log.
+- **UI slices:** `frontend-design` for the look → `web-design-guidelines` on the changed files → fix findings that matter.
+- **Text slices:** `writing-guidelines`.
+- **Review:** `/code-review low` before a deploy that changes behaviour.
+
 ## Routing table
 
 | Task type | Route |
@@ -97,6 +108,9 @@ Load cost is the approximate size of `SKILL.md` only.
 | Render deploy or runtime failure | `render-debug` + Render MCP logs |
 | Supabase error | `supabase` |
 | step finished | deploy + smoke-check; review only at checkpoints |
+| improvement slice | Phase 5 chain |
+| UI change finished | `web-design-guidelines` on the changed files |
+| copy, README, deck text | `writing-guidelines` |
 | checkpoint | `/code-review low` |
 | before demo | Playwright MCP golden path → debug route for breaks |
 | deploy | API: Render MCP (`render-deploy` only for the first deploy); web: Vercel Git auto-deploy |
@@ -113,8 +127,7 @@ Load cost is the approximate size of `SKILL.md` only.
 | Pipeline logic (noise rules, diff, priority, simulator) starts inside a UI step | `tdd` for that function only |
 | Visual work inside a backend step | `frontend-design` tokens already set → no reload; just follow them |
 | Checkpoint reached | `/code-review low` |
-| 20:15 | **Freeze**: Phase 3 chain only |
-| 20:30 | Phase 4 chain |
+| UI change finished | `web-design-guidelines` |
 | LLM 429s in rehearsal | not a skill: set `LLM_MODE=replay` / record per specs §4a |
 
 ## Precedence
@@ -131,3 +144,4 @@ Load cost is the approximate size of `SKILL.md` only.
 
 ## Changes log
 - 2026-10-23 16:50: initial Sprint-mode playbook with token budget rules; disabled 2 unused plugins at project level; denied Read on raw HTML fixtures.
+- 2026-10-24: Phase 5 (Improve). Added `web-design-guidelines` and `writing-guidelines` (Claude Code + Codex), `tdd` and `diagnosing-bugs` copied for Codex only; QA route moved to `scripts/check-all.sh` and e2e scripts; freeze triggers removed; WebFetch allowed for raw.githubusercontent.com.

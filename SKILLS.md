@@ -1,34 +1,37 @@
 # Agent skills in this repo
 
-> Set up by skill-stack-setup on 2026-10-23. Agents: Claude Code, Codex. Scope: project (copied files, committed).
+> Set up by skill-stack-setup on 2026-10-23; reviewed 2026-10-24 for the improvement phase (all 8 original skills confirmed current, 4 added). Agents: Claude Code, Codex. Scope: project (copied files, committed).
 > Reproduce with `bash scripts/install-skills.sh`. Exact content hashes are in `skills-lock.json`.
 
 ## Project needs profile
-This is a solo hackathon prototype (HackNova'26) that must be deployed by about 21:00 with a GitHub repo, PPT and live URL. The stack is:
-- Next.js 15 on Vercel
+RivalLens started as a solo HackNova'26 build and is now a live product being improved for reliability, data quality and UI polish (see `finalVersion.md`). The stack is:
+- Next.js 16 on Vercel
 - FastAPI on Render Free
-- Supabase: Auth with anonymous guests, Postgres, private Storage for snapshots
+- Supabase: Auth with email and password, Postgres, private Storage for snapshots
 
-Judges score data accuracy, change detection, history, evidence and usability, so the UI needs polish while the code has to stay small.
+What matters now: correct like-for-like data, clear loading, empty and error states, accessible UI, plain wording, and code that stays small.
 
 ## Installed skills
 
 | Skill | Source | Why for this project | Invoke | Phase |
 |---|---|---|---|---|
-| `supabase` | supabase/agent-skills @ `c9be0e931b79` (official) | Guest "Try demo account" uses anonymous sign-in; `@supabase/ssr` sessions in Next.js; FastAPI verifies Supabase JWTs; snapshots in a private bucket via signed URLs | Auto-triggers on any Supabase task | build |
+| `supabase` | supabase/agent-skills @ `c9be0e931b79` (official) | Email and password accounts created with the admin API; `@supabase/ssr` sessions in Next.js; FastAPI verifies Supabase JWTs; snapshots in a private bucket via signed URLs | Auto-triggers on any Supabase task | build |
 | `supabase-postgres-best-practices` | supabase/agent-skills @ `c9be0e931b79` (official) | 18 tables + `mock_pages_public` view + indexes from the specs; RLS enabled with a public read view | Auto-triggers on schema/migration/query work | build |
 | `fastapi` | fastapi/fastapi @ `69ddc2badf9d` (official, shipped in the FastAPI repo) | The whole API (C-03) is FastAPI: `Annotated` auth dependencies, background jobs, Pydantic response models | Auto-triggers on FastAPI code | build |
 | `vercel-react-best-practices` | vercel-labs/agent-skills @ `063bee94c3f4` | The 18 Next.js App Router screens; mock pages (C-02) need correct no-cache rendering | Auto-triggers on React/Next.js work | build, review |
 | `render-deploy` | render-oss/skills @ `8675173fe302` (official Render, MIT) | Deploying the FastAPI service (Singapore, Free); `render.yaml`; pairs with the connected Render MCP | Auto-triggers on "deploy to Render" | ship |
 | `render-debug` | render-oss/skills @ `8675173fe302` (official Render, MIT) | Free-tier failure modes: port binding, 512 MB OOM, missing env vars, cold starts | Auto-triggers when a Render deploy or service fails | debug, ship |
 | `frontend-design` | anthropics/skills @ `dbd4588f9e10` | Judges remember the noise ledger (S-10), Change Receipt (S-11) and simulator (S-14) screens; avoids a generic AI look | Auto-triggers on UI design work | build |
+| `web-design-guidelines` | vercel-labs/agent-skills (official) | UI polish phase: audits changed screens for accessibility, focus, forms, loading/empty/error states and phone layout. Fetches the current rules from github.com/vercel-labs/web-interface-guidelines each run | "review my UI", "check accessibility", or name the files | improve, review |
+| `writing-guidelines` | vercel-labs/agent-skills (official) | The owner wants short, plain text everywhere; reviews on-screen copy, README, `finalVersion.md` and deck content. Fetches its rules from github.com/vercel-labs/writing-guidelines | "review my docs / copy" + files | improve, deliverables |
+| `tdd`, `diagnosing-bugs` (Codex only) | mattpocock/skills | Codex can't see the Claude Code plugin; copied to `.agents/skills` only so Claude Code doesn't load them twice | Codex: auto-trigger | build, debug |
 | `ponytail` | DietrichGebert/ponytail @ `09c434ab73ca` | 13 MVP use cases + auth in about 4.5 h solo: smallest change that works, standard library first, no speculative abstractions | Always on for code; "ponytail lite/full/ultra" changes the level | always |
 
 **Already available globally (not copied into the repo):**
 - **Matt Pocock skills plugin:** `tdd`, `diagnosing-bugs`, `prototype`, `code-review`, `grilling` and others. This is the process backbone.
 - **anthropic-skills:** `prototype-build-planner`, `skill-conductor`, `build-hackathon`, `hackathon-demo-submission`, `pptx` (for the required PPT).
 
-Codex does not see these Claude Code plugins.
+Codex does not see these Claude Code plugins, so `tdd` and `diagnosing-bugs` are also copied into `.agents/skills`.
 
 ## How to work with this stack
 > Day-to-day routing and token rules: see `SKILL-PLAYBOOK.md` (it supersedes the review step below: `/code-review low` at checkpoints only).
@@ -71,7 +74,9 @@ Codex does not see these Claude Code plugins.
 | gstack | garrytan/gstack | Heavy, needs Bun (not installed), large context footprint |
 | Addy Osmani agent-skills | addyosmani/agent-skills | Overlaps the Matt Pocock backbone |
 | UI UX Pro Max | nextlevelbuilder/ui-ux-pro-max-skill | Overlaps `frontend-design`; plugin + Python scripts |
-| webapp-testing | anthropics/skills | Playwright MCP already connected for the e2e smoke test |
+| webapp-testing | anthropics/skills | `scripts/e2e/*.cjs` (standalone playwright-core) and `scripts/check-all.sh` already cover live checks |
+| vercel-optimize | vercel-labs/agent-skills | Cost and metrics tuning; not a concern on the free tier |
+| vercel-composition-patterns | vercel-labs/agent-skills | No large component refactor planned |
 | fastapi-templates, fastapi-python, fastapi-expert | wshobson/agents, mindrally/skills, jeffallan/claude-skills | The official FastAPI skill exists |
 | deploy-to-vercel, vercel-cli-with-tokens | vercel-labs/agent-skills | Vercel MCP is connected; Git auto-deploy is enough |
 | render-env-vars, render-cron-jobs, render-background-workers | render-oss/skills | Covered by render-deploy references; cron and workers are P2/P3 only |
