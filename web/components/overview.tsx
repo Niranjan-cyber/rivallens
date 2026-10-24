@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { inr } from "@/components/money";
-import { COV_LABEL, CoverageStrip, Findings, NextAction, SinceLastVisit, useSetup, type Coverage } from "@/components/setup";
+import { COV_LABEL, Findings, NextAction, SinceLastVisit, useSetup, type Coverage } from "@/components/setup";
 import { SampleBadge } from "@/components/ui";
 import { api, type Product, type ProfileSummary } from "@/lib/api";
 
@@ -64,7 +64,6 @@ export function Overview({ profileId }: { profileId: string }) {
             <h2 className="text-[20px] font-medium tracking-[-0.02em]">What we found</h2>
             <div className="mt-3"><Findings findings={setup.data.findings} /></div>
           </div>
-          <CoverageStrip coverage={setup.data.coverage} />
         </div>
       )}
 
