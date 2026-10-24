@@ -9,7 +9,7 @@ import { api, type Job, type Product } from "@/lib/api";
 
 type Row = {
   url: string; domain: string; name: string; brand: string | null; niche: string | null; price: number | null;
-  rating: number | null; review_count: number | null; features: string[]; observed_at: string; same_niche: boolean;
+  rating: number | null; review_count: number | null; features: string[]; observed_at: string; same_niche: boolean; excluded?: string;
 };
 type Position = { n: number; median: number | null; min: number | null; max: number | null; q75: number | null; pct_vs_median: number | null; rank: number | null };
 type Comparison = { product: Product; basis: "niche" | "category"; position: Position; rows: Row[]; premium: Row[]; brands: { brand: string; products: number; min: number | null; max: number | null; revenue: { amount_inr: number; period: string | null; source_url: string; quote: string } | null }[] };
@@ -188,6 +188,7 @@ function RowView({ r }: { r: Row }) {
       <td className="p-3">
         <a href={r.url} target="_blank" rel="noreferrer" className="font-medium underline-offset-4 hover:underline">{r.name}</a>
         <span className="block text-[13px] text-slate">{r.brand ?? r.domain}{r.same_niche ? "" : " · same category, different niche"}</span>
+        {r.excluded && <span className="block text-[13px] text-charcoal">Not counted: {r.excluded}</span>}
       </td>
       <td className="p-3">{r.price != null ? rupees(r.price) : <span className="text-slate">Unknown</span>}</td>
       <td className="p-3">{r.rating != null ? `${r.rating}★${r.review_count ? ` (${r.review_count})` : ""}` : <span className="text-slate">Unknown</span>}</td>

@@ -18,7 +18,7 @@ from app.db import ConnDep
 from app.modules.collector.service import fetch
 from app.modules.products.classify import classify, classify_many
 from app.modules.discovery.service import registrable_domain
-from app.modules.products.market import find_comparables, hint, in_category, niche_overlap, price_position
+from app.modules.products.market import find_comparables, hint, in_category, niche_overlap, price_position, screen_prices
 from app.modules.products.news import fetch_news, queries_for
 from app.modules.products.pages import product_from_html
 from app.modules.products.taxonomy import candidates, path_of
@@ -264,7 +264,8 @@ def comparison_data(conn: Connection, p: dict) -> dict:
         r["price"] = float(r["price"]) if r["price"] is not None else None  # numeric, not Decimal strings, in JSON
         r["rating"] = float(r["rating"]) if r["rating"] is not None else None
         r["same_niche"] = niche_overlap(p["niche"], f"{r['niche']} {r['name']}", leaf)
-    niche_rows = [r for r in rows if r["same_niche"]]
+    screen_prices([r for r in rows if r["same_niche"]])  # invalid prices and outliers stay listed, with the reason, but don't count
+    niche_rows = [r for r in rows if r["same_niche"] and not r.get("excluded")]
     basis = niche_rows if sum(r["price"] is not None for r in niche_rows) >= 3 else rows
     # Only like-for-like prices make a median: a French press is in "Coffee" but says nothing about the price of coffee powder (L-23)
     prices = [float(r["price"]) for r in basis if r["price"] is not None] if basis is niche_rows else []

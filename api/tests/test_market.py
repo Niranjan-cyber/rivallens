@@ -56,3 +56,13 @@ def test_niche_overlap_needs_every_distinguishing_word():
     assert niche_overlap("Filter coffee powder", "Instant coffee powder Classic Protein Coffee Powder", leaf="Coffee") is False
     assert niche_overlap("Cold brew coffee bags", "Canned cold brew Orange Mint", leaf="Coffee") is False
     assert niche_overlap("Coffee", "Coffee Cappuccino", leaf="Coffee") is False  # nothing beyond the category word
+
+
+def test_screen_prices_excludes_invalid_and_outliers_with_a_reason():
+    from app.modules.products.market import screen_prices
+    rows = [{"price": p, "currency": c} for p, c in ((399, "INR"), (450, "INR"), (520, "INR"), (0, "INR"), (12, "USD"), (4999, "INR"), (60, None))]
+    rows[4]["price"] = None  # non-INR prices are stored as None
+    screen_prices(rows)
+    reasons = [r.get("excluded") for r in rows]
+    assert reasons[:3] == [None, None, None]
+    assert "0" in reasons[3] and "USD" in reasons[4] and "5×" in reasons[5] and "5×" in reasons[6]

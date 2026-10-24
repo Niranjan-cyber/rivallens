@@ -40,6 +40,24 @@ def price_position(yours: float | None, prices: list[float]) -> dict:
             "rank": sum(p < yours for p in s) + 1 if yours else None}
 
 
+OUTLIER = 5  # × the median of the others: a bundle, a sample or another size, not the same product's price
+
+
+def screen_prices(rows: list[dict]) -> None:
+    """Marks rows whose price can't be compared (sets r['excluded'] to the reason); the rest make the median."""
+    for r in rows:
+        if r.get("currency") not in (None, "INR"):
+            r["excluded"] = f"Priced in {r['currency']}, not ₹"
+        elif r["price"] is not None and r["price"] <= 0:
+            r["excluded"] = "Price shown as ₹0 or below"
+    for r in rows:
+        others = [o["price"] for o in rows if o is not r and o["price"] is not None and not o.get("excluded")]
+        if r["price"] is not None and not r.get("excluded") and len(others) >= 3:
+            m = statistics.median(others)
+            if r["price"] > OUTLIER * m or r["price"] * OUTLIER < m:
+                r["excluded"] = f"More than {OUTLIER}× away from the others' median: likely a bundle, sample or other size"
+
+
 def in_category(path: str | None, parent: str | None) -> bool:
     """Same category, or a sub-category of it: 'Bakery > Pastries & Scones' counts as 'Bakery'."""
     return bool(path and parent and (path == parent or path.startswith(parent + " > ")))

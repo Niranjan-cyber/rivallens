@@ -47,7 +47,7 @@ def _products(conn: Connection, profile_id: UUID) -> list[dict]:
         if p["taxonomy_id"]:
             c = comparison_data(conn, p)
             priced = [r for r in c["rows"] if r["price"] is not None]
-            like = [r for r in priced if r["same_niche"]]
+            like = [r for r in priced if r["same_niche"] and not r.get("excluded")]
             row |= {"like_for_like": len(like), "broad": len(priced), "sources": list(dict.fromkeys(r["domain"] for r in like)),
                     "position": c["position"] if c["basis"] == "niche" else None,
                     "seen": _day(seen := max((r["observed_at"] for r in like), default=None)), "seen_days": _days(seen)}
